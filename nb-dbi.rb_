@@ -1,0 +1,659 @@
+#! /usr/bin/ruby
+#fctb2015_db_init.rb 0.00b
+
+#Bacura KYOTO Lab
+#Saga Ukyo-ku Kyoto, JAPAN
+#http://bi.bacura.jp
+#yossy@bacura.jp
+
+#==============================================================================
+#Change log
+#==============================================================================
+##20190122, 0.00, Release
+
+
+#==============================================================================
+#LIBRARY
+#==============================================================================
+require 'mysql2'
+require './nb-soul.rb'
+
+
+#==============================================================================
+#GLOBAL
+#==============================================================================
+
+
+#==============================================================================
+#PREPARATION
+#==============================================================================
+#### データベース初期化
+#管理者権限で
+#【データベースの作成】
+#CREATE DATABASE nutrition;
+
+#【特定のデータベースにアクセスするユーザーの追加】
+#CREATE USER ''@'localhost' IDENTIFIED BY '';
+#GRANT ALL PRIVILEGES ON nutrition.* TO ''@'localhost';
+#FLUSH PRIVILEGES;
+
+
+#==============================================================================
+#DEFINITION
+#==============================================================================
+#### 食品栄養成分表テーブルの作成
+def fct_init( source_file )
+	puts '食品栄養成分表テーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5),SID SMALLINT UNSIGNED,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,ENERC SMALLINT UNSIGNED,WATER VARCHAR(8),PROT VARCHAR(8),PROTCAA VARCHAR(8),FAT VARCHAR(8),FATNLEA VARCHAR(8),FASAT VARCHAR(8),FAMS VARCHAR(8),FAPU VARCHAR(8),CHOLE VARCHAR(8),CHO VARCHAR(8),CHOAVLM VARCHAR(8),FIBSOL VARCHAR(8),FIBINS VARCHAR(8),FIBTG VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),NACL_EQ VARCHAR(8),ALC VARCHAR(8),NITRA VARCHAR(8),THEBRN VARCHAR(8),CAFFN VARCHAR(8),TAN VARCHAR(8),POLYPHENT VARCHAR(8),ACEAC VARCHAR(8),COIL VARCHAR(8),OA VARCHAR(8),WCR VARCHAR(8),Notice VARCHAR(255));'
+	$db.query( query )
+
+	# データを読み込んでテーブル更新
+	f = open( source_file, 'r' )
+	f.each_line do |e|
+		items = e.chomp.split( "\t" )
+
+		query = "INSERT INTO #{$MYSQL_TB} SET"
+		query << " FG='#{items[0]}',"
+		query << " FN='#{items[1]}',"
+		query << " SID='#{items[2]}',"
+		query << " Tagnames='#{items[3]}',"
+		query << " REFUSE='#{items[4]}',"
+		query << " ENERC_KCAL='#{items[5]}',"
+		query << " ENERC='#{items[6]}',"
+		query << " WATER='#{items[7]}',"
+		query << " PROT='#{items[8]}',"
+		query << " PROTCAA='#{items[9]}',"
+
+		query << " FAT='#{items[10]}',"
+		query << " FATNLEA='#{items[11]}',"
+		query << " FASAT='#{items[12]}',"
+		query << " FAMS='#{items[13]}',"
+		query << " FAPU='#{items[14]}',"
+		query << " CHOLE='#{items[15]}',"
+		query << " CHO='#{items[16]}',"
+		query << " CHOAVLM='#{items[17]}',"
+		query << " FIBSOL='#{items[18]}',"
+		query << " FIBINS='#{items[19]}',"
+
+		query << " FIBTG='#{items[20]}',"
+		query << " ASH='#{items[21]}',"
+		query << " NA='#{items[22]}',"
+		query << " K='#{items[23]}',"
+		query << " CA='#{items[24]}',"
+		query << " MG='#{items[25]}',"
+		query << " P='#{items[26]}',"
+		query << " FE='#{items[27]}',"
+		query << " ZN='#{items[28]}',"
+		query << " CU='#{items[29]}',"
+
+		query << " MN='#{items[30]}',"
+		query << " ID='#{items[31]}',"
+		query << " SE='#{items[32]}',"
+		query << " CR='#{items[33]}',"
+		query << " MO='#{items[34]}',"
+		query << " RETOL='#{items[35]}',"
+		query << " CARTA='#{items[36]}',"
+		query << " CARTB='#{items[37]}',"
+		query << " CRYPXB='#{items[38]}',"
+		query << " CARTBEQ='#{items[39]}',"
+
+		query << " VITA_RAE='#{items[40]}',"
+		query << " VITD='#{items[41]}',"
+		query << " TOCPHA='#{items[42]}',"
+		query << " TOCPHB='#{items[43]}',"
+		query << " TOCPHG='#{items[44]}',"
+		query << " TOCPHD='#{items[45]}',"
+		query << " VITK='#{items[46]}',"
+		query << " THIAHCL='#{items[47]}',"
+		query << " RIBF='#{items[48]}',"
+		query << " NIA='#{items[49]}',"
+
+		query << " VITB6A='#{items[50]}',"
+		query << " VITB12='#{items[51]}',"
+		query << " FOL='#{items[52]}',"
+		query << " PANTAC='#{items[53]}',"
+		query << " BIOT='#{items[54]}',"
+		query << " VITC='#{items[55]}',"
+		query << " NACL_EQ='#{items[56]}',"
+		query << " ALC='#{items[57]}',"
+		query << " NITRA='#{items[58]}',"
+		query << " THEBRN='#{items[59]}',"
+
+		query << " CAFFN='#{items[60]}',"
+		query << " TAN='#{items[61]}',"
+		query << " POLYPHENT='#{items[62]}',"
+		query << " ACEAC='#{items[63]}',"
+		query << " COIL='#{items[64]}',"
+		query << " OA='#{items[65]}',"
+		query << " WCR='#{items[66]}',"
+		query << " Notice='#{items[67]}';"
+
+		$db.query( query ) if items[2] != nil
+	end
+	f.close
+end
+
+
+#### 食品栄養成分表の修正
+def fct_fix( source_file )
+	puts '食品栄養成分表の修正'
+	data_solid = []
+
+	# 食品成分表データの読み込みと加工
+	f = open( source_file, 'r' )
+	f.each_line do |e|
+		items = e.split( "\t" )
+
+		#### 共通
+		t = e
+		t.sub!( 'こむぎ', '＜こむぎ＞') if items[0] == '01'
+		t.sub!( 'こめ', '＜こめ＞') if items[0] == '01'
+		t.sub!( 'だいず', '＜だいず＞') if items[0] == '04'
+		t.sub!( 'えんどう', '＜えんどう＞') if items[0] == '04'
+		t.sub!( 'うし', '（うし）') if items[0] == '11'
+		t.sub!( 'ぶた', '（ぶた）') if items[0] == '11'
+		t.sub!( 'にわとり', '（にわとり）') if items[0] == '11'
+		t.sub!( 'めんよう', '（めんよう）') if items[0] == '11'
+		t.sub!( '鶏卵', '［鶏卵+］') if items[0] == '12'
+
+		#### 小麦名前問題解消
+		t.sub!( '［玄穀］', '［こむぎ-玄穀+］') if items[0] == '01'
+
+		#### こめ名前問題解消
+		if items[0] == '01'
+			t.sub!( '［水稲穀粒］', '［水稲穀粒+］')
+			t.sub!( '［水稲めし］', '［水稲めし+］')
+			t.sub!( '［水稲全かゆ］', '［水稲全かゆ+］')
+			t.sub!( '［水稲五分かゆ］', '［水稲五分かゆ+］')
+			t.sub!( '［水稲おもゆ］', '［水稲おもゆ+］')
+			t.sub!( '［陸稲穀粒］', '［陸稲穀粒+］')
+			t.sub!( '［陸稲めし］', '［陸稲めし+］')
+			t.sub!( '［水稲穀粒］', '［水稲穀粒+］')
+		end
+
+		#### でん粉名前問題解消
+		t.sub!( '＜でん粉・でん粉製品＞', '') if items[0] == '02'
+
+		#### トマト缶詰名前問題解消
+		t.sub!( '缶詰', 'トマト-缶詰') if items[0] == '06'
+
+		#### 魚缶詰名前問題解消
+		if items[0] == '10'
+			t.sub!( '缶詰', 'いわし-缶詰') if /いわし/ =~ e
+			t.sub!( '缶詰', 'さば-缶詰') if /さば/ =~ e
+			t.sub!( '缶詰', 'まぐろ-缶詰') if /まぐろ/ =~ e
+		end
+
+		#### うし名前問題解消
+		if items[0] == '11'
+			t.sub!( '［和牛肉］', '［和牛肉+］')
+			t.sub!( '［乳用肥育牛肉］', '［乳用肥育牛肉+］')
+			t.sub!( '［交雑牛肉］', '［交雑牛肉+］')
+			t.sub!( '［輸入牛肉］', '［輸入牛肉+］')
+			t.sub!( '［子牛肉］', '［子牛肉+］')
+			t.sub!( '［ひき肉］', '［うし-ひき肉+］') if /うし/ =~ e
+			t.sub!( '［副生物］', '［うし-副生物+］') if /うし/ =~ e
+		end
+
+		#### ぶた名前問題解消
+		if items[0] == '11'
+			t.sub!( '［大型種肉］', '［ぶた-大型種肉+］')
+			t.sub!( '［中型種肉］', '［ぶた-中型種肉+］')
+			t.sub!( '［ひき肉］', '［ぶた-ひき肉+］') if /ぶた/ =~ e
+			t.sub!( '［副生物］', '［ぶた-副生物+］') if /ぶた/ =~ e
+			t.sub!( '［その他］', '［ぶた-その他+］') if /ぶた/ =~ e
+		end
+
+		#### めんよう名前問題解消
+		if items[0] == '11'
+			t.sub!( '［マトン］', '［マトン+］')
+			t.sub!( '［ラム］', '［ラム+］')
+		end
+
+		#### にわとり名前問題解消
+		if items[0] == '11'
+			t.sub!( '［成鶏肉］', '［成鶏肉+］')
+			t.sub!( '［若鶏肉］', '［若鶏肉+］')
+			t.sub!( '［ひき肉］', '［にわとり-ひき肉+］') if /にわとり/ =~ e
+			t.sub!( '［副生物］', '［にわとり-副生物+］') if /にわとり/ =~ e
+			t.sub!( '［その他］', '［にわとり-その他］') if /にわとり/ =~ e
+		end
+
+		#### 個別問題解消
+		#04014 ＜えんどう＞ グリンピース（揚げ豆）の（）を半角にする。
+		t.sub!( '（揚げ豆）', '(揚げ豆)') if items[1] == '04014'
+
+		#07058 グァバジュースのスペースを詰めて、（ネクター）の（）を半角にする。
+		t.sub!( '20 %果汁入り飲料（ネクター）', '20%果汁入り飲料(ネクター)') if items[1] == '07058'
+
+		#07059 グァバジュースのスペースを詰める。。
+		t.sub!( '10 %果汁入り飲料', '10%果汁入り飲料') if items[1] == '07059'
+
+		#07137 ももジュースのスペースを詰めて、（ネクター）の（）を半角にする。
+		t.sub!( '30 %果汁入り飲料（ネクター）', '30%果汁入り飲料(ネクター)') if items[1] == '07137'
+
+		#11002 ＜畜肉類＞いの（ぶた） 肉 脂身つき 生の（）を外す。
+		t.sub!( 'いの（ぶた）', 'いのぶた') if items[1] == '11002'
+
+		#11106 味付け缶詰に「うし」を追加する
+		t.sub!( '味付け缶詰', 'うし-味付け缶詰') if items[1] == '11106'
+
+		#15003 ＜和生菓子・和半生菓子類＞甘納豆 ＜えんどう＞の＜＞を外す。
+		t.sub!( '＜えんどう＞', 'えんどう') if items[1] == '15003'
+
+		data_solid << t
+	end
+	f.close
+
+	# 成分表データの書き込み
+	f = open( "#{source}.fix", 'w' )
+	data_solid.each do |e| f.puts e end
+end
+
+
+#### 食品タグテーブルの作成
+def tag_init( source_file )
+	puts '食品タグテーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID SMALLINT UNSIGNED, user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
+	$db.query( query )
+
+	# タグテーブルから読み込んでタグテーブル更新
+	f = open( source_file, 'r' )
+	f.each_line do |e|
+		items = e.chomp.split( "\t" )
+		if items[3] != nil
+			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
+			t = items[3]
+
+			t.gsub!( '　', "\t" )
+			t.gsub!( '＞', "\t" )
+			t.gsub!( '）', "\t" )
+			t.gsub!( '］', "\t" )
+			t.gsub!( "\s", "\t" )
+			t.gsub!( /\t{2,}/, "\t" )
+			t.gsub!( /\t+$/, '' )
+
+			# 特殊変換
+			t.gsub!( '（', "\t" ) if items[2] == '1875' || items[2] == '1935'
+
+			tags = t.split( "\t" )
+			class1 = ''
+			class2 = ''
+			class3 = ''
+			name_ = ''
+			tag1 = ''
+			tag2 = ''
+			tag3 = ''
+			tag4 = ''
+			tag5 = ''
+			count = 0
+
+			tags.each do |ee|
+				if /＜/ =~ ee
+					class1 = ee.sub( '＜', '')
+				elsif /（/ =~ ee
+					class2 = ee.sub( '（', '')
+				elsif /［/ =~ ee
+					class3 = ee.sub( '［', '')
+				else
+					case count
+					when 0
+						name_ = ee
+						count += 1
+					when 1
+						tag1 = ee
+						count += 1
+					when 2
+						tag2 = ee
+						count += 1
+					when 3
+						tag3 = ee
+						count += 1
+					when 4
+						tag4 = ee
+						count += 1
+					when 5
+						tag5 = ee
+						count += 1
+					end
+				end
+			end
+			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
+			$db.query( sql_query_tag )
+		end
+	end
+	f.close
+end
+
+
+#### 食品拡張テーブルの作成
+def ext_init()
+	puts '食品拡張テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen TINYINT(1), unitc VARCHAR(255), unitn VARCHAR(255), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
+	$db.query( query )
+
+	# 初期化（tagテーブルが必要）
+	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
+	res = $db.query( query )
+	res.each do |e|
+		query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{e['FN']}', color1='0', color2='0', color1h='0', color2h='0';"
+		$db.query( query )
+	end
+
+	# 緑黄色野菜のセット
+	f = open( 'nb-gycv.txt', 'r' )
+	f.each_line do |e|
+		food_no = e.chomp
+		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN=#{food_no};"
+		$db.query( query )
+	end
+end
+
+
+#### 食品辞書テーブルの作成
+def dic_init()
+	# テーブル作成
+	query = 'CREATE TABLE dic ( tn SMALLINT, org_name VARCHAR(64),alias VARCHAR(64),user VARCHAR(32));'
+	$db.query( query )
+
+	# タグテーブルから読み込んで辞書テーブルを更新
+	ans = $db.query( "SELECT * FROM #{$MYSQL_TB_TAG};" )
+	names = []
+	ans.each do |a|
+		names << a['name']
+	end
+	ans.each do |a|
+		names << a['class1'] unless a['class1'] == ''
+	end
+	ans.each do |a|
+		names << a['class2'] unless a['class2'] == ''
+	end
+	ans.each do |a|
+		names << a['class3'] unless a['class3'] == ''
+	end
+	names.uniq!
+
+	c = 1
+	names.each do |e|
+		sql_query_dic = "INSERT INTO #{$MYSQL_TB_DIC} SET tn='#{c}', org_name='#{e}',alias='#{e}';"
+		$db.query( sql_query_dic )
+		c += 1
+	end
+
+	# 成分表から別名を抽出
+	alias_hash = Hash::new
+	query = 'SELECT * FROM fct;'
+	res = $db.query( query )
+	res.each do |e|
+		food_no = e['FN']
+		notice = e['Notice']
+
+		# 真明の追加
+		query = "SELECT name FROM tag WHERE FN='#{food_no}';"
+		res2 = $db.query( query )
+		food_name = res2.first['name']
+
+		if /別名/ =~ notice
+			notice.gsub!( '"' , '' )
+			notice.gsub!( '別名： ' , '' )
+			notice.gsub!( '試料： ' , '' )
+			notice.gsub!( '　' , '' )
+			notice.gsub!( "\s" , '' )
+			notice.gsub!( '、' , ':' )
+			notice.gsub!( ', ' , ':' )
+			notice.gsub!( ', ' , ':' )
+			notice.gsub!( /等$/ , '' )
+
+			notice.gsub!( '（和名）' , '' )
+			notice.gsub!( '（標準和名）' , '' )
+			notice.gsub!( '（関西）' , '' )
+			notice.gsub!( '（全国糖酸度統一基準を満たすもの）' , '' )
+			notice.gsub!( '（小型魚）' , '' )
+
+			notice.gsub!( 'ばれいしょ（馬鈴薯）でん粉' , "ばれいしょでん粉:馬鈴薯でん粉" )
+			notice.gsub!( 'かんしょ（甘藷）でん粉' , "かんしょでん粉:甘藷でん粉" )
+			notice.gsub!( '（甘藷）' , '甘藷' )
+			notice.gsub!( '（馬鈴薯）' , '馬鈴薯' )
+			notice.gsub!( 'さいとう（菜豆）' , "さいとう:菜豆" )
+			notice.gsub!( '青じそ（別名：大葉）' , "青じそ:大葉" )
+			notice.gsub!( 'とうな（薹菜）' , "とうな:薹菜" )
+			notice.gsub!( 'しろぐち（いしもち）' , "しろぐち:いしもち" )
+			notice.gsub!( 'しろぐち（別名：いしもち）' , "しろぐち:いしもち" )
+			notice.gsub!( "赤貝（さるぼう）味付け缶詰" , "赤貝味付け缶詰:さるぼう味付け缶詰" )
+
+			aliases = notice.split( ':' )
+			# 重複の解消
+			aliases.each do |ee| alias_hash[ee] = food_name end
+		end
+	end
+	# 別名を辞書テーブルに挿入
+	alias_hash.each_pair do |k, v|
+		sql_query_dic = "INSERT INTO #{$MYSQL_TB_DIC} SET tn='0', org_name='#{v}',alias='#{k}';"
+		$db.query( sql_query_dic )
+	end
+end
+
+
+#### 食品用検索記録テーブルの作成
+def slogf_init()
+	puts '検索記録テーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE slogf (user VARCHAR(32), words VARCHAR(128), code VARCHAR(32), date DATETIME );'
+	$db.query( query )
+end
+
+
+#### レシピ用検索記録テーブルの作成
+def slogr_init()
+	puts '検索記録テーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE slogr (user VARCHAR(32), words VARCHAR(128), code VARCHAR(32), date DATETIME );'
+	$db.query( query )
+end
+
+
+#### 検索インデックステーブルの作成
+def index_init()
+	puts '検索インデックステーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE index ();'
+	$db.query( query )
+end
+
+
+#### ユーザーテーブルの作成
+def user_init()
+	puts 'ユーザーテーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE user (user VARCHAR(32) NOT NULL PRIMARY KEY,pass VARCHAR(32),cookie VARCHAR(32),mail VARCHAR(64),aliasu VARCHAR(64),status TINYINT, date DATETIME, count INT, language VARCHAR(2));'
+	$db.query( query )
+end
+
+
+#### 履歴テーブルの作成
+def his_init()
+	puts '履歴テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE his (user VARCHAR(32) NOT NULL PRIMARY KEY,his VARCHAR(2048));'
+	$db.query( query )
+end
+
+
+#### コンフィグテーブルの作成
+def cfg_init()
+	puts 'コンフィグテーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(1000), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8));'
+	$db.query( query )
+end
+
+#### 集計テーブルの作成
+def sum_init()
+	puts '集計テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE sum (user VARCHAR(32) NOT NULL PRIMARY KEY,name VARCHAR(255),sum varchar(1024),protect TINYINT(1),dish TINYINT);'
+	$db.query( query )
+end
+
+
+#### レシピテーブルの作成
+def recipe_init()
+	puts 'レシピテーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE recipe (code VARCHAR(12) PRIMARY KEY,user VARCHAR(32) NOT NULL,root VARCHAR(12),branch TINYINT,public TINYINT(1),protect TINYINT(1),draft TINYINT(1),name VARCHAR(255) NOT NULL,dish TINYINT,type TINYINT,role TINYINT,tech TINYINT,time TINYINT,cost TINYINT,sum varchar(1024),protocol varchar(2048),fig1 TINYINT(1),fig2 TINYINT(1),fig3 TINYINT(1),date DATETIME;'
+	$db.query( query )
+end
+
+
+#### レシピインデックステーブルの作成
+def recipei_init()
+	puts 'レシピインデックステーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE recipei ( words VARCHAR(64) PRIMARY KEY, count SMALLINT UNSIGNED, codes VARCHAR(10000));'
+	$db.query( query )
+
+	# テーブルf作成
+	query = 'CREATE TABLE recipeif ( words VARCHAR(64) PRIMARY KEY, count SMALLINT UNSIGNED, codes VARCHAR(2000));'
+	$db.query( query )
+end
+
+
+#### 成分パレットテーブルの作成
+def palette_init()
+	puts '成分パレットテーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE palette (user VARCHAR(32) NOT NULL, name VARCHAR(64), palette VARCHAR(128)), count TINYINT;'
+	$db.query( query )
+end
+
+
+#### 食事テーブルの作成
+def meal_init()
+	puts '食事テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE meal (user VARCHAR(32) NOT NULL PRIMARY KEY,code varchar(16),name VARCHAR(255),meal VARCHAR(255),protect TINYINT(1));'
+	$db.query( query )
+end
+
+
+#### 献立テーブルの作成
+def menu_init()
+	puts '献立テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE menu ( code VARCHAR(16) PRIMARY KEY, user VARCHAR(32) NOT NULL, public TINYINT(1), protect TINYINT(1), name VARCHAR(255) NOT NULL, meal VARCHAR(255), fig TINYINT(1), date DATETIME, label VARCHAR(255), root VARCHAR(16), branch VARCHAR(256));'
+	$db.query( query )
+end
+
+
+#### 擬似食品テーブルの作成
+def fct_pseudo_init()
+	puts '擬似食品テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE fctp (FG VARCHAR(2),FN VARCHAR(6),user VARCHAR(32) NOT NULL,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC_KCAL SMALLINT ,ENERC SMALLINT,WATER VARCHAR(8),PROT VARCHAR(8),PROTCAA VARCHAR(8),FAT VARCHAR(8),FATNLEA VARCHAR(8),FASAT VARCHAR(8),FAMS VARCHAR(8),FAPU VARCHAR(8),CHOLE VARCHAR(8),CHO VARCHAR(8),CHOAVLM VARCHAR(8),FIBSOL VARCHAR(8),FIBINS VARCHAR(8),FIBTG VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),NACL_EQ VARCHAR(8),ALC VARCHAR(8),NITRA VARCHAR(8),THEBRN VARCHAR(8),CAFFN VARCHAR(8),TAN VARCHAR(8),POLYPHENT VARCHAR(8),ACEAC VARCHAR(8),COIL VARCHAR(8),OA VARCHAR(8),WCR VARCHAR(8),Notice VARCHAR(255));'
+	$db.query( query )
+end
+
+
+#### 原価テーブルの作成
+def price_init()
+	puts '原価テーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE price (code VARCHAR(16) PRIMARY KEY, user VARCHAR(32), price varchar(1024));'
+	$db.query( query )
+end
+
+
+#### 原価マスターテーブルの作成
+def pricem_init()
+	puts '原価マスターテーブルの作成'
+
+	# テーブル作成
+	query = 'CREATE TABLE pricem (FN VARCHAR(6), user VARCHAR(32), price INT, volume SMALLINT);'
+	$db.query( query )
+end
+
+
+#### 基準BMIテーブルの作成
+def standard_init()
+	puts '基準BMIテーブルの作成'
+
+	standard_solid = []
+	f = open( 'standard.txt', 'r')
+	f.each_line do |e| standard_solid << e.chomp end
+
+	# カラム追加
+	column_names = standard_solid.shift.split( "\t" )
+	column_type = standard_solid.shift.split( "\t" )
+	column_names.size.times do |c|
+		query = "ALTER TABLE standard add #{column_names[c]} #{column_type[c]};"
+		$db.query( query )
+	end
+
+	# データのセット
+	standard_solid.each do |e|
+		query = 'INSERT INTO standard SET '
+		a = e.split( "\t" )
+		c = 0
+		e.each do |ee|
+			query << "#{column_names[c]}='#{ee}',"
+			c += 1
+		end
+		query.chop
+		query << ';'
+		$db.query( query )
+	end
+end
+
+
+#### 記憶テーブルの作成
+def memory_init()
+	puts '記憶テーブルの作成'
+
+	query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, date DATETIME );'
+	$db.query( query )
+	end
+end
+
+#==============================================================================
+puts "fctb2015_db_init.rb"
+#==============================================================================
+$db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+
+#fct_init( '1365334_1r10_utf8.txt' )
+#fct_fix( '1365334_1r10_utf8.txt')
+#tag_init( '1365334_1r10_utf8_class.txt' )
+#cfg_init()
+#ext_init()
+#dic_init()
+#slogf_init()
+#slogr_init()
+#user_init()
+#his_init()
+#sum_init()
+#palette_init()
+#meal_init()
+#menu_init()
+#fct_pseudo_init()
+#price_init()
+#pricei_init()
+#pricem_init()
+#standard_init()
+#memory_init()
+
+$db.close

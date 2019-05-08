@@ -1,0 +1,229 @@
+/* header styles */
+header {
+  margin-bottom: 1em;
+  font-size: small;
+}
+
+/* Sticky footer styles */
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  z-index: 0;
+}
+
+/* nav styles */
+nav {
+  background-color: white;
+}
+
+.nav_button{
+  margin-bottom: 0.5em;
+}
+
+.login_input{
+  margin-bottom: 0.5em;
+}
+
+.login_form{
+  width: 20em;
+}
+
+/* 利用規約 */
+.terms{
+  font-size: small;
+}
+
+/* ナビゲーション */
+.nav_msg{
+  font-size: small;
+}
+
+/* グローバル */
+.link_cursor{
+  cursor: pointer;
+}
+
+.msg_small{
+  font-size: small;
+}
+
+.msg_small_red{
+  font-size: small;
+  color: red;
+}
+
+.video{
+  background-color: transparent;
+  position: fixed;
+  top: 0em;
+  right: 0.5em;
+  margin: 1em;
+  border: none;
+  font-size: 2em;
+  font-weight: bold;
+  text-align: right;
+  color: lime;
+  z-index: 0
+}
+
+.bw_frame{
+  position:relative;
+  z-index: 99;
+}
+
+.browse_window{
+  position: relative;
+  margin: 0.5em;
+  padding: 1em;
+  border: none;
+  border-radius: 6px;
+  font-size: small;
+  color: indigo;
+  background: aliceblue;
+}
+
+.ctl_button{
+  padding-left: 0.8em;
+  padding-right: 0.8em;
+  margin-bottom: 0.5em;
+}
+
+.del_button{
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  margin-bottom: 0.5em;
+}
+
+.align_r{
+  text-align: right;
+}
+
+.align_l{
+  text-align: left;
+}
+
+.align_c{
+  text-align: center;
+}
+
+.guild_color{
+  background: indigo;
+  color: gold;
+  font-weight: bold;
+}
+
+.code{
+  text-align: right;
+  color: lavender;
+}
+
+/*=====================*/
+/* 閲覧階層 ＋ 詳細表示 */
+/*=====================*/
+
+.fct_value{
+  font-size:large;
+}
+
+.tag1{
+  font-size: small;
+  color: chocolate;
+}
+
+.tag2{
+  font-size: small;
+  color: darkslategray;
+}
+
+.tag3{
+  font-size: small;
+  color: mediumvioletred;
+}
+
+.tag4{
+  font-size: small;
+  color: olive;
+}
+
+.tag5{
+  font-size: small;
+  color: navy;
+}
+
+.tagc{
+  font-size: small;
+  color:silver;
+}
+
+.visited{
+  font-weight: 800;
+}
+
+
+/*================*/
+/* まな板 ＋ レシピ */
+/*================*/
+
+.cb_header{
+  font-size: small;
+  font-weight: bold;
+}
+
+.cb_form{
+  margin-bottom: 0.5em;
+}
+
+.cb_weight_box{
+  width: 50%;
+  padding: .25rem;
+}
+
+.cb_food_label{
+  font-size: medium;
+  font-weight: bold;
+}
+
+.print_comment{
+  color: darkgray;
+}
+
+.print_subtitle{
+  font-size: medium;
+  font-weight: bold;
+}
+
+.print_card{
+  margin-bottom: 1em;
+}
+
+/*===============*/
+/* お膳 ＋ 献立帳 */
+/*===============*/
+
+.meal_header{
+  font-size: small;
+  font-weight: bold;
+}
+
+.meal_form{
+  margin-bottom: 0.5em;
+}
+
+/* 成分計算表 */
+/* 成分計算表 項目名 */
+.fct_item{
+  font-size: x-small;
+}
+
+/* 成分計算表 単位 */
+.fct_unit{
+  color: darkgray;
+  font-size: x-small;
+}
+
+/* 成分計算表 合計 */
+.fct_sum{
+  color: tomato;
+  font-size: medium;
+}
