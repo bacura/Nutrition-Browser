@@ -253,11 +253,22 @@ r.each do |e|
 
 		menu_html << "<td>#{e['label']}</td>"
 		menu_html << "<td>-</td>"
-		if e['user'] == uname
-			menu_html << "<td><input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"menuDelete_BWL1( '#{e['code']}', '#{e['name']}' )\">#{lp[1]}</button></td>"
-		else
-			menu_html << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport_BWL1( '#{e['code']}' )\">#{lp[2]}</button></td>"
+
+
+		menu_html << "<td>"
+		if status >= 2
+			menu_html << "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[18]}</button>&nbsp;&nbsp;"
 		end
+
+
+
+		if e['user'] == uname
+			menu_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"menuDelete_BWL1( '#{e['code']}', '#{e['name']}' )\">#{lp[1]}</button>"
+		else
+			menu_html << "<button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport_BWL1( '#{e['code']}' )\">#{lp[2]}</button>"
+		end
+		menu_html << "</td>"
+
 	end
 	menu_count += 1
 end

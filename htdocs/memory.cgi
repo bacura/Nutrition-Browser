@@ -78,7 +78,7 @@ when 'pointer'
 	r = mariadb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	r.each do |e|
 		edit_button = ''
-		edit_button = "&nbsp<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{e['category']}', '#{e['pointer']}', 'back' )\">編集</button>" if status == 9
+		edit_button = "&nbsp<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{e['category']}', '#{e['pointer']}', 'back' )\">#{lp[3]}</button>" if status >= 8
 		raw_memory = e['memory']
 		memory = raw_memory
 		memory_html << "<div class='row'>"
@@ -98,7 +98,7 @@ when 'refer'
 			pointer = ''
 			r.each do |ee|
 				edit_button = ''
-				edit_button = "<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{e['category']}', '#{e['pointer']}')\">#{e['category']}</button>" if status == 9
+				edit_button = "<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{ee['category']}', '#{ee['pointer']}')\">#{lp[3]}</button>" if status >= 8
 				raw_memory = e['memory']
 				memory = raw_memory
 				memory_html << "<h5>#{ee['pointer']}</h5>"

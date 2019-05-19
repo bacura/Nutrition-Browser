@@ -525,7 +525,7 @@ recipe_solid.each do |e|
 		recipe_html << "<td>"
 		recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
 		if status >= 2
-			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"\">#{lp[21]}</button>"
+			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[21]}</button>"
 		end
 		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect_BWL2( '#{e['code']}' )\">#{lp[9]}</button>"
 		recipe_html << "	<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[19]}</button>"

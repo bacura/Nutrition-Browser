@@ -79,6 +79,7 @@ html_init( nil )
 
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
+status = 0 if status == nil
 lp = lp_init( 'square', language )
 if $DEBUG
 	puts "uname: #{uname}<br>"
@@ -500,7 +501,7 @@ when 'fctb_l5'
 
 		# Koyomi button
 		if status >= 2
-			koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"\">#{lp[3]}</button>"
+			koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{food_no_list[c]}', -5 )\">#{lp[3]}</button>"
 		else
 			koyomi_button = ''
 		end

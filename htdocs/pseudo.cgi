@@ -148,9 +148,7 @@ if command == 'save'
 
 	# 重量影響成分
 	7.upto( 65 ) do |i|
-		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil
-			fct_opt[$FCT_ITEM[i]] = '-'
-		elsif cgi[$FCT_ITEM[i]] == '-'
+		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil || fct_opt[$FCT_ITEM[i]] = '-'
 			fct_opt[$FCT_ITEM[i]] = '-'
 		else
 			t = BigDecimal( cgi[$FCT_ITEM[i]] ) / ( food_weight / 100 )

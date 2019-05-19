@@ -147,7 +147,7 @@ history.each do |e|
 
 	# Koyomi button
 	if status >= 2
-		koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"\">#{lp[35]}</button>"
+		koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e}', 1 )\">#{lp[35]}</button>"
 	else
 		koyomi_button = ''
 	end

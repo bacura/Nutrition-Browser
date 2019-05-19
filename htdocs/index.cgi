@@ -114,7 +114,7 @@ end
           </span>
 
           <span id='guild_menu' style="display:none;">
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initKoyomi()">#{lp[37]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button" onclick="initKoyomi()">#{lp[37]}</button>
           </span>
           <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
           #{config_button}

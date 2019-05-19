@@ -68,6 +68,7 @@ html_init( nil )
 
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
+status = 0 if status == nil
 lp = lp_init( 'detail', language )
 if $DEBUG
 	puts "uname: #{uname}<br>"
@@ -122,13 +123,6 @@ if uname
 	add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"addingCB( '#{food_no}', 'detail_weight' )\">#{lp[1]}</button>"
 else
 	add_button = "<button type='button' class='btn btn btn-dark btn-sm text-secondary' onclick=\"displayVideo( '#{lp[2]}' )\">#{lp[1]}</button>"
-end
-
-#### Koyomi button
-if status >= 2
-	koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"\">#{lp[18]}</button>"
-else
-	koyomi_button = ''
 end
 
 
@@ -195,7 +189,7 @@ html = <<-"HTML"
 		<div class="col-7"><h5 onclick='detailReturn()'>#{fct_opt['Tagnames']}</h5></div>
 		<div class="col-3" align='right'>
 			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}' download='detail_#{fct_opt['FN']}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[14]}</button></a>
-			#{add_button}&nbsp;#{koyomi_button}
+			#{add_button}
 		</div>
 		<div class="col-2" align='right'>
 			<button class='btn btn-success' onclick='detailReturn()'>#{lp[15]}</button>

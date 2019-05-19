@@ -114,7 +114,7 @@ if command == 'edit'
 	end
 else
 	if command == 'save'
-		mariadb( "UPDATE #{$MYSQL_TB_USER} SET;", false )
+		mariadb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{target_pass}', mail='#{target_mail}', aliasu='#{target_aliasu}', status='#{target_status}', language='#{target_language}' WHERE user='#{target_uid}';", false )
 	end
 
 	account_html << "<div class='row'>"

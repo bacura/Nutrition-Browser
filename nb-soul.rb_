@@ -40,6 +40,8 @@ $MYSQL_TB_PALETTE = 'palette'
 $MYSQL_TB_MEAL = 'meal'
 $MYSQL_TB_MENU = 'menu'
 $MYSQL_TB_MEMORY = 'memory'
+$MYSQL_TB_KOYOMI = 'koyomi'
+$MYSQL_TB_FCS = 'fcs'
 
 $DEBUG = false
 
@@ -191,19 +193,23 @@ end
 def html_top( user_name, status, aliasu )
   case status
   when 1
-    login_color = "success"
-  when 2, 3
+    login_color = "primary"
+  when 3
     login_color = "warning"
-  when 9
+  when 2, 4
+    login_color = "info"
+  when 5
+    login_color = "success"
+  when 8, 9
     login_color = "danger"
   else
-    login_color = "primary"
+    login_color = "secondary"
   end
 
 
   user_name =  aliasu if aliasu != '' && aliasu != nil
   login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
-  login = '<a href="login.cgi">ログイン</a>&nbsp;|&nbsp;<a href="regist.cgi">登録</a>' if user_name == nil
+  login = "<a href='login.cgi' class=\"text-#{login_color}\">ログイン</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">登録</a>" if user_name == nil
 
   html = <<-"HTML"
       <header class="navbar navbar-dark bg-dark" id="header">

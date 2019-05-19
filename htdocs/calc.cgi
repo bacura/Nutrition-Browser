@@ -86,8 +86,8 @@ frct_accu = cgi['frct_accu']
 palette = cgi['palette']
 
 if ew_mode == nil || ew_mode == ''
-	r = mariadb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}'", false )
-	if r.first
+	r = mariadb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	if r.first && r.first['calcc'] != nil
 		a = r.first['calcc'].split( ':' )
 		ew_mode = a[0].to_i
 		frct_mode = a[1].to_i
