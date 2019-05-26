@@ -454,18 +454,6 @@ var Pseudo_R2F_BWL3 = function( code ){
 var Pseudo_R2F_BWLX = function( code ){
 	var food_name = document.getElementById( "food_name" ).value;
 	if( food_name != '' ){
-		// BWL2 items
-		var frct_mode = document.getElementById( "frct_mode" ).value;
-		if( document.getElementById( "frct_accu" ).checked ){
-			var frct_accu = 1;
-		}else{
-			var frct_accu = 0;
-		}
-		if( document.getElementById( "ew_mode" ).checked ){
-			var ew_mode = 1;
-		}else{
-			var ew_mode = 0;
-		}
 
 		var food_group = document.getElementById( "food_group" ).value;
 		var class1 = document.getElementById( "class1" ).value;
@@ -478,7 +466,7 @@ var Pseudo_R2F_BWLX = function( code ){
 		var tag5 = document.getElementById( "tag5" ).value;
 
 		$.post( "pseudo_r2f.cgi", {
-			command:'save', code:code, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode,
+			command:'save', code:code, frct_mode:0, frct_accu:1, ew_mode:0,
 			food_name:food_name, food_group:food_group, class1:class1, class2:class2, class3:class3, tag1:tag1,
 			tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5
 		}, function( data ){});

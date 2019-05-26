@@ -65,6 +65,7 @@ def html_nav( user_name, status, lp )
     menu_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
     set_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"menuList_BWL1()\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
+    koyomi_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initKoyomi()\">#{lp[37]}</button>"
   else
     cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{@cb_num}</span>"
     mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"mb_num\">#{@meal_num}</span>"
@@ -75,6 +76,7 @@ def html_nav( user_name, status, lp )
     menu_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{mb}</button>"
     set_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[7]}</button>"
+    koyomi_button = "<button type='button' class='btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[37]}</button>"
   end
 
 if status >= 3
@@ -111,6 +113,7 @@ end
           #{recipe_button}
           #{menu_button}
           #{set_button}
+          #{koyomi_button}
           </span>
 
           <span id='guild_menu' style="display:none;">

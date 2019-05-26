@@ -151,7 +151,7 @@ food_no.each do |e|
 		else
 			q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
 		end
-		r = db.q( q )
+		r = db.query( q )
 		fct_name << r.first['Tagnames']
 		$FCT_ITEM.size.times do |c|
 			fct_tmp << r.first[$FCT_ITEM[c]] if palette_set[c] == 1
@@ -165,7 +165,7 @@ end
 if true
 	food_no.size.times do |c|
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-		r = db.q( q )
+		r = db.query( q )
 		fct_name[c] = bind_tags( r ) if r.first
 	end
 end

@@ -474,10 +474,9 @@ when 'fctb_l5'
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 	food_no_list.size.times do |c|
 		pseudo_flag = false
-
 		# 栄養素の一部を取得
 		if /^P|U/ =~ food_no_list[c]
-			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}';"
+			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}' AND user='#{uname}';"
 			pseudo_flag = true
 		else
 			query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no_list[c]}';"
@@ -485,6 +484,7 @@ when 'fctb_l5'
 		p query if $DEBUG
 		res = db.query( query )
 		sub_components = ''
+
 		fc_items.each do |e|
 			t = num_opt( res.first[e], food_weight, frct_mode, $FCT_FRCT[e] )
 			sub_components << "<td align='center'>#{t}</td>"
@@ -508,19 +508,19 @@ when 'fctb_l5'
 
 		# GM専用単位変換ボタン
 		gm_unitc = ''
-		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc_BWLF( '#{food_no_list[c]}' )\">#{lp[4]}単</button>" if status == 9
+		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc_BWLF( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if status == 9
 
 		# GM専用色ボタン
 		gm_color = ''
-		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor_BWLF( '#{food_no_list[c]}' )\">#{lp[5]}色</button>" if status == 9
+		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor_BWLF( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if status == 9
 
 		# GM専用アレルギーボタン
 		gm_allergen = ''
-		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen_BWLF( '#{food_no_list[c]}' )\">#{lp[6]}ア</button>" if status == 9
+		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen_BWLF( '#{food_no_list[c]}' )\">#{lp[6]}</button>" if status == 9
 
 		# GM専用旬ボタン
 		gm_shun = ''
-		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun_BWLF( '#{food_no_list[c]}' )\">#{lp[7]}旬</button>" if status == 9
+		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun_BWLF( '#{food_no_list[c]}' )\">#{lp[7]}</button>" if status == 9
 
 
 		tags = "<span class='tag1'>#{tag1_list[c]}</span> <span class='tag2'>#{tag2_list[c]}</span> <span class='tag3'>#{tag3_list[c]}</span> <span class='tag4'>#{tag4_list[c]}</span> <span class='tag5'>#{tag5_list[c]}</span>"

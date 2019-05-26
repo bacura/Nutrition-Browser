@@ -223,7 +223,7 @@ when 'save'
 	end
 
 	# 保護の確認と新しいコード
-	rr= db_mariadb( "SELECT name, protect from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false )
+	rr= mariadb( "SELECT name, protect from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false )
 	# 保存データもポストデータも保護モードだったら、新しいコードと名前を割り振る
 	if rr.first['protect'] == 1 && protect == 1
 		if recipe_name == rr.first['name']

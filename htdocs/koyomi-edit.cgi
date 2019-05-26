@@ -92,13 +92,6 @@ if $DEBUG
 end
 
 
-#### Guild member check
-if status < 1
-	puts "Guild menber error."
-	exit
-end
-
-
 #### Getting POST
 command = cgi['command']
 yyyy = cgi['yyyy'].to_i

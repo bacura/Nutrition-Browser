@@ -310,7 +310,8 @@ var saveMemory_BWLF = function( mode ){
 };
 
 //
-var savePMemory_BWLF = function( category, pointer, post_process ){
+var savePMemory_BWLF = function( category, post_process ){
+	var pointer = document.getElementById( 'pointer' ).value;
 	var memory = document.getElementById( 'memory' ).value;
 	var rank = document.getElementById( 'rank' ).value;
 	if( post_process == 'front'){

@@ -265,7 +265,7 @@ when 'save_pointer'
 	if r.first
 		mariadb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{Time.now}' WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	else
-		mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory_dolid}', category='#{category}', rank='#{rank}', date='#{Time.now}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{Time.now}';", false )
 	end
 
 	new_html, memory_html = edit( category )

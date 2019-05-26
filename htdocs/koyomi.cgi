@@ -69,13 +69,6 @@ if $DEBUG
 end
 
 
-#### GMチェック
-if status < 1
-	puts "Guild menber error."
-	exit
-end
-
-
 #### POSTデータの取得
 command = cgi['command']
 yyyy = cgi['yyyy'].to_i

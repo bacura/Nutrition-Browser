@@ -137,7 +137,7 @@ def html_head( interrupt, status, sub_title )
   js_guild = "<script type='text/javascript' src='#{$JS_PATH}/guild.js'></script>" if status >= 3
 
   js_master = ''
-  js_master = "<script type='text/javascript' src='#{$JS_PATH}/master.js'></script>" if status == 9
+  js_master = "<script type='text/javascript' src='#{$JS_PATH}/master.js'></script>" if status >= 8
 
   html = <<-"HTML"
 <!DOCTYPE html>
