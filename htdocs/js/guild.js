@@ -32,8 +32,8 @@ var editKoyomi_BW2 = function( com, dd ){
 };
 
 // Koyomi delete
-var deleteKoyomi_BW2 = function( yyyy, mm, dd, tdiv, code ){
-	$.post( "koyomi-edit.cgi", { command:'delete', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, code:code }, function( data ){ $( "#bw_level2" ).html( data );});
+var deleteKoyomi_BW2 = function( yyyy, mm, dd, tdiv, code, order ){
+	$.post( "koyomi-edit.cgi", { command:'delete', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, code:code, order:order }, function( data ){ $( "#bw_level2" ).html( data );});
 };
 
 // Koyomi memo

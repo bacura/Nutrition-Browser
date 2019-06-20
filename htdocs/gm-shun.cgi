@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-gycv.cgi'
+$SCRIPT = 'gm-shun.cgi'
 $DEBUG = false
 
 
@@ -76,7 +76,7 @@ when 'on'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /\d\d\d\d\d/ =~ e
-			mariadb( "UPDATE #{$MYSQL_TB_EXT} SET shun1s='#{shun1s}', shun1e='#{shun1e}, shun2s='#{shun2s}', shun2e='#{shun2e}' WHERE FN='#{code}';", false )
+			mariadb( "UPDATE #{$MYSQL_TB_EXT} SET shun1s='#{shun1s}', shun1e='#{shun1e}', shun2s='#{shun2s}', shun2e='#{shun2e}' WHERE FN='#{code}';", false )
 		end
 	end
 when 'off'
@@ -98,19 +98,25 @@ list_html = ''
 r = mariadb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE shun1s>='1' and shun1s<='12';", false )
 if r.size != 0
 	code_list = []
+	name_tag_list = []
 	r.each do |e|
 		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false )
 		code_list << rr.first['FN']
+		name_tag_list << "#{rr.first['name']}・#{rr.first['tag1']} #{rr.first['tag2']} #{rr.first['tag3']} #{rr.first['tag4']} #{rr.first['tag5']}"
 	end
+	c = 0
 	code_list.reverse.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
+		rr = mariadb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{e}';", false )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-1'><button class='btn btn-sm btn-outline-danger' type='button' onclick=\"offGYCV_BWL1( '#{e}' )\">x</button></div>"
 		list_html << "<div class='col-2'>#{e}</div>"
-		list_html << "<div class='col-4'>#{rr.first['name']}・#{rr.first['tag1']} #{rr.first['tag2']} #{rr.first['tag3']} #{rr.first['tag4']} #{rr.first['tag5']}</div>"
+		list_html << "<div class='col-4'>#{name_tag_list[c]}</div>"
 		list_html << "<div class='col-1'>#{rr.first['shun1s']}</div>"
 		list_html << "<div class='col-1'>#{rr.first['shun1e']}</div>"
+		list_html << "<div class='col-1'>#{rr.first['shun2s']}</div>"
+		list_html << "<div class='col-1'>#{rr.first['shun2e']}</div>"
 		list_html << '</div>'
+		c += 1
 	end
 else
 	list_html << 'no item listed.'

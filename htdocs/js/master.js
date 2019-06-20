@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////
-// 単位変換項目 ////////////////////////////////////////////////////////////////////////
+// Unit exchange ////////////////////////////////////////////////////////////////////////
 
-// 単位変換ボタンを押してLFにエディタを表示
+// Unit exchange init
 var initUnitc_BWLF = function( com ){
 	if( com == 'init' ){
 		var code = '';
@@ -13,13 +13,13 @@ var initUnitc_BWLF = function( com ){
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// ダイレクト単位変換ボタンを押してL1にエディタを表示
+// Direct unit exchange button
 var directUnitc_BWLF = function( code ){
 	$.post( "gm-unitc.cgi", { command:'init', code:code }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// 単位変換の保存ボタンを押してデータを更新してL1にエディタを表示
+// Update unit exchange button
 var updateUintc_BWL1 = function(){
 	var code = document.getElementById( "food_no" ).value;
 
@@ -40,15 +40,15 @@ var updateUintc_BWL1 = function(){
 		var notice = document.getElementById( "notice" ).value;
 
 		$.post( "gm-unitc.cgi", { command:'update', code:code, unitc2:uc2, unitc3:uc3, unitc4:uc4, unitc5:uc5, unitc6:uc6, unitc7:uc7, unitc8:uc8, unitc9:uc9, unitc10:uc10, unitc11:uc11, unitc12:uc12, unitc13:uc13, unitc14:uc14, notice:notice}, function( data ){ $( "#bw_levelF" ).html( data );});
-		displayVideo( code + 'を保存' );
+		displayVideo( code + ' saved' );
 	}
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// 食品色項目 ////////////////////////////////////////////////////////////////////////
+// Food color ////////////////////////////////////////////////////////////////////////
 
-// 食品色ボタンを押してL1にエディタを表示
+// Food color init
 var initColor_BWLF = function( com ){
 	if( com == 'init' ){
 		var code = '';
@@ -60,13 +60,13 @@ var initColor_BWLF = function( com ){
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// ダイレクト食品色ボタンを押してL1にエディタを表示
+// Direct food color button
 var directColor_BWLF = function( code ){
 	$.post( "gm-color.cgi", { command:'init', code:code }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// 単位変換の保存ボタンを押してデータを更新してL1にエディタを表示
+// Update food color
 var updateColor_BWL1 = function(){
 	var code = document.getElementById( "food_no" ).value;
 	if( code != '' ){
@@ -128,46 +128,46 @@ var updateColor_BWL1 = function(){
 		if( document.getElementById( "color2h_11" ).checked ){ color2h = 11; }
 
 		$.post( "gm-color.cgi", { command:'update', code:code, color1:color1, color2:color2, color1h:color1h, color2h:color2h }, function( data ){ $( "#bw_levelF" ).html( data );});
-		displayVideo( code + 'を保存' );
+		displayVideo( code + ' saved' );
 	}
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// 辞書登録項目 ////////////////////////////////////////////////////////////////////////
+// Food name dictionary ////////////////////////////////////////////////////////////////////////
 
-// 辞書登録ボタンを押してL1にエディタを表示
+// Food name dictionary init
 var initDic_BWL1 = function( com ){
 	closeBroseWindows( 1 );
 	$.post( "gm-dic.cgi", { command:com }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
 };
 
-// ダイレクト単位変換ボタンを押してL1にエディタを表示
+// Direct food name dictionary button
 var saveDic_BWL1 = function( org_name, tn ){
 	displayVideo( tn );
 	var aliases = document.getElementById( 'tn' + tn ).value;
 	$.post( "gm-dic.cgi", { command:'save', org_name:org_name, tn:tn, aliases:aliases }, function( data ){});
-	displayVideo( org_name + 'を更新' );
+	displayVideo( org_name + ' modified' );
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// アレルギー登録項目 ////////////////////////////////////////////////////////////////////////
+// Allergen ////////////////////////////////////////////////////////////////////////
 
-// アレルギー登録ボタンを押してL1にエディタを表示
+// Allergen init
 var initAllergen_BWLF = function( com ){
 	$.post( "gm-allergen.cgi", { command:com }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// アレルギーボタンを押してL1にエディタを表示
+// Direct allergen button
 var directAllergen_BWLF = function( code ){
 	$.post( "gm-allergen.cgi", { command:'init', code:code }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// 登録ボタンを押して、登録後L1にエディタを表示
+// Allergen ON
 var onAllergen_BWL1 = function(){
 	var code = document.getElementById( 'code' ).value;
 	var allergen = 0
@@ -175,75 +175,75 @@ var onAllergen_BWL1 = function(){
 	if(document.getElementById( 'ag_class2' ).checked == true ){ allergen = '2' }
 	if(document.getElementById( 'ag_class3' ).checked == true ){ allergen = '3' }
 	$.post( "gm-allergen.cgi", { command:'on', code:code, allergen:allergen }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( code + ':アレルゲン ON' );
+	displayVideo( code + ':allergen ON' );
 };
 
-// 削除ボタンを押して、削除後L1にエディタを表示
+// Allergen OFF
 var offAllergen_BWL1 = function( code ){
 	$.post( "gm-allergen.cgi", { command:'off', code:code }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( code + ':アレルゲン OFF' );
+	displayVideo( code + ':allergen OFF' );
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// 緑黄色野菜登録項目 ////////////////////////////////////////////////////////////////////////
+// Green yellow color vegetable ////////////////////////////////////////////////////////////////////////
 
-// 緑黄色野菜登録登録ボタンを押してL1にエディタを表示
+// GYCV init
 var initGYCV_BWLF = function( com ){
 	$.post( "gm-gycv.cgi", { command:com }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// 登録ボタンを押して、登録後L1にエディタを表示
+// GYCV ON
 var onGYCV_BWL1 = function(){
 	var food_no = document.getElementById( 'food_no' ).value;
 	$.post( "gm-gycv.cgi", { command:'on', food_no:food_no }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( food_no + ':緑黄色野菜 ON' );
+	displayVideo( food_no + ':GYCV ON' );
 };
 
-// 削除ボタンを押して、削除後L1にエディタを表示
+// GYCV OFF
 var offGYCV_BWL1 = function( food_no ){
 	$.post( "gm-gycv.cgi", { command:'off', food_no:food_no }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( food_no + ':緑黄色野菜 OFF' );
+	displayVideo( food_no + ':GYCV OFF' );
 };
 
 /////////////////////////////////////////////////////////////////////////////////
-// 旬登録項目 ////////////////////////////////////////////////////////////////////////
+// Shun ////////////////////////////////////////////////////////////////////////
 
-// 辞書登録ボタンを押してL1にエディタを表示
+// Shun init
 var initShun_BWLF = function( com ){
 	$.post( "gm-shun.cgi", { command:com }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// アレルギーボタンを押してL1にエディタを表示
+// Direct shun button
 var directShun_BWLF = function( code ){
 	$.post( "gm-shun.cgi", { command:'init', code:code }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// 登録ボタンを押して、登録後L1にエディタを表示
+// Shun ON
 var onShun_BWL1 = function(){
-	var food_no = document.getElementById( 'food_no' ).value;
+	var code = document.getElementById( 'code' ).value;
 	var shun1s = document.getElementById( 'shun1s' ).value;
 	var shun1e = document.getElementById( 'shun1e' ).value;
 	var shun2s = document.getElementById( 'shun2s' ).value;
 	var shun2e = document.getElementById( 'shun2e' ).value;
-	$.post( "gm-shun.cgi", { command:'on', food_no:food_no, shun1s:shun1s, shun1e:shun1e, shun2s:shun2s, shun2e:shun2e }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( food_no + ':旬 ON' );
+	$.post( "gm-shun.cgi", { command:'on', code:code, shun1s:shun1s, shun1e:shun1e, shun2s:shun2s, shun2e:shun2e }, function( data ){ $( "#bw_levelF" ).html( data );});
+	displayVideo( code + ':Shun ON' );
 };
 
-// 削除ボタンを押して、削除後L1にエディタを表示
-var offShun_BWL1 = function( food_no ){
-	$.post( "gm-shun.cgi", { command:'off', food_no:food_no }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( food_no + ':旬 OFF' );
+// Shun OFF
+var offShun_BWL1 = function( code ){
+	$.post( "gm-shun.cgi", { command:'off', code:code }, function( data ){ $( "#bw_levelF" ).html( data );});
+	displayVideo( code + ':Shun OFF' );
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// 別名管理 ////////////////////////////////////////////////////////////////////////
+// Food search log ////////////////////////////////////////////////////////////////////////
 
-// 検索語ボタンを押してL1にエディタを表示
+// Food search log init
 var initSlogf_BWL1 = function( com ){
 	closeBroseWindows( 1 );
 	$.post( "gm-slogf.cgi", { command:com }, function( data ){ $( "#bw_level1" ).html( data );});
@@ -252,23 +252,23 @@ var initSlogf_BWL1 = function( com ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// アカウント管理 ////////////////////////////////////////////////////////////////////////
+// Account ////////////////////////////////////////////////////////////////////////
 
-// ユーザー管理ボタンを押してL1にエディタを表示
+// Account init
 var initAccount_BWL1 = function( com ){
 	closeBroseWindows( 1 );
 	$.post( "gm-account.cgi", { command:com }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
 };
 
-// ユーザー管理・エディットボタンを押してL2にエディタを表示
+// Edit account
 var editAccount_BWL2 = function( target_uid ){
 	$.post( "gm-account.cgi", { command:'edit', target_uid:target_uid }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'none';
 	document.getElementById( "bw_level2" ).style.display = 'block';
 };
 
-// ユーザー管理・保存ボタンを押してL2にエディタを表示
+// Update account
 var saveAccount_BWL1 = function( target_uid ){
 	var target_pass = document.getElementById( 'target_pass' ).value;
 	var target_mail = document.getElementById( 'target_mail' ).value;
@@ -276,7 +276,7 @@ var saveAccount_BWL1 = function( target_uid ){
 	var target_status = document.getElementById( 'target_status' ).value;
 	var target_language = document.getElementById( 'target_language' ).value;
 	$.post( "gm-account.cgi", { command:'save', target_uid:target_uid, target_pass:target_pass, target_mail:target_mail, target_aliasu:target_aliasu, target_status:target_status, target_language:target_language }, function( data ){ $( "#bw_level1" ).html( data );});
-	displayVideo( target_uid + '保存' );
+	displayVideo( target_uid + ' saved' );
 	document.getElementById( "bw_level2" ).style.display = 'none';
 	document.getElementById( "bw_level1" ).style.display = 'block';
 };
@@ -285,31 +285,32 @@ var saveAccount_BWL1 = function( target_uid ){
 /////////////////////////////////////////////////////////////////////////////////
 // Memory ////////////////////////////////////////////////////////////////////////
 
-// 記憶管理ボタンを押してL1にエディタを表示
+// Memory init
 var initMemory_BWLF = function(){
 	closeBroseWindows( 0 );
 	$.post( "gm-memory.cgi", { command:'init' }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-//
+// New memory
 var newMemory_BWLF = function(){
 	$.post( "gm-memory.cgi", { command:'new' }, function( data ){ $( "#bw_levelF" ).html( data );});
 };
 
+// New pointer
 var newPMemory_BWLF = function( category, pointer, post_process ){
 	$.post( "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-//
+// Save memory
 var saveMemory_BWLF = function( mode ){
 	var memory = document.getElementById( 'memory' ).value;
 	$.post( "gm-memory.cgi", { command:'save', memory:memory, mode:mode }, function( data ){ $( "#bw_levelF" ).html( data );});
 	displayVideo( 'Saved' );
 };
 
-//
+// Save pointer
 var savePMemory_BWLF = function( category, post_process ){
 	var pointer = document.getElementById( 'pointer' ).value;
 	var memory = document.getElementById( 'memory' ).value;

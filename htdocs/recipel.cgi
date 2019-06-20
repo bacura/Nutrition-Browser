@@ -437,13 +437,13 @@ html_cost = cost_html( cost )
 recipe_solid = []
 if recipe_code_list.size > 0
 	recipe_code_list.each do |e|
-		r = mariadb( "SELECT code, user, protect, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false )
+		r = mariadb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false )
 		if r.first
 			recipe_solid << Hash['code' => e, 'user' => r.first['user'], 'protect' => r.first['protect'], 'name' => r.first['name'], 'fig1' => r.first['fig1']]
 		end
 	end
 else
-	r = mariadb( "SELECT code, user, protect, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false )
+	r = mariadb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false )
 	recipe_solid = r
 end
 
@@ -509,19 +509,8 @@ recipe_solid.each do |e|
 		else
 			recipe_html << lp[7]
 		end
-		if e['draft'] == 1
-			recipe_html << lp[5]
-		else
-			recipe_html << lp[7]
-		end
-		if e['draft'] == 1
-			recipe_html << lp[8]
-		else
-			recipe_html << lp[7]
-		end
 
 		recipe_html << "</td>"
-
 		recipe_html << "<td>"
 		recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
 		if status >= 2

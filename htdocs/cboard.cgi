@@ -202,7 +202,7 @@ when 'weight'
 		puts '廃棄前g' if $DEBUG
 		rr = mariadb( "SELECT REFUSE FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false )
 		if rr.first['REFUSE']
-			uk = BigDecimal(( 100 - r.first['REFUSE'].to_i ).to_s ) / 100
+			uk = BigDecimal(( 100 - rr.first['REFUSE'].to_i ).to_s ) / 100
 		end
 	elsif r.first['unitc']
 		# 単位変換

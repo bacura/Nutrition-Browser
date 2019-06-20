@@ -453,7 +453,6 @@ when 'fctb_l5'
 		end
 	end
 
-
  	# 簡易表示の項目
  	fc_items = []
 	fc_items_html = ''
@@ -475,8 +474,11 @@ when 'fctb_l5'
 	food_no_list.size.times do |c|
 		pseudo_flag = false
 		# 栄養素の一部を取得
-		if /^P|U/ =~ food_no_list[c]
+		if /^U/ =~ food_no_list[c]
 			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}' AND user='#{uname}';"
+			pseudo_flag = true
+		elsif /^P/ =~ food_no_list[c]
+			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}';"
 			pseudo_flag = true
 		else
 			query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no_list[c]}';"
@@ -484,7 +486,6 @@ when 'fctb_l5'
 		p query if $DEBUG
 		res = db.query( query )
 		sub_components = ''
-
 		fc_items.each do |e|
 			t = num_opt( res.first[e], food_weight, frct_mode, $FCT_FRCT[e] )
 			sub_components << "<td align='center'>#{t}</td>"

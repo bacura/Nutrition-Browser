@@ -38,6 +38,7 @@ def meals( r, tdiv, lp )
 	mb_html << "</thead>"
 
 	a = r.first[$TDIVL[tdiv]].split( "\t" )
+	c = 0
 	a.each do |e|
 		mb_html << '<tr>'
 		aa = e.split( ':' )
@@ -67,8 +68,9 @@ def meals( r, tdiv, lp )
 			end
 		end
 
-		mb_html << "<td><button class='btn btn-sm btn-outline-danger' onclick=\"deleteKoyomi_BW2( '#{r.first['date'].year}', '#{r.first['date'].month}', '#{r.first['date'].day}', '#{tdiv}', '#{aa[0]}' )\">削除</button></td>"
+		mb_html << "<td><button class='btn btn-sm btn-outline-danger' onclick=\"deleteKoyomi_BW2( '#{r.first['date'].year}', '#{r.first['date'].month}', '#{r.first['date'].day}', '#{tdiv}', '#{aa[0]}', '#{c}' )\">削除</button></td>"
 		mb_html << '</tr>'
+		c += 1
 	end
 	mb_html << '</table>'
 
@@ -100,6 +102,7 @@ dd = cgi['dd'].to_i
 tdiv = cgi['tdiv'].to_i
 code = cgi['code']
 memo = cgi['memo']
+order = cgi['order']
 if $DEBUG
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
@@ -108,6 +111,7 @@ if $DEBUG
 	puts "tdiv:#{tdiv}<br>\n"
 	puts "code:#{code}<br>\n"
 	puts "memo:#{memo}<br>\n"
+	puts "order:#{order}<br>\n"
 	puts "<hr>\n"
 end
 
@@ -130,7 +134,7 @@ if command == 'delete'
 
 	new_meal = ''
 	code_.size.times do |c|
-		new_meal << "#{code_[c]}:#{vol_[c]}:#{unit_[c]}:#{hh_[c]}\t" if code_[c] != code
+		new_meal << "#{code_[c]}:#{vol_[c]}:#{unit_[c]}:#{hh_[c]}\t" if c != order.to_i
 	end
 	new_meal.chop!
 	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET #{$TDIVL[tdiv]}='#{new_meal}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )

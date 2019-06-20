@@ -263,17 +263,17 @@ html = <<-"HTML"
 	<table class="table table-sm table-hover">
 	<thead>
     	<tr>
-     		<th>#{lp[11]}</th>
-     		<th>#{lp[12]}</th>
-     		<th>#{lp[13]}</th>
-     		<th>#{lp[14]}</th>
-     		<th>#{lp[15]}</th>
-     		<th>#{lp[16]}</th>
-     		<th>#{lp[17]}</th>
+     		<th align='center'>#{lp[11]}</th>
+     		<th align='center'>#{lp[12]}</th>
+     		<th align='center'>#{lp[13]}</th>
+     		<th align='center'>#{lp[14]}</th>
+     		<th align='center'>#{lp[15]}</th>
+     		<th align='center'>#{lp[16]}</th>
+     		<th align='center'>#{lp[17]}</th>
     	</tr>
   	</thead>
 	#{date_html}
-	<table>
+	</table>
 
 HTML
 

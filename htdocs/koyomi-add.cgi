@@ -131,17 +131,22 @@ if command == 'save'
 	end
 end
 
+today_html = ''
+
+
+
+
 
 ####
 date_html = ''
 week_count = first_week
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( last_day ) do |c|
-	date_html << "<div class='row'>"
+	date_html << "<tr>"
 	if week_count == 0
-		date_html << "<div class='col-1' style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</div>"
+		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
 	else
-		date_html << "<div class='col-1'><span>#{c}<span> (#{weeks[week_count]})</div>"
+		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
 	breakfast_color = 'light'
 	lunch_color = 'light'
@@ -154,10 +159,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false)
 	if r.first
 		if r.first['fix'] != ''
-			date_html << "<div class='col-1'><span class='badge badge-secondary'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-			date_html << "<div class='col-1'><span class='badge badge-secondary'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-			date_html << "<div class='col-1'><span class='badge badge-secondary'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-			date_html << "<div class='col-1'><span class='badge badge-secondary'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
+			4.times do date_html << "<td class='btn-secondary'></td>" end
 		else
 			if r.first['breakfast'] != ''
 				breakfast_color = 'info'
@@ -175,18 +177,18 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 				supple_color = 'info'
 				supple_c = r.first['supple'].split( "\t" ).size
 			end
-			date_html << "<div class='col-1'><span class='btn-#{breakfast_color} badge badge-#{breakfast_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '0' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{breakfast_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-			date_html << "<div class='col-1'><span class='btn-#{lunch_color} badge badge-#{lunch_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '1' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{lunch_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-			date_html << "<div class='col-1'><span class='btn-#{dinner_color} badge badge-#{dinner_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '2' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{dinner_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-			date_html << "<div class='col-1'><span class='btn-#{supple_color} badge badge-#{supple_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '3' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{supple_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
+			date_html << "<td class='btn-#{breakfast_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '0' )\">#{breakfast_c}</td>"
+			date_html << "<td class='btn-#{lunch_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '1' )\">#{lunch_c}</td>"
+			date_html << "<td class='btn-#{dinner_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '2' )\">#{dinner_c}</td>"
+			date_html << "<td class='btn-#{supple_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '3' )\">#{supple_c}</td>"
 		end
 	else
-		date_html << "<div class='col-1'><span class='btn-#{breakfast_color} badge badge-#{breakfast_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '0' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{breakfast_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-		date_html << "<div class='col-1'><span class='btn-#{lunch_color} badge badge-#{lunch_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '1' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{lunch_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-		date_html << "<div class='col-1'><span class='btn-#{dinner_color} badge badge-#{dinner_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '2' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{dinner_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
-		date_html << "<div class='col-1'><span class='btn-#{supple_color} badge badge-#{supple_color}' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '3' )\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#{supple_c}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>"
+		date_html << "<td class='btn-#{breakfast_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '0' )\">#{breakfast_c}</td>"
+		date_html << "<td class='btn-#{lunch_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '1' )\">#{lunch_c}</td>"
+		date_html << "<td class='btn-#{dinner_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '2' )\">#{dinner_c}</td>"
+		date_html << "<td class='btn-#{supple_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '3' )\">#{supple_c}</td>"
 	end
-	date_html << "</div>"
+	date_html << "</tr>"
 	week_count += 1
 	week_count = 0 if week_count > 6
 end
@@ -271,15 +273,20 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<br>
-	<div class='row'>
-	<div class='col-1'>#{lp[17]}</div>
-	<div class='col-1'>#{lp[18]}</div>
-	<div class='col-1'>#{lp[19]}</div>
-	<div class='col-1'>#{lp[20]}</div>
-	<div class='col-1'>#{lp[21]}</div>
-	</div>
-	<hr>
+
+	<table class="table table-sm table-hover">
+	<thead>
+    	<tr>
+     		<th align='center'>#{lp[17]}</th>
+     		<th align='center'>#{lp[18]}</th>
+     		<th align='center'>#{lp[19]}</th>
+     		<th align='center'>#{lp[20]}</th>
+     		<th align='center'>#{lp[21]}</th>
+    	</tr>
+  	</thead>
+	#{today_html}
 	#{date_html}
+	</table>
 HTML
 
 puts html

@@ -65,7 +65,6 @@ def html_nav( user_name, status, lp )
     menu_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
     set_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"menuList_BWL1()\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
-    koyomi_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initKoyomi()\">#{lp[37]}</button>"
   else
     cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{@cb_num}</span>"
     mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"mb_num\">#{@meal_num}</span>"
@@ -76,7 +75,6 @@ def html_nav( user_name, status, lp )
     menu_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{mb}</button>"
     set_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[7]}</button>"
-    koyomi_button = "<button type='button' class='btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[37]}</button>"
   end
 
 if status >= 3
@@ -89,23 +87,23 @@ end
       <nav class='container-fluid'>
           #{g_button}
           <span id='normal_menu' style="display:inline;">
-          <button id=''type="button" class="btn btn-warning btn-sm nav_button" id="category1" onclick="summonBWL1( 1 )">#{lp[10]}</button>
-          <button type="button" class="btn btn-primary btn-sm nav_button" id="category2" onclick="summonBWL1( 2 )">#{lp[11]}</button>
+          <button id=''type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonBWL1( 1 )">#{lp[10]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summonBWL1( 2 )">#{lp[11]}</button>
           <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summonBWL1( 3 )">#{lp[12]}</button>
-          <button type="button" class="btn btn-primary btn-sm nav_button" id="category4" onclick="summonBWL1( 4 )">#{lp[13]}</button>
-          <button type="button" class="btn btn-primary btn-sm nav_button" id="category5" onclick="summonBWL1( 5 )">#{lp[14]}</button>
+          <button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="summonBWL1( 4 )">#{lp[13]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button" id="category5" onclick="summonBWL1( 5 )">#{lp[14]}</button>
           <button type="button" class="btn btn-success btn-sm nav_button" id="category6" onclick="summonBWL1( 6 )">#{lp[15]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category7" onclick="summonBWL1( 7 )">#{lp[16]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category7" onclick="summonBWL1( 7 )">#{lp[16]}</button>
           <button type="button" class="btn btn-success btn-sm nav_button" id="category8" onclick="summonBWL1( 8 )">#{lp[17]}</button>
           <button type="button" class="btn btn-success btn-sm nav_button" id="category9" onclick="summonBWL1( 9 )">#{lp[18]}</button>
           <button type="button" class="btn btn-danger btn-sm nav_button" id="category10" onclick="summonBWL1( 10 )">#{lp[19]}</button>
           <button type="button" class="btn btn-danger btn-sm nav_button" id="category11" onclick="summonBWL1( 11 )">#{lp[20]}</button>
           <button type="button" class="btn btn-danger btn-sm nav_button" id="category12" onclick="summonBWL1( 12 )">#{lp[21]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category13" onclick="summonBWL1( 13 )">#{lp[22]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category14" onclick="summonBWL1( 14 )">#{lp[23]}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="summonBWL1( 13 )">#{lp[22]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="summonBWL1( 14 )">#{lp[23]}</button>
           <button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="summonBWL1( 15 )">#{lp[24]}</button>
           <button type="button" class="btn btn-secondary btn-sm nav_button" id="category16" onclick="summonBWL1( 16 )">#{lp[25]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category17" onclick="summonBWL1( 17 )">#{lp[26]}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="summonBWL1( 17 )">#{lp[26]}</button>
           <button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="summonBWL1( 18 )">#{lp[27]}</button>
           #{special_button}
           #{his_button}
@@ -113,11 +111,15 @@ end
           #{recipe_button}
           #{menu_button}
           #{set_button}
-          #{koyomi_button}
           </span>
 
           <span id='guild_menu' style="display:none;">
-          <button type="button" class="btn btn-warning btn-sm nav_button" onclick="initKoyomi()">#{lp[37]}</button>
+          #{his_button}
+          #{sum_button}
+          #{recipe_button}
+          #{menu_button}
+          #{set_button}
+          <button type="button" class="btn btn-info btn-sm nav_button" onclick="initKoyomi()">#{lp[37]}</button>
           </span>
           <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
           #{config_button}
