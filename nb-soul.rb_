@@ -41,6 +41,7 @@ $MYSQL_TB_MEAL = 'meal'
 $MYSQL_TB_MENU = 'menu'
 $MYSQL_TB_MEMORY = 'memory'
 $MYSQL_TB_KOYOMI = 'koyomi'
+$MYSQL_TB_KOYOMIEX = 'koyomiex'
 $MYSQL_TB_FCS = 'fcs'
 
 $DEBUG = false
@@ -259,16 +260,16 @@ end
 
 #### GETデータの抽出
 def get_data()
-	data = Hash.new
-	if ENV['QUERY_STRING']
-		querys = ENV['QUERY_STRING'].split( '&' )
-		querys.each { |e|
-			( k, v ) = e.split( '=' )
-			data[ k ] = v
-		}
-	end
+  data = Hash.new
+  if ENV['QUERY_STRING']
+    querys = ENV['QUERY_STRING'].split( '&' )
+    querys.each { |e|
+      ( k, v ) = e.split( '=' )
+      data[ k ] = v
+    }
+  end
 
-	return data
+  return data
 end
 
 
@@ -324,8 +325,8 @@ end
 
 #### ログインチェック
 def login_check( cgi )
-	cookie_name = cgi.cookies['NAME'].first
- 	cookie_uid = cgi.cookies['UID'].first
+  cookie_name = cgi.cookies['NAME'].first
+  cookie_uid = cgi.cookies['UID'].first
 
   r = mariadb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true )
 

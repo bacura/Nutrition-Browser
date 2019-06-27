@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////
-// アカウント情報の変更 //////////////////////////////////////////////////////////////
+// Account //////////////////////////////////////////////////////////////
 
-// アカウント情報ボタンを押したときにL2閲覧ウインドウの内容を書き換える
+// Updating account information
 var account_cfg = function( step ){
 	var new_mail = '';
 	var new_aliasu = '';
@@ -24,9 +24,9 @@ var account_cfg = function( step ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// 成分パレットの設定 //////////////////////////////////////////////////////////////
+// Food constituent paltte //////////////////////////////////////////////////////////////
 
-// 成分パレットボタンを押したときにL2閲覧ウインドウの内容を書き換える
+// Sending FC palette
 var palette_cfg = function( step, id ){
 	if( step == 'list' ){
 		closeBroseWindows( 2 );
@@ -129,23 +129,23 @@ var palette_cfg = function( step, id ){
 //			$.post( "config.cgi", { command:"palette", step:'list' }, function( data ){ $( "#bw_level2" ).html( data );});
 			closeBroseWindows( 2 );
 		} else{
-			displayVideo( 'パレット名が必要' );
+			displayVideo( 'Palette name!(>_<)' );
 		}
 	}
 
-	// パレット編集
+	// Edit FC palette
 	if( step == 'edit_palette' ){
 		$.post( "config.cgi", { command:"palette", step:step, palette_name:id }, function( data ){ $( "#bw_level3" ).html( data );});
 		document.getElementById( "bw_level3" ).style.display = 'block';
 	}
 
-	// パレット削除
+	// Deleting FC palette
 	if( step == 'delete_palette' ){
 		if( document.getElementById( id ).checked ){
 			$.post( "config.cgi", { command:"palette", step:step, palette_name:id }, function( data ){ $( "#bw_level2" ).html( data );});
 			closeBroseWindows( 2 );
 		} else{
-			displayVideo( 'チェックが必要' );
+			displayVideo( 'Check!(>_<)' );
 		}
 	}
 
@@ -153,30 +153,30 @@ var palette_cfg = function( step, id ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// 履歴 /////////////////////////////////////////////////////////////////////
+// History /////////////////////////////////////////////////////////////////////
 
-// 履歴初期化ボタンを押したときにL2閲覧ウインドウの内容を書き換える
+// History initialisation
 var history_cfg = function( step ){
 	closeBroseWindows( 2 );
 	$.post( "config.cgi", { command:"history", step:step }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
 
 	if( step == 'clear' ){
-		displayVideo( '履歴を初期化' );
+		displayVideo( 'Initialized' );
 	}
 };
 
 /////////////////////////////////////////////////////////////////////////////////
-// まな板 /////////////////////////////////////////////////////////////////////
+// Chopping board /////////////////////////////////////////////////////////////////////
 
-// まな板初期化ボタンを押したときにまな板を初期化する
+// Chopping board initialisation
 var sum_cfg = function( step ){
 	closeBroseWindows( 2 );
 	$.post( "config.cgi", { command:"sum", step:step }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
 
 	if( step == 'clear' ){
-		displayVideo( 'まな板を初期化' );
+		displayVideo( 'Initialized' );
 	}
 
 	var fx = function(){
@@ -199,4 +199,39 @@ var release_cfg = function( step ){
 	if( step == 'clear' ){
 		displayVideo( 'パスワードを変更' );
 	}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi EX /////////////////////////////////////////////////////////////////////
+
+//
+var koyomiex_cfg = function( step, del_id, del_no ){
+	closeBroseWindows( 2 );
+
+	if( step == 'update' ){
+		var item0 = document.getElementById( "item0" ).value;
+		var item1 = document.getElementById( "item1" ).value;
+		var item2 = document.getElementById( "item2" ).value;
+		var item3 = document.getElementById( "item3" ).value;
+		var item4 = document.getElementById( "item4" ).value;
+		var item5 = document.getElementById( "item5" ).value;
+		var item6 = document.getElementById( "item6" ).value;
+		var item7 = document.getElementById( "item7" ).value;
+		var item8 = document.getElementById( "item8" ).value;
+		var item9 = document.getElementById( "item9" ).value;
+
+		$.post( "config.cgi", { command:"koyomiex", step:step, item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9 }, function( data ){ $( "#bw_level2" ).html( data );});
+		displayVideo( 'Saved' );
+	}else if( step == 'delete' ){
+		if( document.getElementById( del_id ).checked ){
+			$.post( "config.cgi", { command:"koyomiex", step:step, del_no:del_no }, function( data ){ $( "#bw_level2" ).html( data );});
+			displayVideo( 'Deleted' );
+		}else{
+			displayVideo( 'Check!(>_<)' );
+		}
+	}else{
+		$.post( "config.cgi", { command:"koyomiex", step:step,  }, function( data ){ $( "#bw_level2" ).html( data );});
+	}
+	document.getElementById( "bw_level2" ).style.display = 'block';
 };

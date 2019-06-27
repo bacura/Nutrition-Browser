@@ -119,6 +119,9 @@ if command == 'init' && code != ''
 		tag4 = r.first['tag4']
 		tag5 = r.first['tag5']
 	end
+elsif command == 'save' && code != ''
+	r = mariadb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';", false )
+	user = r.first['user'] if r.first
 end
 
 
@@ -132,13 +135,13 @@ if command == 'save'
 	end
 
 	# エネルギー補完
-	if cgi['ENERC_KCAL'] != '' && cgi['ENERC'] == ''
+	if  cgi['ENERC_KCAL'].to_f != 0 && cgi['ENERC'].to_f == 0
 		fct_opt['ENERC_KCAL'] = cgi['ENERC_KCAL']
 		fct_opt['ENERC'] = (( cgi['ENERC_KCAL'].to_i * 4184 ) / 1000 ).to_i
-	elsif cgi['ENERC_KCAL'] == '' && cgi['ENERC'] != ''
+	elsif cgi['ENERC_KCAL'].to_f == 0 && cgi['ENERC'].to_f != 0
 		fct_opt['ENERC_KCAL'] = ( cgi['ENERC'] / 4.184 ).to_i
 		fct_opt['ENERC'] = cgi['ENERC']
-	elsif cgi['ENERC_KCAL'] == '' && cgi['ENERC'] == ''
+	elsif cgi['ENERC_KCAL'].to_f == 0 && cgi['ENERC'].to_f == 0
 		fct_opt['ENERC_KCAL'] = 0
 		fct_opt['ENERC'] = 0
 	else
@@ -148,7 +151,7 @@ if command == 'save'
 
 	# 重量影響成分
 	7.upto( 65 ) do |i|
-		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil || fct_opt[$FCT_ITEM[i]] = '-'
+		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil || cgi[$FCT_ITEM[i]] == '-'
 			fct_opt[$FCT_ITEM[i]] = '-'
 		else
 			t = BigDecimal( cgi[$FCT_ITEM[i]] ) / ( food_weight / 100 )
@@ -320,7 +323,7 @@ end
 
 #### 削除ボタン
 delete_button = ''
-if code != '' and user == uname
+if code != '' && user == uname
 	delete_button = "<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"pseudoDelete_BWLF( '#{code}' )\">#{lp[2]}</button>"
 end
 

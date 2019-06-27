@@ -26,10 +26,11 @@ $DEBUG = false
 #DEFINITION
 #==============================================================================
 #### 初期画面
-def config_init( lp )
+def config_init( lp, status )
 	html = <<-"HTML"
 <button type="button" class="btn btn-info btn-sm nav_button" onclick="account_cfg()">#{lp[1]}</button>
 <button type="button" class="btn btn-info btn-sm nav_button" onclick="palette_cfg( 'list' )">#{lp[2]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="koyomiex_cfg( 'init' )">#{lp[9]}</button>
 <button type="button" class="btn btn-light btn-sm nav_button" onclick="">#{lp[4]}</button>
 <button type="button" class="btn btn-light btn-sm nav_button" onclick="">#{lp[5]}</button>
 <button type="button" class="btn btn-warning btn-sm nav_button" onclick="history_cfg()">#{lp[6]}</button>
@@ -68,7 +69,7 @@ end
 #### モジュール選択
 html = ''
 if command == 'init'
-	html = config_init( lp )
+	html = config_init( lp, status )
 else
 	require "#{$HTDOCS_PATH}/config_/mod_#{command}.rb"
 	html = config_module( cgi )

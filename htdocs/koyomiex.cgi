@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi 0.00
+#Nutrition browser koyomi ex 0.00
 
 #==============================================================================
 #CHANGE LOG
@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'koyomi.cgi'
+$SCRIPT = 'koyomiex.cgi'
 $DEBUG = false
 start_year = 2019
 
@@ -59,7 +59,7 @@ html_init( nil )
 
 cgi = CGI.new
 uname, uid, status, aliaseu, language = login_check( cgi )
-lp = lp_init( 'koyomi', language )
+lp = lp_init( 'koyomiex', language )
 if $DEBUG
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"
@@ -75,11 +75,15 @@ yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
 dd = 1 if dd == 0
+item_no = cgi['item_no'].to_i
+cell = cgi['cell']
 if $DEBUG
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
 	puts "mm:#{mm}<br>\n"
 	puts "dd:#{dd}<br>\n"
+	puts "item_no:#{item_no}<br>\n"
+	puts "cell:#{cell}<br>\n"
 	puts "<hr>\n"
 end
 
@@ -102,26 +106,51 @@ if $DEBUG
 end
 
 
-####
-case command
-when 'fix'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='1' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
-when 'fix_all'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='1' WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false )
-when 'cancel'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
-when 'cancel_all'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='' WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false )
+#### loading config
+r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+item_set = r.first['koyomiex'].split( ':' ) if r.first['koyomiex']
+item_set_no = []
+0.upto( 9 ) do |c|
+	item_set_no << c unless item_set[c] == "" || item_set[c] == nil || item_set[c] == "\t"
 end
+
+
+#### Updating cell
+if command == 'update'
+	r = mariadb( "SELECT user FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
+	if r.first
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{item_no}='#{cell}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
+	else
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET item#{item_no}='#{cell}', user='#{uname}', date='#{yyyy}-#{mm}-#{dd}';", false )
+	end
+end
+
+
+
+
+####
+th_html = '<thead><tr>'
+th_html << "<th align='center'>日付</th>"
+item_set_no.each do |e|
+	th_html << "<th align='center'>#{item_set[e]}</th>"
+end
+th_html << '</tr></thead>'
+
+
+
 
 
 ####
 date_html = ''
 week_count = first_week
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false)
+r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false)
 koyomir = []
+cells = []
 r.each do |e| koyomir[e['date'].day] = e end
+
+
+
 
 
 1.upto( last_day ) do |c|
@@ -133,77 +162,13 @@ r.each do |e| koyomir[e['date'].day] = e end
 	end
 
 	if koyomir[c] == nil
-		5.times do |cc| date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}', '#{cc}' )\">-</td>" end
-		date_html << "<td></td>"
+		item_set_no.each do |e|
+			date_html << "<td><input type='text' id='id#{c}_#{e}' value='' onChange=\"updateKoyomiex( '#{c}', '#{e}', 'id#{c}_#{e}' )\"></td>"
+		end
 	else
-		if koyomir[c]['fix'] == ''
-			if koyomir[c]['breakfast'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['breakfast'] )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['lunch'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['lunch'] )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['dinner'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['dinner'] )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['supple'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['supple'] )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['memo'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{koyomir[c]['memo']}</td>"
-			end
-
-			date_html << "<td><button class='btn btn-sm btn-outline-primary' onclick=\"fixKoyomi_BW1( 'fix', '#{c}' )\">#{lp[18]}</button></td>"
-		else
-			if koyomir[c]['breakfast'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['breakfast'] )}</td>"
-			end
-
-			if koyomir[c]['lunch'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['lunch'] )}</td>"
-			end
-
-			if koyomir[c]['dinner'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['dinner'] )}</td>"
-			end
-
-			if koyomir[c]['supple'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['supple'] )}</td>"
-			end
-
-			if koyomir[c]['memo'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{koyomir[c]['memo']}</td>"
-			end
-
-			date_html << "<td><button class='btn btn-sm btn-outline-warning' onclick=\"fixKoyomi_BW1( 'cancel', '#{c}' )\">#{lp[19]}</button></td>"
+		item_set_no.each do |e|
+			t = koyomir[c]["item#{e}"]
+			date_html << "<td><input type='text' id='id#{c}_#{e}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{e}', 'id#{c}_#{e}' )\"></td>"
 		end
 	end
 	date_html << "</tr>"
@@ -215,7 +180,7 @@ end
 ####
 select_html = ''
 select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='yyyy' class='custom-select' onChange=\"changeKoyomi_BW1()\">"
+select_html << "<select id='yyyy' class='custom-select' onChange=\"changeKoyomiex_BW1()\">"
 start_year.upto( date.year + 1 ) do |c|
 	if c == yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -228,7 +193,7 @@ select_html << "<div class='input-group-append'><label class='input-group-text'>
 select_html << "</div>"
 
 select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomi_BW1()\">"
+select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomiex_BW1()\">"
 1.upto( 12 ) do |c|
 	if c == mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -244,18 +209,12 @@ select_html << "</div>"
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5>#{lp[8]}:</h5></div>
-		<div class='col-5 form-inline'>
+		<div class='col-2'><h5>#{lp[8]}</h5></div>
+		<div class='col-8 form-inline'>
 			#{select_html}
 		</div>
-		<div class='col-1'>
-			<button class='btn btn-sm btn-outline-primary' onclick="fixKoyomi_BW1( 'fix_all', '#{dd}' )">#{lp[20]}</button>
-		</div>
 		<div class='col-2'>
-			<button class='btn btn-sm btn-outline-warning' onclick="fixKoyomi_BW1( 'cancel_all', '#{dd}' )">#{lp[21]}</button>
-		</div>
-		<div class='col-2'>
-			<button class='btn btn-success' onclick="initKoyomiex_BW1( '#{yyyy}', '#{mm}' )">#{lp[22]}</button>
+			<button class='btn btn-success' onclick="returnKoyomi_BW1( '#{yyyy}', '#{mm}' )">#{lp[12]}</button>
 		</div>
 	</div>
 	<div class='row'>
@@ -264,17 +223,7 @@ html = <<-"HTML"
 	<br>
 
 	<table class="table table-sm table-hover">
-	<thead>
-    	<tr>
-     		<th align='center'>#{lp[11]}</th>
-     		<th align='center'>#{lp[12]}</th>
-     		<th align='center'>#{lp[13]}</th>
-     		<th align='center'>#{lp[14]}</th>
-     		<th align='center'>#{lp[15]}</th>
-     		<th align='center'>#{lp[16]}</th>
-     		<th align='center'>#{lp[17]}</th>
-    	</tr>
-  	</thead>
+	#{th_html}
 	#{date_html}
 	</table>
 
