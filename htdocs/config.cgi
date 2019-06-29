@@ -30,11 +30,9 @@ def config_init( lp, status )
 	html = <<-"HTML"
 <button type="button" class="btn btn-info btn-sm nav_button" onclick="account_cfg()">#{lp[1]}</button>
 <button type="button" class="btn btn-info btn-sm nav_button" onclick="palette_cfg( 'list' )">#{lp[2]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="history_cfg()">#{lp[6]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="sum_cfg()">#{lp[7]}</button>
 <button type="button" class="btn btn-info btn-sm nav_button" onclick="koyomiex_cfg( 'init' )">#{lp[9]}</button>
-<button type="button" class="btn btn-light btn-sm nav_button" onclick="">#{lp[4]}</button>
-<button type="button" class="btn btn-light btn-sm nav_button" onclick="">#{lp[5]}</button>
-<button type="button" class="btn btn-warning btn-sm nav_button" onclick="history_cfg()">#{lp[6]}</button>
-<button type="button" class="btn btn-warning btn-sm nav_button" onclick="sum_cfg()">#{lp[7]}</button>
 <button type="button" class="btn btn-danger btn-sm nav_button" onclick="release_cfg()">#{lp[8]}</button>
 HTML
 

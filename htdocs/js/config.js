@@ -156,13 +156,16 @@ var palette_cfg = function( step, id ){
 // History /////////////////////////////////////////////////////////////////////
 
 // History initialisation
-var history_cfg = function( step ){
+var history_cfg = function( step, his_max ){
 	closeBroseWindows( 2 );
-	$.post( "config.cgi", { command:"history", step:step }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "config.cgi", { command:"history", step:step, his_max:his_max }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
 
 	if( step == 'clear' ){
 		displayVideo( 'Initialized' );
+	}
+	if( step == 'max' ){
+		displayVideo( 'History max -> '+ his_max );
 	}
 };
 
@@ -221,7 +224,9 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var item8 = document.getElementById( "item8" ).value;
 		var item9 = document.getElementById( "item9" ).value;
 
-		$.post( "config.cgi", { command:"koyomiex", step:step, item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9 }, function( data ){ $( "#bw_level2" ).html( data );});
+		var koyomiy = document.getElementById( "koyomiy" ).value;
+
+		$.post( "config.cgi", { command:"koyomiex", step:step, item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9, koyomi_y:koyomiy }, function( data ){ $( "#bw_level2" ).html( data );});
 		displayVideo( 'Saved' );
 	}else if( step == 'delete' ){
 		if( document.getElementById( del_id ).checked ){

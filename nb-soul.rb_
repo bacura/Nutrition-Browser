@@ -405,8 +405,13 @@ def add_his( user, fn )
     current_his = []
   end
 
+  #
+  r = mariadb( "SELECT his_max FROM #{$MYSQL_TB_CFG} WHERE user='#{user}';", false )
+  his_max = r.first['his_max'].to_i  if r.first
+  his_max = 200 if his_max < 200 || his_max > 500
+
   new_his = "#{fn}\t"
-  0.upto( $HISTORY_LIMIT - 1 ) do |c|
+  0.upto( his_max - 1 ) do |c|
     new_his << "#{current_his[c]}\t" unless fn == current_his[c]
   end
   new_his.chop!

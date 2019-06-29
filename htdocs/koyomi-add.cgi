@@ -20,13 +20,22 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 $SCRIPT = 'koyomia.cgi'
-$DEBUG = false
-start_year = 2019
+$DEBUG = true
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+#
+def get_starty( uname )
+	t = Time.new
+	start_year = t.year
+	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	if r.first
+		start_year = r.first['koyomiy'].to_i if r.first['koyomiy'].to_i != 0
+	end
+	return start_year
+end
 
 #==============================================================================
 # Main
@@ -36,6 +45,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliaseu, language = login_check( cgi )
 lp = lp_init( 'koyomi-add', language )
+start_year = get_starty( uname )
 if $DEBUG
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"
