@@ -17,8 +17,8 @@ require 'bigdecimal'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'fitu'
-$MYSQL_PW = 'sqlmouse'
+$MYSQL_USER = ''
+$MYSQL_PW = ''
 $MYSQL_DB = 'nutrition'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
@@ -46,10 +46,10 @@ $MYSQL_TB_FCS = 'fcs'
 
 $DEBUG = false
 
-$GM = 'guild_master'
+$GM = ''
 
 #### 注意！！
-$HTDOCS_PATH = '/var/www/html/fctb'
+$HTDOCS_PATH = ''
 
 $PHOTO_PATH = "#{$HTDOCS_PATH}/photo"
 $PHOTO_PATH_TMP = "#{$HTDOCS_PATH}/photo_"
