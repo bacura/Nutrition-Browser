@@ -66,7 +66,19 @@ recipe_name = r.first['name']
 
 #### HTMLパレットの生成
 palette_html = ''
-$PALETTE.size.times do |c| palette_html << "<option value='#{c}'>#{$PALETTE_NAME[c]}</option>" end
+#### Setting palette
+palette_sets = []
+palette_name = []
+r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+if r.first
+	r.each do |e|
+		a = e['palette'].split( '' )
+		a.map! do |x| x.to_i end
+		palette_sets << a
+		palette_name << e['name']
+	end
+end
+palette_sets.size.times do |c| palette_html << "<option value='#{c}'>#{palette_name[c]}</option>" end
 
 
 #### HTML生成
@@ -86,7 +98,7 @@ html = <<-"HTML"
   				<div class="input-group-prepend">
     				<span class="input-group-text" for="dish">#{lp[4]}</span>
   				</div>
-  				<input type='number' min='1' class="form-control" id='dish' value='4'>
+  				<input type='number' min='1' class="form-control" id='dish' value='1'>
 			</div>
 		</div>
 		<div class='col-1'>

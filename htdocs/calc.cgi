@@ -115,7 +115,7 @@ if $DEBUG
 end
 
 
-#### Extracting SUM dataSUM
+#### Extracting SUM data
 r = mariadb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
 recipe_name = r.first['name']
 code = r.first['code']
@@ -129,17 +129,19 @@ accu_check = accu_check( frct_accu )
 ew_check = ew_check( ew_mode )
 
 
-#### パレット
+#### Setting palette
+palette_sets = []
+palette_name = []
 r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
 		a.map! do |x| x.to_i end
-		$PALETTE << a
-		$PALETTE_NAME << e['name']
+		palette_sets << a
+		palette_name << e['name']
 	end
 end
-palette_set = $PALETTE[palette]
+palette_set = palette_sets[palette]
 
 
 #### 成分項目の抽出
@@ -182,7 +184,9 @@ end
 #### 名前の書き換え
 if true
 	food_no.size.times do |c|
-		r = db.query( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';" )
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
+		r = db.query( q )
 		fct_name[c] = bind_tags( r ) if r.first
 	end
 end
@@ -218,11 +222,11 @@ fct_sum = adjust_digit( fct_item, fct_sum, frct_mode )
 
 #### HTMLパレットの生成
 palette_html = ''
-$PALETTE.size.times do |c|
+palette_sets.size.times do |c|
 	if palette == c
-		palette_html << "<option value='#{c}' SELECTED>#{$PALETTE_NAME[c]}</option>"
+		palette_html << "<option value='#{c}' SELECTED>#{palette_name[c]}</option>"
 	else
-		palette_html << "<option value='#{c}'>#{$PALETTE_NAME[c]}</option>"
+		palette_html << "<option value='#{c}'>#{palette_name[c]}</option>"
 	end
 end
 

@@ -203,9 +203,10 @@ recipe_code.each do |e|
 	# 名前の書き換え
 	if true
 		food_no.size.times do |c|
-			query = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-			res = db.query( query )
-			fct_name[c] = bind_tags( res ) if res.first
+			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
+			r = db.query( q )
+			fct_name[c] = bind_tags( r ) if r.first
 		end
 	end
 	db.close

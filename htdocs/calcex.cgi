@@ -165,6 +165,7 @@ end
 if true
 	food_no.size.times do |c|
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
 		r = db.query( q )
 		fct_name[c] = bind_tags( r ) if r.first
 	end

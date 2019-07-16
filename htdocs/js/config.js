@@ -39,6 +39,15 @@ var palette_cfg = function( step, id ){
 		document.getElementById( "bw_level3" ).style.display = 'block';
 	}
 
+
+	switch( step ){
+	case 'reset_palette':
+		$.post( "config.cgi", { command:"palette", step:step }, function( data ){ $( "#bw_level2" ).html( data );});
+		document.getElementById( "bw_level2" ).style.display = 'block';
+		displayVideo( 'Palette reset' );
+		break;
+	}
+
 	if( step == 'regist' ){
 		var palette_name = document.getElementById( "palette_name" ).value;
 
@@ -213,6 +222,12 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 	closeBroseWindows( 2 );
 
 	if( step == 'update' ){
+		var koyomiy = document.getElementById( "koyomiy" ).value;
+
+		var breakfast_st = document.getElementById( "breakfast_st" ).value;
+		var lunch_st = document.getElementById( "lunch_st" ).value;
+		var dinner_st = document.getElementById( "dinner_st" ).value;
+
 		var item0 = document.getElementById( "item0" ).value;
 		var item1 = document.getElementById( "item1" ).value;
 		var item2 = document.getElementById( "item2" ).value;
@@ -224,9 +239,7 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var item8 = document.getElementById( "item8" ).value;
 		var item9 = document.getElementById( "item9" ).value;
 
-		var koyomiy = document.getElementById( "koyomiy" ).value;
-
-		$.post( "config.cgi", { command:"koyomiex", step:step, item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9, koyomi_y:koyomiy }, function( data ){ $( "#bw_level2" ).html( data );});
+		$.post( "config.cgi", { command:"koyomiex", step:step, item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st }, function( data ){ $( "#bw_level2" ).html( data );});
 		displayVideo( 'Saved' );
 	}else if( step == 'delete' ){
 		if( document.getElementById( del_id ).checked ){

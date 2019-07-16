@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'koyomia.cgi'
+$SCRIPT = 'koyomi-add.cgi'
 $DEBUG = true
 
 #==============================================================================
@@ -30,11 +30,18 @@ $DEBUG = true
 def get_starty( uname )
 	t = Time.new
 	start_year = t.year
+	breakfast_st = 0
+	lunch_st = 0
+	dinner_st = 0
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first
-		start_year = r.first['koyomiy'].to_i if r.first['koyomiy'].to_i != 0
+		a = r.first['koyomiy'].split( ':' )
+		start_year = a[0].to_i if a[0].to_i != 0
+		breakfast_st = a[1].to_i if a[1].to_i != 0
+		lunch_st = a[2].to_i if a[2].to_i != 0
+		dinner_st = a[3].to_i if a[3].to_i != 0
 	end
-	return start_year
+	return start_year, breakfast_st, lunch_st, dinner_st
 end
 
 #==============================================================================
@@ -45,12 +52,17 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliaseu, language = login_check( cgi )
 lp = lp_init( 'koyomi-add', language )
-start_year = get_starty( uname )
+start_year, breakfast_st, lunch_st, dinner_st = get_starty( uname )
 if $DEBUG
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"
 	puts "aliaseu:#{aliaseu}<br>\n"
 	puts "language:#{language}<br>\n"
+	puts "<hr>\n"
+	puts "start_year:#{start_year}<br>\n"
+	puts "breakfast_st:#{breakfast_st}<br>\n"
+	puts "lunch_st:#{lunch_st}<br>\n"
+	puts "dinner_st:#{dinner_st}<br>\n"
 	puts "<hr>\n"
 end
 
@@ -110,12 +122,15 @@ if command == 'save'
 		case tdiv
 		when 0
 			delimiter = "\t" if breakfast != ''
+			hh = breakfast_st if hh == 99
 			breakfast << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
 		when 1
 			delimiter = "\t" if lunch != ''
+			hh = lunch_st if hh == 99
 			lunch << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
 		when 2
 			delimiter = "\t" if dinner != ''
+			hh = dinner_st if hh == 99
 			dinner << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
 		when 3
 			delimiter = "\t" if supple != ''
@@ -129,10 +144,13 @@ if command == 'save'
 		supple = ""
 		case tdiv
 		when 0
+			hh = breakfast_st if hh == 99
 			breakfast = "#{code}:#{ev}:#{eu}:#{hh}"
 		when 1
+			hh = lunch_st if hh == 99
 			lunch = "#{code}:#{ev}:#{eu}:#{hh}"
 		when 2
+			hh = dinner_st if hh == 99
 			dinner = "#{code}:#{ev}:#{eu}:#{hh}"
 		when 3
 			supple = "#{code}:#{ev}:#{eu}:#{hh}"
@@ -141,13 +159,8 @@ if command == 'save'
 	end
 end
 
-today_html = ''
 
-
-
-
-
-####
+#### Date HTML
 date_html = ''
 week_count = first_week
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
@@ -204,7 +217,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 end
 
 
-####
+#### Select HTML
 select_html = ''
 select_html << "<select id='yyyy' class='custom-select custom-select-sm' onChange=\"changeKoyomi_BWF( '#{code}' )\">"
 start_year.upto( 2020 ) do |c|
@@ -249,7 +262,9 @@ select_html << "<option value='99'>時刻</option>"
 select_html << "</select>"
 
 
-####
+#### Rate HTML
+rate_selected = ''
+rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 rate_html = ''
 rate_html << "<div class='input-group input-group-sm'>"
 rate_html << "	<div class='input-group-prepend'>"
@@ -259,7 +274,7 @@ rate_html << "	<input type='number' id='ev' value='100' class='form-control'>"
 rate_html << "  <div class='input-group-append'>"
 rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
 rate_html << "			<option value='%'>%</option>"
-rate_html << "			<option value='g'>g</option>"
+rate_html << "			<option value='g' #{rate_selected}>g</option>"
 rate_html << "		</select>"
 rate_html << "	</div>"
 rate_html << "</div>"
@@ -294,9 +309,10 @@ html = <<-"HTML"
      		<th align='center'>#{lp[21]}</th>
     	</tr>
   	</thead>
-	#{today_html}
 	#{date_html}
 	</table>
 HTML
-
 puts html
+
+#### Adding history
+add_his( uname, code ) if /^[UP]?\d{5}/ =~ code

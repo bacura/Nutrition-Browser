@@ -25,6 +25,23 @@ $DEBUG = false
 # DEFINITION
 #==============================================================================
 
+# Getting start year & standard meal time
+def get_starty( uname )
+	t = Time.new
+	start_year = t.year
+	breakfast_st = 0
+	lunch_st = 0
+	dinner_st = 0
+	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	if r.first
+		a = r.first['koyomiy'].split( ':' )
+		start_year = a[0].to_i if a[0].to_i != 0
+		breakfast_st = a[1].to_i if a[1].to_i != 0
+		lunch_st = a[2].to_i if a[2].to_i != 0
+		dinner_st = a[3].to_i if a[3].to_i != 0
+	end
+	return start_year, breakfast_st, lunch_st, dinner_st
+end
 
 #==============================================================================
 # Main
@@ -34,12 +51,17 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'koyomi-fix', language )
+start_year, breakfast_st, lunch_st, dinner_st = get_starty( uname )
 if $DEBUG
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
 	puts "aliasu: #{aliasu}<br>"
 	puts "language: #{language}<br>"
+	puts "<hr>"
+	puts "breakfast_st:#{breakfast_st}<br>\n"
+	puts "lunch_st:#{lunch_st}<br>\n"
+	puts "dinner_st:#{dinner_st}<br>\n"
 	puts "<hr>"
 end
 fct_opt = Hash.new
@@ -51,7 +73,8 @@ yyyy = cgi['yyyy']
 mm = cgi['mm']
 dd = cgi['dd']
 tdiv = cgi['tdiv'].to_i
-hh = cgi['hh']
+hh = cgi['hh'].to_i
+some = cgi['some']
 palette = cgi['palette'].to_i
 food_name = cgi['food_name']
 food_weight = cgi['food_weight']
@@ -66,6 +89,7 @@ if $DEBUG
 	puts "dd: #{dd}<br>\n"
 	puts "tdiv: #{tdiv}<br>\n"
 	puts "hh: #{hh}<br>\n"
+	puts "some: #{some}<br>\n"
 	puts "palette: #{palette}<br>\n"
 	puts "<hr>\n"
 end
@@ -74,6 +98,53 @@ end
 #### 成分読み込み
 if command == 'init'
 	4.upto( 67 ) do |i| fix_opt[$FCT_ITEM[i]] = 0.0 end
+end
+
+
+#### Saving Something
+if command == 'some'
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
+	if r.first
+		breakfast = r.first['breakfast']
+		lunch = r.first['lunch']
+		dinner = r.first['dinner']
+		supple = r.first['supple']
+		delimiter = ''
+
+		case tdiv
+		when 0
+			hh = breakfast_st if hh == 99
+			breakfast = "#{some}:100:%:#{hh}"
+		when 1
+			hh = lunch_st if hh == 99
+			lunch = "#{some}:100:%:#{hh}"
+		when 2
+			hh = dinner_st if hh == 99
+			dinner = "#{some}:100:%:#{hh}"
+		when 3
+			supple = "#{some}:100:%:#{hh}"
+		end
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
+	else
+		breakfast = ''
+		lunch = ''
+		dinner = ''
+		supple = ''
+		case tdiv
+		when 0
+			hh = breakfast_st if hh == 99
+			breakfast = "#{some}:100:%:#{hh}"
+		when 1
+			hh = lunch_st if hh == 99
+			lunch = "#{some}:100:%:#{hh}"
+		when 2
+			hh = dinner_st if hh == 99
+			dinner = "#{some}:100:%:#{hh}"
+		when 3
+			supple = "#{some}:100:%:#{hh}"
+		end
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}', memo='', date='#{yyyy}-#{mm}-#{dd}';", false)
+	end
 end
 
 
@@ -166,10 +237,10 @@ if command == 'save'
 		end
 		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
 	else
-		breakfast = ""
-		lunch = ""
-		dinner = ""
-		supple = ""
+		breakfast = ''
+		lunch = ''
+		dinner = ''
+		supple = ''
 		case tdiv
 		when 0
 			breakfast = "#{fix_code}:100:%:#{hh}"
@@ -308,15 +379,11 @@ html_fct_block6 << '</table>'
 
 
 ####
-supple_html = ''
-if tdiv == 3
-	supple_html << "<select class='custom-select custom-select-sm' id='hh'>"
-else
-	supple_html << "<select class='custom-select custom-select-sm' id='hh' disabled>"
-end
-supple_html << "	<option value='99'>時刻</option>"
-0.upto( 23 ) do |c| supple_html << "<option value='#{c}'>#{c}</option>" end
-supple_html << "</select>"
+hh_html = ''
+hh_html << "<select class='custom-select custom-select-sm' id='hh'>"
+hh_html << "	<option value='99'>時刻</option>"
+0.upto( 23 ) do |c| hh_html << "<option value='#{c}'>#{c}</option>" end
+hh_html << "</select>"
 
 
 #### html部分
@@ -327,15 +394,18 @@ html = <<-"HTML"
 			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
 		</div>
 		<div class="col-1">
-		#{supple_html}
+		#{hh_html}
 		</div>
 		<div class="col-3">
 		#{palette_html}
 		</div>
 		<div class="col-2">
+			<button class='btn btn-success' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )">#{lp[1]}</button>
 		</div>
 		<div class="col-2">
-			<button class='btn btn-success' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{hh}' )">#{lp[1]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?=' )">#{lp[8]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
 		</div>
 	</div>
 	<div class="row">
@@ -350,7 +420,7 @@ html = <<-"HTML"
 				<div class="input-group-prepend">
 					<label class="input-group-text">#{lp[5]}</label>
 				</div>
-				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight}" disabled>&nbsp;g
+				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>&nbsp;g
 			</div>
 		</div>
 	</div>

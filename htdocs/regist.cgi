@@ -154,6 +154,9 @@ when 'finish'
 
   #パレットテーブルの登録
   mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
+  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='基本の5成分', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
+  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='基本の14成分', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false )
+  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='全て', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false )
 
   #履歴テーブルの登録
   mariadb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{post_data['id']}', his='';", false )

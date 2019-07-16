@@ -21,30 +21,36 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 $SCRIPT = 'koyomi.cgi'
 $DEBUG = false
-start_year = 2019
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
-def meals( meal )
+def meals( meal, uname )
+
 	mb_html = '<ul>'
 	a = meal.split( "\t" )
 	a.each do |e|
 		aa = e.split( ':' )
-		if /\-m\-/ =~ aa[0]
+		if aa[0] == '?-'
+			mb_html << "<li style='list-style-type: circle'>何か食べた（小盛）</li>"
+		elsif aa[0] == '?='
+			mb_html << "<li style='list-style-type: circle'>何か食べた（並盛）</li>"
+		elsif aa[0] == '?+'
+			mb_html << "<li style='list-style-type: circle'>何か食べた（大盛）</li>"
+		elsif /\-m\-/ =~ aa[0]
 			r = mariadb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false )
 			mb_html << "<li>#{r.first['name']}</li>"
 		elsif /\-f\-/ =~ aa[0]
 			r = mariadb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false )
-			mb_html << "<li>#{r.first['name']}</li>"
+			mb_html << "<li style='list-style-type: circle'>#{r.first['name']}</li>"
 		elsif /\-/ =~ aa[0]
 			r = mariadb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false )
 			mb_html << "<li>#{r.first['name']}</li>"
-		elsif /\?/ =~ aa[0]
-			mb_html << "<li>?</li>"
 		else
-			r = mariadb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';", false )
-			mb_html << "<li>#{r.first['name']}</li>"
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U\d{5}/ =~ aa[0]
+			r = mariadb( q, false )
+			mb_html << "<li style='list-style-type: square'>#{r.first['name']}</li>"
 		end
 	end
 	mb_html << '</ul>'
@@ -53,13 +59,14 @@ def meals( meal )
 end
 
 
-#
+####
 def get_starty( uname )
 	t = Time.new
 	start_year = t.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first
-		start_year = r.first['koyomiy'].to_i if r.first['koyomiy'].to_i != 0
+		a = r.first['koyomiy'].split( ':' )
+		start_year = a[0].to_i if a[0].to_i != 0
 	end
 	return start_year
 end
@@ -95,6 +102,30 @@ if $DEBUG
 	puts "dd:#{dd}<br>\n"
 	puts "<hr>\n"
 end
+
+
+#### General menu
+if command == 'menu'
+html = <<-"MENU"
+<div class='container-fluid'>
+	<div class='row'>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">食事記録</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">拡張記録</button></div>
+		<div class='col-2'></div>
+		<div class='col-2'></div>
+		<div class='col-2'></div>
+		<div class='col-2'></div>
+	</div>
+</div>
+
+MENU
+	puts html
+	exit()
+end
+
+
+
+
 
 
 #### 日付の取得
@@ -153,28 +184,28 @@ r.each do |e| koyomir[e['date'].day] = e end
 			if koyomir[c]['breakfast'] == ''
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
 			else
-				meal_block = meals( koyomir[c]['breakfast'] )
+				meal_block = meals( koyomir[c]['breakfast'], uname )
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
 			end
 
 			if koyomir[c]['lunch'] == ''
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
 			else
-				meal_block = meals( koyomir[c]['lunch'] )
+				meal_block = meals( koyomir[c]['lunch'], uname )
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
 			end
 
 			if koyomir[c]['dinner'] == ''
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
 			else
-				meal_block = meals( koyomir[c]['dinner'] )
+				meal_block = meals( koyomir[c]['dinner'], uname )
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
 			end
 
 			if koyomir[c]['supple'] == ''
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
 			else
-				meal_block = meals( koyomir[c]['supple'] )
+				meal_block = meals( koyomir[c]['supple'], uname )
 				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
 			end
 
@@ -189,25 +220,25 @@ r.each do |e| koyomir[e['date'].day] = e end
 			if koyomir[c]['breakfast'] == ''
 				date_html << "<td>-</td>"
 			else
-				date_html << "<td>#{meals( koyomir[c]['breakfast'] )}</td>"
+				date_html << "<td>#{meals( koyomir[c]['breakfast'], uname )}</td>"
 			end
 
 			if koyomir[c]['lunch'] == ''
 				date_html << "<td>-</td>"
 			else
-				date_html << "<td>#{meals( koyomir[c]['lunch'] )}</td>"
+				date_html << "<td>#{meals( koyomir[c]['lunch'], uname )}</td>"
 			end
 
 			if koyomir[c]['dinner'] == ''
 				date_html << "<td>-</td>"
 			else
-				date_html << "<td>#{meals( koyomir[c]['dinner'] )}</td>"
+				date_html << "<td>#{meals( koyomir[c]['dinner'], uname )}</td>"
 			end
 
 			if koyomir[c]['supple'] == ''
 				date_html << "<td>-</td>"
 			else
-				date_html << "<td>#{meals( koyomir[c]['supple'] )}</td>"
+				date_html << "<td>#{meals( koyomir[c]['supple'], uname )}</td>"
 			end
 
 			if koyomir[c]['memo'] == ''

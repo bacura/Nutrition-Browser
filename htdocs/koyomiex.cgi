@@ -21,7 +21,6 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 $SCRIPT = 'koyomiex.cgi'
 $DEBUG = false
-start_year = 2019
 
 #==============================================================================
 #DEFINITION
@@ -53,13 +52,13 @@ def meals( meal )
 end
 
 
-#
 def get_starty( uname )
 	t = Time.new
 	start_year = t.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first
-		start_year = r.first['koyomiy'].to_i if r.first['koyomiy'].to_i != 0
+		a = r.first['koyomiy'].split( ':' )
+		start_year = a[0].to_i if a[0].to_i != 0
 	end
 	return start_year
 end
@@ -120,9 +119,12 @@ end
 
 
 #### loading config
-r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-item_set = r.first['koyomiex'].split( ':' ) if r.first['koyomiex']
+item_set = []
 item_set_no = []
+r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+if r.first
+	item_set = r.first['koyomiex'].split( ':' ) unless r.first['koyomiex'] == nil
+end
 0.upto( 9 ) do |c|
 	item_set_no << c unless item_set[c] == "" || item_set[c] == nil || item_set[c] == "\t"
 end

@@ -82,7 +82,8 @@ ew_mode = cgi['ew_mode']
 frct_mode = cgi['frct_mode']
 frct_accu = cgi['frct_accu']
 palette = cgi['palette']
-p 'vv'
+
+
 if ew_mode == nil || ew_mode == ''
 	r = mariadb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first && r.first['calcc'] != nil
@@ -208,7 +209,8 @@ recipe_code.each do |e|
 	# 名前の書き換え
 	if true
 		food_no.size.times do |c|
-			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+			q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+			q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
 			rr = db.query( q )
 			fct_name[c] = bind_tags( rr ) if rr.first
 		end

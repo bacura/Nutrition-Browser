@@ -120,7 +120,6 @@ end
           #{menu_button}
           #{set_button}
           <button type="button" class="btn btn-info btn-sm nav_button" onclick="initKoyomi()">#{lp[37]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" onclick="initKoyomiex_BW1( '', '' )">#{lp[40]}</button>
           </span>
           <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
           #{config_button}

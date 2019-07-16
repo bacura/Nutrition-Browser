@@ -126,13 +126,13 @@ def modify_protocol( protocol )
 	return_protocol = "<ul>\n"
 	a = protocol.split( "\n" )
 	a.each do |e|
-		if /^\#/ =~ e
-			t = e.delete( '#' )
-			return_protocol << "<span class='print_comment'>(#{t})</span><br>\n"
-		elsif /^\@/ =~ e
+		if /^\@/ =~ e
 			t = e.delete( '@' )
-			return_protocol << "<span class='print_subtitle'>#{t}</span><br>\n"
+			return_protocol << "<span class='print_comment'>(#{t})</span><br>\n"
 		elsif /^\!/ =~ e
+			t = e.delete( '!' )
+			return_protocol << "<span class='print_subtitle'>#{t}</span><br>\n"
+		elsif /^\#/ =~ e
 		elsif e == ''
 			return_protocol << "<br>\n"
 		else

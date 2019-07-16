@@ -26,13 +26,13 @@ $TDIVL = [ 'breakfast', 'lunch', 'dinner', 'supple' ]
 #==============================================================================
 #DEFINITION
 #==============================================================================
-def meals( r, tdiv, lp )
+def meals( r, tdiv, lp, uname )
 	mb_html = "<table class='table table-sm table-hover'>"
 	mb_html << "<thead>"
 	mb_html << "<tr>"
 	mb_html << "<td>#{lp[8]}</td>"
 	mb_html << "<td>#{lp[9]}</td>"
-	mb_html << "<td>#{lp[10]}</td>" if tdiv == 3
+	mb_html << "<td>#{lp[10]}</td>"
 	mb_html << "<td></td>"
 	mb_html << "</tr>"
 	mb_html << "</thead>"
@@ -43,7 +43,14 @@ def meals( r, tdiv, lp )
 		mb_html << '<tr>'
 		aa = e.split( ':' )
 		item_name = ''
-		if /\-m\-/ =~ aa[0]
+
+		if aa[0] == '?-'
+			item_name = "何か食べた（小盛）"
+		elsif aa[0] == '?='
+			item_name = "何か食べた（並盛）"
+		elsif aa[0] == '?+'
+			item_name = "何か食べた（大盛）"
+		elsif /\-m\-/ =~ aa[0]
 			rr = mariadb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false )
 			item_name = rr.first['name']
 		elsif /\-f\-/ =~ aa[0]
@@ -52,21 +59,27 @@ def meals( r, tdiv, lp )
 		elsif /\-/ =~ aa[0]
 			rr = mariadb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false )
 			item_name = rr.first['name']
-		elsif /\?/ =~ aa[0]
-			item_name = '?'
 		else
-			rr = mariadb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';", false )
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U\d{5}/ =~ aa[0]
+			rr = mariadb( q, false )
 			item_name = rr.first['name']
 		end
 		mb_html << "<td>#{item_name}</td>"
-		mb_html << "<td>#{aa[1]}#{aa[2]}</td>"
-		if tdiv == 3
-			if aa[3] == '99'
-				mb_html << "<td>-</td>"
-			else
-				mb_html << "<td>#{aa[3]}:00</td>"
-			end
+
+
+		if /\-f\-/ =~ aa[0] || aa[0] == '?-' || aa[0] == '?=' || aa[0] == '?+'
+			mb_html << "<td>-</td>"
+		else
+			mb_html << "<td>#{aa[1]}#{aa[2]}</td>"
 		end
+
+		if aa[3] == '99'
+			mb_html << "<td>-</td>"
+		else
+			mb_html << "<td>#{aa[3]}:00</td>"
+		end
+
 
 		mb_html << "<td><button class='btn btn-sm btn-outline-danger' onclick=\"deleteKoyomi_BW2( '#{r.first['date'].year}', '#{r.first['date'].month}', '#{r.first['date'].day}', '#{tdiv}', '#{aa[0]}', '#{c}' )\">削除</button></td>"
 		mb_html << '</tr>'
@@ -143,7 +156,12 @@ end
 
 #### Updating memo
 if command == 'memo'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET memo='#{memo}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
+	if r.first
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET memo='#{memo}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
+	else
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET fix='', breakfast='', lunch='', dinner='', supple='', memo='#{memo}', user='#{uname}', date='#{yyyy}-#{mm}-#{dd}';", false )
+	end
 end
 
 
@@ -154,10 +172,10 @@ mariadb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND breakfast=''
 ####
 r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
 if r.first
- 	breakfast_html = meals( r, 0, lp )
- 	lunch_html = meals( r, 1, lp )
- 	dinner_html = meals( r, 2, lp )
- 	supple_html = meals( r, 3, lp )
+ 	breakfast_html = meals( r, 0, lp, uname )
+ 	lunch_html = meals( r, 1, lp, uname )
+ 	dinner_html = meals( r, 2, lp, uname )
+ 	supple_html = meals( r, 3, lp, uname )
  	memo = r.first['memo']
 else
  	breakfast_html = ''
@@ -178,36 +196,39 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<div class='row'>
-		<div class='col-4'>
+		<div class='col-6'>
 			<h5>#{lp[1]}</h5>
 			#{breakfast_html}
 			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 0 )">＋</button>
 		</div>
-		<div class='col-4'>
+		<div class='col-6'>
 			<h5>#{lp[2]}</h5>
 			#{lunch_html}
 			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 1 )">＋</button>
-		</div>
-		<div class='col-4'>
-			<h5>#{lp[3]}</h5>
-			#{dinner_html}
-			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 2 )">＋</button>
 		</div>
 	</div>
 	<br>
 	<div class='row'>
 		<div class='col-6'>
+			<h5>#{lp[3]}</h5>
+			#{dinner_html}
+			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 2 )">＋</button>
+		</div>
+		<div class='col-6'>
 			<h5>#{lp[4]}</h5>
 			#{supple_html}
 			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 3 )">＋</button>
 		</div>
-		<div class='col-5'>
-			<h5>メモ</h5>
-			<textarea class="form-control" id="memo" rows="3">#{memo}</textarea>
-		</div>
+	</div>
+	<div class='row'>
 		<div class='col-1'>
 			<br>
-			<br>
+			<h5>メモ</h5>
+		</div>
+		<div class='col-10'>
+			<textarea class="form-control" id="memo" rows="2">#{memo}</textarea>
+		</div>
+		<div class='col-1'>
 			<br>
 			<button class='btn btn-sm btn-outline-primary' onclick="memoKoyomi( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</button>
 		</div>

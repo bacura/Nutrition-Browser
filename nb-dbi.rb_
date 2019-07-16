@@ -9,7 +9,7 @@
 #==============================================================================
 #Change log
 #==============================================================================
-##20190623, 0.00, Release
+##20190716, 0.00, Release
 
 
 #==============================================================================
@@ -491,7 +491,7 @@ def cfg_init()
 	puts 'コンフィグテーブルの作成'
 
 	# テーブル作成
-	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(1000), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8)), koyomiy smallint(4), koyomiex VARCHAR(256);'
+	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(1000), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8)), koyomiy VARCHAR(16), koyomiex VARCHAR(256);'
 	$db.query( query )
 end
 
@@ -635,14 +635,14 @@ end
 def koyomi_init()
 	puts 'koyomi'
 
-	query = 'CREATE TABLE koyomi (user VARCHAR(32), fix VARCHAR(16), breakfast VARCHAR(100), lunch VARCHAR(100), dinner VARCHAR(100), supple VARCHAR(200), memo VARCHAR(256), date DATE );'
+	query = 'CREATE TABLE koyomi (user VARCHAR(32), fix VARCHAR(16), breakfast VARCHAR(256), lunch VARCHAR(256), dinner VARCHAR(256), supple VARCHAR(256), memo VARCHAR(256), date DATE );'
 	$db.query( query )
 	end
 end
 
 
 #### Koyomi EX table
-def koyomiex_init()
+def koyomi_init()
 	puts 'koyomi'
 
 	query = 'CREATE TABLE koyomiex (user VARCHAR(32), item0 VARCHAR(16), item1 VARCHAR(16), item2 VARCHAR(16), item3 VARCHAR(16), item4 VARCHAR(16), item5 VARCHAR(16), item6 VARCHAR(16), item7 VARCHAR(16), item8 VARCHAR(16), item9 VARCHAR(16), date DATE );'

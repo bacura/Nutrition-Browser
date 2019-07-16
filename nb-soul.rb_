@@ -17,8 +17,8 @@ require 'bigdecimal'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = ''
-$MYSQL_PW = ''
+$MYSQL_USER = 'fitu'
+$MYSQL_PW = 'sqlmouse'
 $MYSQL_DB = 'nutrition'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
@@ -46,10 +46,10 @@ $MYSQL_TB_FCS = 'fcs'
 
 $DEBUG = false
 
-$GM = ''
+$GM = 'guild_master'
 
 #### 注意！！
-$HTDOCS_PATH = ''
+$HTDOCS_PATH = '/var/www/html/fctb'
 
 $PHOTO_PATH = "#{$HTDOCS_PATH}/photo"
 $PHOTO_PATH_TMP = "#{$HTDOCS_PATH}/photo_"
@@ -73,16 +73,16 @@ $RECIPE_TIME = ['未設定','～5','～10','～15','～20','～30','～45','～6
 $RECIPE_COST = ['未設定','50円未満','100円未満','150円未満','200円未満','300円未満','400円未満','500円未満','600円未満','800円未満','1000円未満', '1000円以上']
 
 $PALETTE = []
-$PALETTE[0] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]
-$PALETTE[1] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0]
-$PALETTE[2] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0]
-$PALETTE[3] = [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0]
+#$PALETTE[0] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]
+#$PALETTE[1] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0]
+#$PALETTE[2] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0]
+#$PALETTE[3] = [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0]
 
 $PALETTE_NAME = []
-$PALETTE_NAME[0] = "基本の5成分"
-$PALETTE_NAME[1] = "基本の12成分"
-$PALETTE_NAME[2] = "基本の14成分"
-$PALETTE_NAME[3] = "全て"
+#$PALETTE_NAME[0] = "基本の5成分"
+#$PALETTE_NAME[1] = "基本の12成分"
+#$PALETTE_NAME[2] = "基本の14成分"
+#$PALETTE_NAME[3] = "全て"
 
 #         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15
 $UNIT = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前']
@@ -260,16 +260,16 @@ end
 
 #### GETデータの抽出
 def get_data()
-  data = Hash.new
-  if ENV['QUERY_STRING']
-    querys = ENV['QUERY_STRING'].split( '&' )
-    querys.each { |e|
-      ( k, v ) = e.split( '=' )
-      data[ k ] = v
-    }
-  end
+	data = Hash.new
+	if ENV['QUERY_STRING']
+		querys = ENV['QUERY_STRING'].split( '&' )
+		querys.each { |e|
+			( k, v ) = e.split( '=' )
+			data[ k ] = v
+		}
+	end
 
-  return data
+	return data
 end
 
 
@@ -325,8 +325,8 @@ end
 
 #### ログインチェック
 def login_check( cgi )
-  cookie_name = cgi.cookies['NAME'].first
-  cookie_uid = cgi.cookies['UID'].first
+	cookie_name = cgi.cookies['NAME'].first
+ 	cookie_uid = cgi.cookies['UID'].first
 
   r = mariadb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true )
 
@@ -341,7 +341,6 @@ end
 #### 食品成分値の処理
 def num_opt( num, weight, mode, limit )
   # リミットがない→数値ではない場合はそのまま返す
-
 
   return num if limit == nil
 
@@ -502,7 +501,6 @@ def bind_tags( res_tag )
     sub_class << tags['class1'].sub( '+', '' ) if /\+$/ =~ tags['class1']
     sub_class << tags['class2'].sub( '+', '' ) if /\+$/ =~ tags['class2']
     sub_class << tags['class3'].sub( '+', '' ) if /\+$/ =~ tags['class3']
-
     tags = "<span class='tagc'>#{sub_class}</span> #{tags['name']} <span class='tag1'>#{tags['tag1']}</span> <span class='tag2'>#{tags['tag2']}</span> <span class='tag3'>#{tags['tag3']}</span> <span class='tag4'>#{tags['tag4']}</span> <span class='tag5'>#{tags['tag5']}</span>"
 
     return tags

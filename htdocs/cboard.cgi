@@ -370,6 +370,7 @@ if false
 else
 	food_list.each do |e|
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}';"
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{uname}';" if /^U\d{5}/ =~ e.no
 		r = db.query( q )
 		food_tag << bind_tags( r ) if r.first
 		food_tag << '' if e.no == '-' || e.no == '+'
@@ -509,7 +510,9 @@ food_list.each do |e|
 	# フードキーの生成
 	food_key = ''
   	unless e.no == '-' || e.no == '+'
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e.no}';", false )
+  		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e.no}';"
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{uname}';" if /^U\d{5}/ =~ e.no
+		r = mariadb( q, false )
 
 		if r.first
 			food_key = "#{r.first['FG']}:#{r.first['class1']}:#{r.first['class2']}:#{r.first['class3']}:#{r.first['name']}"

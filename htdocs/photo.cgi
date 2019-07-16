@@ -186,11 +186,11 @@ when 'upload'
 		if photo_x >= photo_y
 			tn_ratio = $TN_SIZE / photo_x
 			tns_ratio = $TNS_SIZE / photo_x
-			photo_ratio = $PHOTO_SIZE_MAX / photo_x if photo_x <= $PHOTO_SIZE_MAX
+			photo_ratio = $PHOTO_SIZE_MAX / photo_x if photo_x >= $PHOTO_SIZE_MAX
 		else
 			tn_ratio = $TN_SIZE / photo_y
 			tns_ratio = $TNS_SIZE / photo_y
-			photo_ratio = $PHOTO_SIZE_MAX / photo_y if photo_y <= $PHOTO_SIZE_MAX
+			photo_ratio = $PHOTO_SIZE_MAX / photo_y if photo_y >= $PHOTO_SIZE_MAX
 		end
 		puts "Image magick resize" if $DEBUG
 
@@ -203,12 +203,12 @@ when 'upload'
 		tns_file.write( "#{$PHOTO_PATH}/#{code}-#{slot_no}tns.jpg" )
 
 		# 2Kサイズ変更と保存
-		photo_file = photo.thumbnail( photo_ratio )
+		photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
 
 		# ウォーターマーク合成
 		wm_text = "FCTB2015 #{code} by #{uname}"
 #		wm_text = "食品成分表ブラウザ 2015\nPhoto by #{uname} in #{Time.now.year}"
-		wm_img = Magick::Image.new( photo_file.columns, photo_file.rows )
+		wm_img = Magick::Image.new( photo.columns, photo.rows )
 		wm_drew = Magick::Draw.new
 		wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do
 			self.gravity = Magick::SouthWestGravity
@@ -218,8 +218,8 @@ when 'upload'
 			self.stroke = "none"
 		end
 		wm_img = wm_img.shade( true, 315 )
-		photo_file.composite!( wm_img, Magick::CenterGravity, Magick::HardLightCompositeOp )
-		photo_file.write( "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg" )
+		photo.composite!( wm_img, Magick::CenterGravity, Magick::HardLightCompositeOp )
+		photo.write( "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg" )
 
 		#一時ファイルの削除
 		File.unlink "#{$PHOTO_PATH_TMP}/#{photo_name}"

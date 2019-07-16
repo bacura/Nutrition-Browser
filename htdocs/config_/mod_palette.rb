@@ -1,15 +1,13 @@
 # Config module for FCTB Palette 0.00
 #encoding: utf-8
 
-#### パレットリスト表示
+#### displying palette
 def listing( uname )
-	query = "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';"
-	db_err = 'SELECT palette'
-	res = db_process( query, db_err, false )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
 
 	# 操作ボタン準備
 	list_body = ''
-	res.each do |e|
+	r.each do |e|
 		list_body << "<tr><td>#{e['name']}</td><td>#{e['count']}</td>"
 		list_body << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick='palette_cfg( \"edit_palette\", \"#{e['name']}\" )'>編集</button></td>"
 		list_body << "<td>"
@@ -20,8 +18,9 @@ def listing( uname )
 	html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-10'><h5>カスタム成分パレット一覧</h5></div>
+		<div class='col-8'><h5>カスタム成分パレット一覧</h5></div>
 		<div class='col-2'><button class="btn btn-outline-primary btn-sm" type="button" onclick="palette_cfg( 'new_palette' )">新規登録</button></div>
+		<div class='col-2'><button class="btn btn-outline-danger btn-sm" type="button" onclick="palette_cfg( 'reset_palette' )">リセット</button></div>
 	</div>
 	<br>
 
@@ -57,10 +56,8 @@ def config_module( cgi )
 	when 'new_palette', 'edit_palette'
 		checked = []
 		if step == 'edit_palette'
-			query = "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='#{cgi['palette_name']}';"
-			db_err = 'SELECT palette'
-			res = db_process( query, db_err, false )
-			palette = res.first['palette']
+			r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='#{cgi['palette_name']}';", false )
+			palette = r.first['palette']
 			palette.size.times do |c|
 				if palette[c] == '1'
 					checked << 'checked'
@@ -114,31 +111,38 @@ HTML
 		end
 
 		# パレット名チェック
-		query = "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{uname}';"
-		db_err = 'select PALETTE'
-		res = db_process( query, db_err, false )
+		r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{uname}';", false )
 
-		if res.first
+		if r.first
 			# 更新
-			query = "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', count='#{fct_count}' WHERE name='#{palette_name}' AND user='#{uname}';"
-			db_err = 'select PALETTE'
-			db_process( query, db_err, false )
+			mariadb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', count='#{fct_count}' WHERE name='#{palette_name}' AND user='#{uname}';", false )
 		else
 			# 追加
-			query = "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{uname}', palette='#{fct_bits}', count='#{fct_count}';"
-			db_err = 'select PALETTE'
-			db_process( query, db_err, false )
+			mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{uname}', palette='#{fct_bits}', count='#{fct_count}';", false )
 		end
 
 		html = listing( uname )
 
 	when 'delete_palette'
-		query = "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{uname}';"
-		db_err = 'DELETE PALETTE'
-		db_process( query, db_err, false )
+		mariadb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{uname}';", false )
+
+		html = listing( uname )
+
+	when 'reset_palette'
+		mariadb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+ 		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='基本の5成分', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='基本の14成分', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='全て', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false )
 
 		html = listing( uname )
 	end
+
+
+
+
+
+
 
 	return html
 end
