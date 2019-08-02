@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'fctb-mealm.cgi'
+$SCRIPT = 'mealm.cgi'
 
 
 #==============================================================================
@@ -47,7 +47,11 @@ unless recipe_code == ''
  		if r.first['meal']
 			a = r.first['meal'].split( "\t" )
 			recipe_num = a.size
-			new_meal = "#{r.first['meal']}\t#{recipe_code}"
+			if recipe_num == 0
+				new_meal = "#{recipe_code}"
+			else
+				new_meal = "#{r.first['meal']}\t#{recipe_code}"
+			end
 		else
 			new_meal = recipe_code
  		end

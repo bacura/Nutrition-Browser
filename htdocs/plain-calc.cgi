@@ -128,17 +128,20 @@ food_no.each do |e|
 	fct_tmp = []
 	if e == '-'
 		fct << '-'
+		fct_name << '-'
 	elsif e == '+'
 		fct << '+'
+		fct_name << '+'
 	elsif e == '00000'
 		fct << '0'
+		fct_name << '0'
 	else
 		if /P|U/ =~ e
-			query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
+			q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
 		else
-			query = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
+			q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
 		end
-		res = db.query( query )
+		res = db.query( q )
 		fct_name << res.first['Tagnames']
 		$FCT_ITEM.size.times do |c|
 			fct_tmp << res.first[$FCT_ITEM[c]] if palette_set[c] == 1
@@ -148,13 +151,15 @@ food_no.each do |e|
 end
 
 
-# 名前の書き換え
+#### 名前の書き換え
 if false
 	food_no.size.times do |c|
-		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
-		r = db.query( q )
-		fct_name[c] = bind_tags( res ) if res.first
+ 		unless food_no[c] == '+' || food_no[c] == '-' || food_no[c] == '0'
+			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ food_no[c]
+			r = db.query( q )
+			fct_name[c] = bind_tags( r ) if r.first
+		end
 	end
 end
 db.close
@@ -162,7 +167,7 @@ db.close
 
 #### データ計算
 fct_sum = []
-fct_item.size.times do |c| fct_sum << 0.0 end
+fct_item.size.times do |c| fct_sum << BigDecimal( 0 ) end
 
 food_no.size.times do |fn|
 	unless food_no[fn] == '-' || food_no[fn] == '+'
@@ -202,11 +207,12 @@ end
 fct_txt.chop!
 fct_txt << "\n"
 
-# 単位
+
+#### 単位
 fct_txt << "\t\tg\t"
 fct_item.size.times do |c|
-	if $FCT_UNIT[c]
-		fct_txt << "#{$FCT_UNIT[c]}\t"
+	if $FCT_UNIT[fct_item[c]]
+		fct_txt << "#{$FCT_UNIT[fct_item[c]]}\t"
 	else
 		fct_txt << "\t"
 	end
@@ -214,7 +220,8 @@ end
 fct_txt.chop!
 fct_txt << "\n"
 
-# 各成分値
+
+#### 各成分値
 food_no.size.times do |c|
 	unless food_no[c] == '-' || food_no[c] == '+'
 		fct_txt << "#{food_no[c]}\t#{fct_name[c]}\t#{food_weight[c].to_f}\t"

@@ -346,7 +346,7 @@ food_no_list.size.times do |c|
 		elsif ( food_no_list[c].to_i >= 17044 && food_no_list[c].to_i <= 17050 ) || food_no_list[c].to_i == 17119 || food_no_list[c].to_i == 17120
 			miso += food_weight_list[c]
 		# 醤油の判定
-		elsif food_no_list[c].to_i >= 17055 && food_no_list[c].to_i <= 17062
+		elsif ( food_no_list[c].to_i >= 17007 && food_no_list[c].to_i <= 17011 ) || ( food_no_list[c].to_i >= 17086 && food_no_list[c].to_i <= 17088 )
 			shoyu += food_weight_list[c]
 		else
 			seasoning += food_weight_list[c]

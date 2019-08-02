@@ -150,12 +150,13 @@ if command == 'save'
 	end
 
 	# 重量影響成分
+	fct_opt['ENERC_KCAL'] = BigDecimal( fct_opt['ENERC_KCAL'].to_s ) / ( food_weight / 100 )
+	fct_opt['ENERC'] = BigDecimal( fct_opt['ENERC'].to_s ) / ( food_weight / 100 )
 	7.upto( 65 ) do |i|
 		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil || cgi[$FCT_ITEM[i]] == '-'
 			fct_opt[$FCT_ITEM[i]] = '-'
 		else
-			t = BigDecimal( cgi[$FCT_ITEM[i]] ) / ( food_weight / 100 )
-			fct_opt[$FCT_ITEM[i]] = t
+			fct_opt[$FCT_ITEM[i]] = BigDecimal( cgi[$FCT_ITEM[i]] ) / ( food_weight / 100 )
 		end
 	end
 
@@ -197,7 +198,7 @@ if command == 'save'
 
 	# タグテーブルに追加
 	public_bit = 0
-	public_bit = 1 if uname == $GM
+	public_bit = 1 if status == 9
 
 	# 新規食品番号の合成
 	over_max_flag = false

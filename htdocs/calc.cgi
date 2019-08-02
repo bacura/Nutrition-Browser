@@ -156,15 +156,18 @@ fct = []
 fct_name = []
 db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
-#### 食品成分データの抽出と名前の書き換え
+#### 食品成分データの抽出
 food_no.each do |e|
 	fct_tmp = []
 	if e == '-'
 		fct << '-'
+		fct_name << '-'
 	elsif e == '+'
 		fct << '+'
+		fct_name << '+'
 	elsif e == '00000'
 		fct << '0'
+		fct_name << '0'
 	else
 		if /P|U/ =~ e
 			q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
@@ -184,10 +187,12 @@ end
 #### 名前の書き換え
 if true
 	food_no.size.times do |c|
-		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
-		r = db.query( q )
-		fct_name[c] = bind_tags( r ) if r.first
+ 		unless food_no[c] == '+' || food_no[c] == '-' || food_no[c] == '0'
+			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ food_no[c]
+			r = db.query( q )
+			fct_name[c] = bind_tags( r ) if r.first
+		end
 	end
 end
 db.close
@@ -265,6 +270,7 @@ table_num.times do |c|
 		end
 	end
 	fct_html << '    </tr>'
+
 
 	# 各成分値
 	food_no.size.times do |cc|

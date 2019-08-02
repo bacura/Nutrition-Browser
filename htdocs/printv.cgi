@@ -59,8 +59,10 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode )
 	when 7, 8
 		return_foods << "<thead><tr><th>食品番号</th><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th><th class='align_r'>廃棄率%</th><th class='align_r'>発注量kg</th></tr></thead>\n"
 	end
+
 	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 	a = sum.split( "\t" )
+
 	a.each do |e|
 		fn, fw, fu, fuv, fc, fi, frr, few = e.split( ':' )
 		few = fw if few == nil
@@ -103,9 +105,12 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode )
 				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td><td align='right'>#{few_v}</td></tr>\n" if res.first
 			when 7, 8
 				tags = bind_tags( res )
+				refuse = 0
 				query = "SELECT REFUSE from #{$MYSQL_TB_FCT} WHERE FN='#{fn}';"
 				res = db.query( query )
-				t = ( BigDecimal( fw ) * BigDecimal( dish ) / ( 100 - res.first['REFUSE'].to_i ) / BigDecimal( 10 )).ceil( 2 ).to_f.to_s
+				refuse = res.first['REFUSE'].to_i if res.first
+				t = ( BigDecimal( fw ) * BigDecimal( dish ) / ( 100 - refuse ) / BigDecimal( 10 )).ceil( 2 ).to_f.to_s
+
 				df = t.split( '.' )
 				comp = ( 2 - df[1].size )
 				comp.times do |c| df[1] = df[1] << '0' end
@@ -241,7 +246,7 @@ ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
 hr_image = get_data['hr'].to_i
 
-url = "http://fctb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&hr=#{hr_image}"
+url = "http://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&hr=#{hr_image}"
 
 #### デバッグ用
 if $DEBUG
@@ -254,21 +259,19 @@ end
 
 
 #### コードの読み込み
-query = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';"
-db_err = 'select recipe code check'
-res = db_process( query, db_err, false )
-unless res.first
+r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+unless r.first
 	puts "指定のレシピコード(#{code})は存在しません。"
 	exit( 9 )
 end
-uname = res.first['user']
-recipe_name = res.first['name']
-sum = res.first['sum']
-dish_recipe = res.first['dish'].to_i
-protocol = res.first['protocol']
-fig1 = res.first['fig1'].to_i
-fig2 = res.first['fig2'].to_i
-fig3 = res.first['fig3'].to_i
+uname = r.first['user']
+recipe_name = r.first['name']
+sum = r.first['sum']
+dish_recipe = r.first['dish'].to_i
+protocol = r.first['protocol']
+fig1 = r.first['fig1'].to_i
+fig2 = r.first['fig2'].to_i
+fig3 = r.first['fig3'].to_i
 if $DEBUG
 	puts "uname: #{uname}<br>"
 	puts "recipe_name: #{recipe_name}<br>"
@@ -295,18 +298,6 @@ protocol = modify_protocol( protocol )
 photos = arrange_photo( code, fig1, fig2, fig3, hr_image )
 
 
-#### デバッグ用
-if $DEBUG
-	puts "recipe_name: #{recipe_name}<br>"
-	puts "dish_recipe: #{dish_recipe}<br>"
-	puts "protocol: #{protocol}<br>"
-	puts "fig1: #{fig1}<br>"
-	puts "fig2: #{fig2}<br>"
-	puts "fig3: #{fig3}<br>"
-	puts "<hr>"
-end
-
-
 #### QR codeの生成
 makeQRcode( url, code )
 
@@ -321,8 +312,19 @@ if template > 4
 	accu_check = accu_check( frct_accu )
 	ew_check = ew_check( ew_mode )
 
-	# パレット
-	palette_set = $PALETTE[palette]
+	# Setting palette
+	palette_sets = []
+	palette_name = []
+	r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+	if r.first
+		r.each do |e|
+			a = e['palette'].split( '' )
+			a.map! do |x| x.to_i end
+			palette_sets << a
+			palette_name << e['name']
+		end
+	end
+	palette_set = palette_sets[palette]
 
 	# 成分項目の抽出
 	fct_item = []

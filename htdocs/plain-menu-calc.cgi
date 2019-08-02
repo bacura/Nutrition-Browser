@@ -163,20 +163,23 @@ recipe_code.each do |e|
 		fct_tmp = []
 		if ee == '-'
 			fct << '-'
+			fct_name << '-'
 		elsif ee == '+'
 			fct << '+'
+			fct_name << '+'
 		elsif ee == '00000'
 			fct << '0'
+			fct_name << '0'
 		else
 			if /P|U/ =~ ee
-				query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{uname}' OR user='#{$GM}' );"
+				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{uname}' OR user='#{$GM}' );"
 			else
-				query = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
+				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
 			end
-			res = db.query( query )
-			fct_name << res.first['Tagnames']
+			rr = db.query( q )
+			fct_name << rr.first['Tagnames']
 			$FCT_ITEM.size.times do |c|
-				fct_tmp << res.first[$FCT_ITEM[c]] if palette_set[c] == 1
+				fct_tmp << rr.first[$FCT_ITEM[c]] if palette_set[c] == 1
 			end
 			fct << Marshal.load( Marshal.dump( fct_tmp ))
 		end
@@ -185,10 +188,12 @@ recipe_code.each do |e|
 	# 名前の書き換え
 	if false
 		food_no.size.times do |c|
-			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
-			r = db.query( q )
-			fct_name[c] = bind_tags( r ) if r.first
+ 			unless food_no[c] == '+' || food_no[c] == '-' || food_no[c] == '0'
+				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ food_no[c]
+				rr = db.query( q )
+				fct_name[c] = bind_tags( rr ) if rr.first
+			end
 		end
 	end
 	db.close
@@ -246,7 +251,7 @@ recipe_code.each do |e|
 	fct_txt[rc] << "#{recipe_name[rc]}\n"
 
 	# 項目名
-	fct_txt[rc] << lp[8]
+	fct_txt[rc] << "\t#{lp[8]}\t#{lp[16]}\t#{lp[17]}"
 	fct_item.each do |ee|
 		if $FCT_NAME[ee]
 			fct_txt[rc] << "\t#{$FCT_NAME[ee]}"
@@ -274,8 +279,8 @@ recipe_code.each do |e|
 			fct_item.size.times do |cc|
 				fct_txt[rc] << "\t#{fct[c][cc]}"
 			end
+			fct_txt[rc] << "\n"
 		end
-		fct_txt[rc] << "\n"
 	end
 
 	# 合計値

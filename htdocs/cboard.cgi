@@ -60,6 +60,25 @@ class Food
 	attr_accessor :no, :weight, :unit, :unitv, :check, :init, :rr, :ew
 end
 
+#### Easy calc
+def we_calc( food_list, uname )
+	weight = 0
+	energy = BigDecimal( 0 )
+	food_list.each do |e|
+		unless e.no == '-' || e.no == '+'
+			weight += e.weight.to_f
+			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCT} WHERE FN='#{e.no}';"
+			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.no}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.no
+			r = mariadb( q, false )
+			t = convert_zero( r.first['ENERC_KCAL'] )
+			energy += ( t * e.weight.to_f / 100 )
+		end
+	end
+
+	return weight, energy
+end
+
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -106,9 +125,7 @@ end
 
 #### CBの読み込み
 q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{uname}';"
-if command == 'load'
-	q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';"
-end
+q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';" if command == 'load'
 r = mariadb( q, false )
 
 code = r.first['code']
@@ -136,6 +153,12 @@ if sum
 		food_list << t
 	end
 end
+
+
+#### Getting food weight & food energy
+weight_ctrl, energy_ctrl = we_calc( food_list, uname )
+weight_ctrl = ( weight_ctrl / dish_num ).to_i
+energy_ctrl = ( energy_ctrl / dish_num ).to_i
 
 
 update = ''
@@ -400,9 +423,10 @@ seasoning_html << "</div>"
 #### 新しいまな板表示
 html = <<-"HTML"
 <div class='container-fluid'>
-<div class='row'>
-	<h5>#{lp[1]}: #{update}#{recipe_name}</h5></div><br>
 	<div class='row'>
+		<div class='col-8'>
+			<h5>#{lp[1]}: #{update}#{recipe_name}</h5>
+		</div>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 				<div class="input-group-prepend">
@@ -414,6 +438,13 @@ html = <<-"HTML"
 	        	</div>
 			</div>
 		</div>
+		<div class='col-2' align='center'>
+			<input type='checkbox' id='all_check'>&nbsp;
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_BWL1( 'all', '#{code}' )\">#{lp[8]}</button>
+		</div>
+	</div>
+
+	<div class='row'>
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<div class="input-group-prepend">
@@ -425,18 +456,43 @@ html = <<-"HTML"
         		</div>
 			</div>
 		</div>
-		<div class='col-3'>
+		<div class='col-4'>
 			#{seasoning_html}
 		</div>
 		<div class='col-2'>
-			<button type='button' class='btn btn-outline-primary btn-sm' onclick=\"gnExchange_BWL1( '#{code}' )\">#{lp[22]}</button>
-		</div>
-		<div class='col-2' align='center'>
-			<input type='checkbox' id='all_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_BWL1( 'all', '#{code}' )\">#{lp[8]}</button>
 		</div>
 	</div>
-</div>
+	<br>
+	<div class='row'>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<div class="input-group-prepend">
+					<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
+				</div>
+  				<input type="number" min='1' class="form-control" id="weight_ctrl" value="#{weight_ctrl}" onchange=\"\">
+				<div class="input-group-append">
+	        		<button class='btn btn-outline-warning' type='button' onclick=\"\">#{lp[27]}</button>
+	        	</div>
+			</div>
+		</div>
+		<div class='col-3'>
+			<div class='input-group input-group-sm'>
+				<div class="input-group-prepend">
+					<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
+				</div>
+  				<input type="number" min='1' class="form-control" id="energy_ctrl" value="#{energy_ctrl}" onchange=\"\">
+				<div class="input-group-append">
+	        		<button class='btn btn-outline-warning' type='button' onclick=\"\">#{lp[27]}</button>
+	        	</div>
+			</div>
+		</div>
+		<div class='col-5'>
+		</div>
+		<div class='col-2'>
+			<input type='checkbox' id='gn_check'>&nbsp;
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange_BWL1( '#{code}' )\">#{lp[22]}</button>
+		</div>
+	</div>
 	<hr>
 
 <div class='row cb_header'>

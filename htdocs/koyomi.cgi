@@ -20,7 +20,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 $SCRIPT = 'koyomi.cgi'
-$DEBUG = false
+$DEBUG = true
 
 #==============================================================================
 #DEFINITION
@@ -64,10 +64,11 @@ def get_starty( uname )
 	t = Time.new
 	start_year = t.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-	if r.first
+	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		start_year = a[0].to_i if a[0].to_i != 0
 	end
+
 	return start_year
 end
 

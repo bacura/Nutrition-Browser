@@ -104,11 +104,14 @@ if r.size != 0
 		code_list << rr.first['FN']
 		name_tag_list << "#{rr.first['name']}・#{rr.first['tag1']} #{rr.first['tag2']} #{rr.first['tag3']} #{rr.first['tag4']} #{rr.first['tag5']}"
 	end
+	code_list.reverse!
+	name_tag_list.reverse!
+
 	c = 0
-	code_list.reverse.each do |e|
+	code_list.each do |e|
 		rr = mariadb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{e}';", false )
 		list_html << "<div class='row'>"
-		list_html << "<div class='col-1'><button class='btn btn-sm btn-outline-danger' type='button' onclick=\"offGYCV_BWL1( '#{e}' )\">x</button></div>"
+		list_html << "<div class='col-1'><button class='btn btn-sm btn-outline-danger' type='button' onclick=\"offShun_BWL1( '#{e}' )\">x</button></div>"
 		list_html << "<div class='col-2'>#{e}</div>"
 		list_html << "<div class='col-4'>#{name_tag_list[c]}</div>"
 		list_html << "<div class='col-1'>#{rr.first['shun1s']}</div>"

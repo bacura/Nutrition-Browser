@@ -30,11 +30,11 @@ def frct_select( frct_mode, lp )
 	frct_select = ''
 	case frct_mode
 	when 3
-		frct_select = lp[7]
+		frct_select = lp[10]
 	when 2
-		frct_select = lp[8]
+		frct_select = lp[11]
 	else
-		frct_select = lp[9]
+		frct_select = lp[12]
 	end
 
 	return frct_select
@@ -43,8 +43,8 @@ end
 
 #### 合計精密チェック
 def accu_check( frct_accu, lp )
-  accu_check = lp[10]
-  accu_check = lp[11] if frct_accu == 1
+  accu_check = lp[15]
+  accu_check = lp[7] if frct_accu == 1
 
   return accu_check
 end
@@ -52,8 +52,8 @@ end
 
 #### 予想重量チェック
 def ew_check( ew_mode, lp )
-  ew_check = lp[12]
-  ew_check = lp[13] if ew_mode == 1
+  ew_check = lp[6]
+  ew_check = lp[8] if ew_mode == 1
 
   return ew_check
 end
@@ -107,11 +107,9 @@ ew_check = ew_check( ew_mode, lp )
 
 
 #### パレット
-query = "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';"
-db_err = 'SELECT palette'
-res = db_process( query, db_err, false )
-if res.first
-	res.each do |e|
+r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+if r.first
+	r.each do |e|
 		a = e['palette'].split( '' )
 		a.map! do |x| x.to_i end
 		$PALETTE << a
@@ -140,12 +138,10 @@ end
 
 
 #### mealからデータを抽出
-query = "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';"
-db_err = 'meal select'
-res = db_process( query, db_err, false )
-meal_name = res.first['name']
-code = res.first['code']
-meal = res.first['meal'].split( "\t" )
+r = mariadb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+meal_name = r.first['name']
+code = r.first['code']
+meal = r.first['meal'].split( "\t" )
 recipe_code = []
 meal.each do |e| recipe_code << e end
 
@@ -181,20 +177,23 @@ recipe_code.each do |e|
 		fct_tmp = []
 		if ee == '-'
 			fct << '-'
+			fct_name << '-'
 		elsif ee == '+'
 			fct << '+'
+			fct_name << '+'
 		elsif ee == '00000'
 			fct << '0'
+			fct_name << '0'
 		else
 			if /P|U/ =~ ee
-				query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{uname}' OR user='#{$GM}' );"
+				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{uname}' OR user='#{$GM}' );"
 			else
-				query = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
+				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
 			end
-			res = db.query( query )
-			fct_name << res.first['Tagnames']
+			rr = db.query( q )
+			fct_name << rr.first['Tagnames']
 			$FCT_ITEM.size.times do |c|
-				fct_tmp << res.first[$FCT_ITEM[c]] if palette_set[c] == 1
+				fct_tmp << rr.first[$FCT_ITEM[c]] if palette_set[c] == 1
 			end
 			fct << Marshal.load( Marshal.dump( fct_tmp ))
 		end
@@ -203,10 +202,12 @@ recipe_code.each do |e|
 	# 名前の書き換え
 	if true
 		food_no.size.times do |c|
-			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-			q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND user='#{uname}';" if /^U\d{5}/ =~ food_no[c]
-			r = db.query( q )
-			fct_name[c] = bind_tags( r ) if r.first
+ 			unless food_no[c] == '+' || food_no[c] == '-' || food_no[c] == '0'
+				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
+				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ food_no[c]
+				rr = db.query( q )
+				fct_name[c] = bind_tags( rr ) if rr.first
+			end
 		end
 	end
 	db.close
@@ -305,7 +306,7 @@ recipe_code.each do |e|
 
 	# 合計値
 	fct_html[rc] << '    <tr>'
-	fct_html[rc] << "      <td colspan='2' align='center' class='fct_sum'>#{lp[4]}小計</td>"
+	fct_html[rc] << "      <td colspan='2' align='center' class='fct_sum'>#{lp[4]}</td>"
 	fct_html[rc] << "      <td align='right' class='fct_sum'>#{total_weight.to_f}</td>"
 
 	fct_item.size.times do |c|
@@ -336,7 +337,7 @@ fct_html_sum = ''
 fct_html_sum << '    <tr>'
 fct_html_sum << '      <th align="center" width="6%" class="fct_item"></th>'
 fct_html_sum << '      <th align="center" width="20%" class="fct_item"></th>'
-fct_html_sum << "      <th align='center' width='4%' class='fct_item'>#{lp[5]}</th>"
+fct_html_sum << "      <th align='center' width='4%' class='fct_item'>#{lp[3]}</th>"
 fct_item.each do |e|
 	if $FCT_NAME[e]
 		fct_html_sum << "      <th align='center' width='5%' class='fct_item'>#{$FCT_NAME[e]}</th>"
@@ -361,7 +362,7 @@ fct_html_sum << '    </tr>'
 
 # 合計値
 fct_html_sum << '    <tr>'
-fct_html_sum << "      <td colspan='2' align='center' class='fct_sum'>#{lp[6]}</td>"
+fct_html_sum << "      <td colspan='2' align='center' class='fct_sum'>#{lp[17]}</td>"
 fct_html_sum << "      <td align='right' class='fct_sum'>#{total_total_weight.to_f}</td>"
 fct_item.size.times do |c|
 	if fct_item[c] == 'REFUSE' || fct_item[c] == 'WCR' || fct_item[c] == 'Notice'
@@ -373,8 +374,8 @@ end
 fct_html_sum << '    </tr>'
 
 
-puts "<div>#{lp[14]}: #{meal_name}</div>"
-puts "<div>#{lp[15]}: #{ew_check} #{lp[16]}： #{frct_select} / #{accu_check}</div>"
+puts "<div>#{lp[5]}: #{meal_name}</div>"
+puts "<div>#{lp[14]}: #{ew_check} #{lp[9]}： #{frct_select} / #{accu_check}</div>"
 puts "<br>"
 
 puts '<table class="table table-striped table-sm">'

@@ -70,7 +70,7 @@ when 'view'
 	if code == ''
 		# 献立データベースの仮登録チェック
   		r = mariadb( "SELECT code FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND name='' AND code!='';", false )
-  		code = r.first['code'] if res.first
+  		code = r.first['code'] if r.first
   		unless r.first
 		  	# 献立データベースに仮登録
 			code = generate_code( uname, 'm' )

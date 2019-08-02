@@ -142,14 +142,18 @@ var checkCB_BWL1 = function( order, code, check_id ){
 // まな板のQuick保存を押してL1にリストを更新
 var quickSave_BWL1 = function( code ){
 	$.post( "cboard.cgi", { command:'quick_save', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
-	displayVideo( '保存しました' );
+	displayVideo( 'Saved' );
 };
 
 
 // まな板のQuick保存を押してL1にリストを更新
 var gnExchange_BWL1 = function( code ){
-	$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
-	displayVideo( '最適化しました' );
+	if( document.getElementById( 'gn_check' ).checked ){
+		$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
+		displayVideo( 'Adjusted' );
+	} else{
+		displayVideo( 'Check!!(>_<)' );
+	}
 };
 
 
