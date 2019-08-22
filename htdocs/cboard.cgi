@@ -60,24 +60,99 @@ class Food
 	attr_accessor :no, :weight, :unit, :unitv, :check, :init, :rr, :ew
 end
 
-#### Easy calc
-def we_calc( food_list, uname )
-	weight = 0
-	energy = BigDecimal( 0 )
+#### Easy weight calc
+def weight_calc( food_list, dish_num )
+	weight = BigDecimal( '0' )
+	weight_checked = BigDecimal( '0' )
 	food_list.each do |e|
 		unless e.no == '-' || e.no == '+'
-			weight += e.weight.to_f
+			weight += BigDecimal( e.weight.to_s )
+			weight_checked +=  BigDecimal( e.weight.to_s ) if e.check == '1'
+		end
+	end
+	weight = ( weight / dish_num.to_i ).to_i
+	weight_checked = ( weight_checked / dish_num.to_i ).to_i
+
+	return weight, weight_checked
+end
+
+
+#### Easy energy calc
+def energy_calc( food_list, uname, dish_num )
+	energy = BigDecimal( '0' )
+	energy_checked = BigDecimal( '0' )
+	food_list.each do |e|
+		unless e.no == '-' || e.no == '+'
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCT} WHERE FN='#{e.no}';"
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.no}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.no
 			r = mariadb( q, false )
 			t = convert_zero( r.first['ENERC_KCAL'] )
-			energy += ( t * e.weight.to_f / 100 )
+			energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
+			energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1'
+		end
+	end
+	energy = ( energy / dish_num.to_i ).to_i
+	energy_checked = ( energy_checked / dish_num.to_i ).to_i
+
+	return energy, energy_checked
+end
+
+
+#### Processing weight fraction
+def proc_wf( weight )
+	weight_ = BigDecimal( 0 )
+	if weight <= 0.01
+		weight_ = 0.01
+	elsif weight >= 0.01 && weight < 0.10
+		weight_ = weight.round( 2 )
+
+	elsif weight >= 0.10 && weight < 0.5
+		weight_ = weight.round( 2 )
+	elsif weight >= 0.5 && weight < 1.0
+		weight_ = weight.floor( 1 )
+		t = weight - weight_
+		if t >= 0.075
+			weight_ += 0.1
+		elsif t >= 0.025 && t > 0.075
+			weight_ += 0.05
+		end
+
+	elsif weight >= 1.0 && weight < 5.0
+		weight_ = weight.round( 1 )
+	elsif weight >= 5 && weight < 10
+		weight_ = weight.floor( 0 )
+		t = weight - weight_
+		if t >= 0.75
+			weight_ += 1
+		elsif t >= 0.25 && t > 0.75
+			weight_ += 0.5
+		end
+
+	elsif weight >= 10 && weight < 50
+		weight_ = weight.round( 0 )
+	elsif weight >= 50 && weight < 100
+		weight_ = weight.floor( -1 )
+		t = weight - weight_
+		if t >= 7.5
+			weight_ += 10
+		elsif t >= 2.5 && t > 7.5
+			weight_ += 5
+		end
+
+	elsif weight >= 100 && weight < 500
+		weight_ = weight.round( -1 )
+	elsif weight >= 500
+		weight_ = weight.floor( -2 )
+		t = weight - weight_
+		if t >= 75
+			weight_ += 100
+		elsif t >= 25 && t > 75
+			weight_ += 50
 		end
 	end
 
-	return weight, energy
+	return weight_
 end
-
 
 #==============================================================================
 # Main
@@ -107,7 +182,6 @@ option1 = cgi['option1']
 option2 = cgi['option2']
 option3 = cgi['option3']
 code = cgi['code']
-seasoning = cgi['seasoning']
 if $DEBUG
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
@@ -118,7 +192,6 @@ if $DEBUG
 	puts "opt1:#{option1}<br>"
 	puts "opt2:#{option2}<br>"
 	puts "opt3:#{option3}<br>"
-	puts "seasoning:#{seasoning}<br>"
 	puts "<hr>"
 end
 
@@ -155,13 +228,8 @@ if sum
 end
 
 
-#### Getting food weight & food energy
-weight_ctrl, energy_ctrl = we_calc( food_list, uname )
-weight_ctrl = ( weight_ctrl / dish_num ).to_i
-energy_ctrl = ( energy_ctrl / dish_num ).to_i
-
-
 update = ''
+all_check = ''
 case command
 # リストから食品を削除
 when 'clear'
@@ -217,8 +285,7 @@ when 'weight'
 		puts 'カロリー' if $DEBUG
 		rr = mariadb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false )
 		if rr.first['ENERC_KCAL']
-			kcal = rr.first['ENERC_KCAL']
-			uk = 100 / kcal
+			uk = BigDecimal( '100' ) / rr.first['ENERC_KCAL']
 		end
 	elsif food_list[order_no].unit.to_i == 15
 		# 廃棄前g
@@ -236,7 +303,6 @@ when 'weight'
 		uk = BigDecimal( t )
 	end
 
-
 	# 換算重量の小数点処理
 	food_list[order_no].weight = unit_value * uk
 	if food_list[order_no].weight >= 10
@@ -248,7 +314,7 @@ when 'weight'
 	end
 
 	# 調理後重量の小数点処理
-	food_list[order_no].ew = BigDecimal( food_list[order_no].weight.to_s ) * BigDecimal( food_list[order_no].rr )
+	food_list[order_no].ew = BigDecimal( food_list[order_no].weight.to_s ) * BigDecimal( food_list[order_no].rr.to_s )
 	if food_list[order_no].ew >= 10
 		food_list[order_no].ew = food_list[order_no].ew.round( 0 ).to_i
 	elsif food_list[order_no].ew >= 1
@@ -257,7 +323,6 @@ when 'weight'
 		food_list[order_no].ew = food_list[order_no].ew.round( 2 ).to_f
 	end
 	update = '*'
-
 
 #### 食品番号による食品の追加、または空白の追加
 when 'add'
@@ -297,6 +362,16 @@ when 'check_box'
 	food_list[order_no].check = check_status
 
 
+#### Switching all check box
+when 'allSwitch'
+	allSwitch = cgi['allSwitch']
+	puts "allSwitch:#{allSwitch}<br>" if $DEBUG
+
+	food_list.size.times do |c|
+		food_list[c].check = allSwitch
+	end
+	all_check = 'CHECKED' if allSwitch == '1'
+
 #### 皿数の更新
 when 'dish'
 	dish_num = 1 if dish_num == nil || dish_num == ''
@@ -314,22 +389,7 @@ when 'gn_exchange'
 	c = 0
 	food_list.each do |e|
 		unless e.no == '-' || e.no == '+'
-			weight_gn = BigDecimal( e.weight ) / dish_num
-			if weight_gn <= 0.01
-				weight_gn = 0.01
-			elsif weight_gn >= 0.01 && weight_gn < 0.1
-			elsif weight_gn >= 0.1 && weight_gn < 0.3
-				weight_gn = weight_gn.round( 2 )
-			elsif weight_gn >= 0.3 && weight_gn < 3
-				weight_gn = weight_gn.round( 1 )
-			elsif weight_gn >= 3 && weight_gn < 30
-				weight_gn = weight_gn.round( 0 )
-			elsif weight_gn >= 30 && weight_gn < 300
-				weight_gn = weight_gn.round( -1 )
-			elsif weight_gn >= 300
-				weight_gn = weight_gn.round( -2 )
-			end
-
+			weight_gn = proc_wf( BigDecimal( e.weight ) / dish_num )
 			food_list[c].weight = weight_gn
 			food_list[c].unit = '0'
 			food_list[c].unitv = weight_gn
@@ -342,6 +402,9 @@ when 'gn_exchange'
 
 #### 調味％
 when 'seasoning'
+	seasoning = cgi['seasoning']
+	puts "seasoning:#{seasoning}<br>" if $DEBUG
+
 	total_weight = BigDecimal( 0 )
 	target_weight = BigDecimal( 0 )
 	food_list.each do |e|
@@ -367,6 +430,61 @@ when 'seasoning'
 		end
 	end
 	update = '*'
+
+
+#### Adjusting tootal food weight
+when 'wadj'
+	weight_adj = cgi[''].to_i
+	puts "weight_adj:#{weight_adj}<br>" if $DEBUG
+
+	weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
+#	break if ( weight_ctrl - weight_checked ) < 10
+	wadj_rate = BigDecimal( weight_adj - ( weight_ctrl - weight_checked )) / ( weight_checked )
+	food_list.size.times do |c|
+		if food_list[c].check == '1'
+			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * wadj_rate )
+			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * wadj_rate )
+			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * wadj_rate )
+		end
+	end
+	update = '*'
+
+
+#### Adjusting tootal food energy
+when 'eadj'
+	energy_adj = cgi['energy_adj'].to_i
+	puts "energy_adj:#{energy_adj}<br>" if $DEBUG
+
+	energy_ctrl, energy_checked = energy_calc( food_list, uname, dish_num )
+#	break if ( energy_ctrl - energy_checked ) < 10
+	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
+	food_list.size.times do |c|
+		if food_list[c].check == '1'
+			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * eadj_rate )
+			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * eadj_rate )
+			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * eadj_rate )
+		end
+	end
+	update = '*'
+
+
+#### Adjusting feeding rate by food loss
+when 'ladj'
+	loss_adj = cgi['loss_adj'].to_i
+	puts "loss_adj:#{loss_adj}<br>" if $DEBUG
+
+	weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
+	ladj_rate = ( BigDecimal( weight_checked - loss_adj ) / ( weight_checked )).round( 2 ).to_f
+	food_list.size.times do |c|
+		if food_list[c].check == '1'
+			food_list[c].rr = ladj_rate
+			food_list[c].ew = BigDecimal( food_list[c].weight ) * ladj_rate
+		else
+			food_list[c].rr = "1.0"
+			food_list[c].ew = food_list[c].weight
+		end
+	end
+	update = '*'
 end
 
 
@@ -376,6 +494,13 @@ if $DEBUG
 	puts "update:#{update}<br>"
 	puts "<hr>"
 end
+
+
+#### Getting food weight & food energy
+weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
+energy_ctrl, energy_checked = energy_calc( food_list, uname, dish_num )
+weitht_adj = weight_ctrl if weitht_adj == 0
+energy_adj = energy_ctrl if energy_adj == 0
 
 
 #### CBタグの読み込み
@@ -420,6 +545,11 @@ seasoning_html << "</div>"
 seasoning_html << "</div>"
 
 
+#### Sasshi button
+html_sasshi = ''
+html_sasshi = "<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[28]}</button>" if status >= 3
+
+
 #### 新しいまな板表示
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -456,22 +586,22 @@ html = <<-"HTML"
         		</div>
 			</div>
 		</div>
-		<div class='col-4'>
+		<div class='col-5'>
 			#{seasoning_html}
 		</div>
-		<div class='col-2'>
+		<div class='col-1'>
 		</div>
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
 				</div>
-  				<input type="number" min='1' class="form-control" id="weight_ctrl" value="#{weight_ctrl}" onchange=\"\">
+  				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl}">
 				<div class="input-group-append">
-	        		<button class='btn btn-outline-warning' type='button' onclick=\"\">#{lp[27]}</button>
+	        		<button class='btn btn-outline-primary' type='button' onclick=\"weightAdj( '#{code}' )\">#{lp[27]}</button>
 	        	</div>
 			</div>
 		</div>
@@ -480,23 +610,36 @@ html = <<-"HTML"
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
 				</div>
-  				<input type="number" min='1' class="form-control" id="energy_ctrl" value="#{energy_ctrl}" onchange=\"\">
+  				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl}">
 				<div class="input-group-append">
-	        		<button class='btn btn-outline-warning' type='button' onclick=\"\">#{lp[27]}</button>
+	        		<button class='btn btn-outline-primary' type='button' onclick=\"energyAdj( '#{code}' )\">#{lp[27]}</button>
 	        	</div>
 			</div>
 		</div>
-		<div class='col-5'>
+		<div class='col-3'>
+			<div class='input-group input-group-sm'>
+				<div class="input-group-prepend">
+					<label class="input-group-text" for="energy_ctrl">#{lp[29]}</label>
+				</div>
+  				<input type="number" min='0' class="form-control" id="loss_adj" value="0">
+				<div class="input-group-append">
+	        		<button class='btn btn-outline-primary' type='button' onclick=\"lossAdj( '#{code}' )\">#{lp[27]}</button>
+	        	</div>
+			</div>
+		</div>
+		<div class='col-1'>
+	        #{html_sasshi}
 		</div>
 		<div class='col-2'>
 			<input type='checkbox' id='gn_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange_BWL1( '#{code}' )\">#{lp[22]}</button>
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange( '#{code}' )\">#{lp[22]}</button>
 		</div>
 	</div>
 	<hr>
 
 <div class='row cb_header'>
-	<div class='col-2 cb_header'>#{lp[9]}</div>
+	<div class='col-1 cb_header'>#{lp[9]}</div>
+	<div class='col-1 cb_header'><input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[30]}</div>
 	<div class='col-1 cb_header'>#{lp[10]}</div>
 	<div class='col-3 cb_header'>#{lp[11]}</div>
 	<div class='col-3'>

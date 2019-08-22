@@ -400,12 +400,9 @@ html = <<-"HTML"
 		#{palette_html}
 		</div>
 		<div class="col-2">
-			<button class='btn btn-success' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )">#{lp[1]}</button>
 		</div>
 		<div class="col-2">
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?=' )">#{lp[8]}</button>
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )">#{lp[1]}</button>
 		</div>
 	</div>
 	<div class="row">
@@ -415,13 +412,22 @@ html = <<-"HTML"
     			<label class="form-check-label">#{lp[2]}</label>
   			</div>
 		</div>
-		<div class="col-2">
+		<div class="col-4">
 			<div class="input-group input-group-sm">
 				<div class="input-group-prepend">
 					<label class="input-group-text">#{lp[5]}</label>
 				</div>
 				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>&nbsp;g
 			</div>
+		</div>
+		<div class="col-2">
+		</div>
+		<div class="col-4">
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?=' )">#{lp[8]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
+			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
 		</div>
 	</div>
 	<br>

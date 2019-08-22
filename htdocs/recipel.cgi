@@ -386,6 +386,7 @@ if command == 'import'
 		end
 
 		mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{uname}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{Time.now}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{uname}';", false )
 	end
 
 end
@@ -518,7 +519,7 @@ recipe_solid.each do |e|
 		end
 		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect_BWL2( '#{e['code']}' )\">#{lp[9]}</button>"
 		recipe_html << "	<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[19]}</button>"
-		recipe_html << "	<button class='btn btn-primary btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[20]}</button>&nbsp;"
+		recipe_html << "	<button class='btn btn-primary btn-sm' type='button' onclick=\"\">#{lp[20]}</button>&nbsp;"
 		recipe_html << "</td>"
 
 		if e['user'] == uname

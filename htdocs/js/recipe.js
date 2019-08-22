@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////////
+
 // まな板 ////////////////////////////////////////////////////////////////////////
 
 // 追加ボタンを押してsumに食品を追加して、まな板カウンタを増やす
@@ -77,10 +77,45 @@ var lower_BWL1 = function( order, code ){
 };
 
 
-// まな板の人数設定ボタンを押してL1にリストを更新
+// Changing dish number
 var dishCB_BWL1 = function( code ){
 	var dish_num = document.getElementById( "dish_num" ).value;
 	$.post( "cboard.cgi", { command:'dish', code:code, dish_num:dish_num }, function( data ){ $( "#bw_level1" ).html( data );});
+};
+
+
+// Adjusting total food weight
+var weightAdj = function( code ){
+	var weight_adj = document.getElementById( "weight_adj" ).value;
+	$.post( "cboard.cgi", { command:'wadj', code:code, weight_adj:weight_adj }, function( data ){ $( "#bw_level1" ).html( data );});
+	displayVideo( 'Adjusted by weight' );
+};
+
+
+// Adjusting total food energy
+var energyAdj = function( code ){
+	var energy_adj = document.getElementById( "energy_adj" ).value;
+	$.post( "cboard.cgi", { command:'eadj', code:code, energy_adj:energy_adj }, function( data ){ $( "#bw_level1" ).html( data );});
+		displayVideo( 'Adjusted by energy' );
+};
+
+
+// Adjusting feeding rate by food loss
+var lossAdj = function( code ){
+	var loss_adj = document.getElementById( "loss_adj" ).value;
+	$.post( "cboard.cgi", { command:'ladj', code:code, loss_adj:loss_adj }, function( data ){ $( "#bw_level1" ).html( data );});
+		displayVideo( 'Adjusted by loss' );
+};
+
+
+// Switching all check
+var allSwitch = function( code ){
+	if( document.getElementById( 'switch_all' ).checked ){
+		var allSwitch = 1;
+	} else{
+		var allSwitch = 0;
+	}
+	$.post( "cboard.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#bw_level1" ).html( data );});
 };
 
 
@@ -146,8 +181,8 @@ var quickSave_BWL1 = function( code ){
 };
 
 
-// まな板のQuick保存を押してL1にリストを更新
-var gnExchange_BWL1 = function( code ){
+// GN Exchange
+var gnExchange = function( code ){
 	if( document.getElementById( 'gn_check' ).checked ){
 		$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 		displayVideo( 'Adjusted' );
@@ -273,7 +308,7 @@ var photoDel_BWL2 = function( slot, code ){
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-// レシピ一覧 ////////////////////////////////////////////////////////////////////////
+// Recipe list ////////////////////////////////////////////////////////////////////////
 
 // まな板のレシピ読み込みボタンを押してL1にリストを表示
 var recipeList_BWL1 = function( com ){
@@ -309,14 +344,17 @@ var recipeDelete_BWL1 = function( code, page ){
 	if( document.getElementById( code ).checked ){
 		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
 		displayVideo( 'Removed' );
-		$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#bw_level1" ).html( data );});
+		var fxRR = function(){
+			$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#bw_level1" ).html( data );});
+		};
+		setTimeout( fxRR, 1000 );
 	} else{
 		displayVideo( 'Check!' );
 	}
 };
 
 
-// レシピ一覧のインポートボタンを押してレシピをインポートし、L1にリストを再表示
+// importing public recipe form recipe list
 var recipeImport_BWL1 = function( code, page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
@@ -327,6 +365,30 @@ var recipeImport_BWL1 = function( code, page ){
 
 	$.post( "recipel.cgi", { command:'import', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
 	displayVideo( 'Imported' );
+
+	var fxRI = function(){
+		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#cb_num" ).html( data );});
+	};
+	setTimeout( fxRI, 1000 );
+};
+
+
+// importing public recipe form recipe list
+var recipeSub = function( code, page ){
+	var range = document.getElementById( "range" ).value;
+	var type = document.getElementById( "type" ).value;
+	var role = document.getElementById( "role" ).value;
+	var tech = document.getElementById( "tech" ).value;
+	var time = document.getElementById( "time" ).value;
+	var cost = document.getElementById( "cost" ).value;
+
+	$.post( "recipel.cgi", { command:'sub', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
+	displayVideo( 'Imported' );
+
+	var fxRI = function(){
+		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#cb_num" ).html( data );});
+	};
+	setTimeout( fxRI, 1000 );
 };
 
 
@@ -415,7 +477,7 @@ var clearCT_BWL2 = function( code ){
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Lucky☆入力 ////////////////////////////////////////////////////////////////////////
+// Lucky star input ////////////////////////////////////////////////////////////////////////
 
 // Lucky☆入力ボタンを押してL2に入力画面を表示、そしてL1を非表示にする
 var luckyInput_BWL2 = function(){
@@ -444,7 +506,7 @@ var luckyAnalyze_BWL2 = function( mode ){
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
-// 食品化 ////////////////////////////////////////////////////////////////////////
+// Foodize ////////////////////////////////////////////////////////////////////////
 
 // 成分計算表の食品化ボタンを押してL3に擬似食品フォームを表示
 var Pseudo_R2F_BWL3 = function( code ){

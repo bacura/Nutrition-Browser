@@ -20,8 +20,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 $SCRIPT = 'koyomi.cgi'
-$DEBUG = true
-
+$DEBUG = false
 #==============================================================================
 #DEFINITION
 #==============================================================================
@@ -31,12 +30,16 @@ def meals( meal, uname )
 	a = meal.split( "\t" )
 	a.each do |e|
 		aa = e.split( ':' )
-		if aa[0] == '?-'
+		if aa[0] == '?--'
+			mb_html << "<li style='list-style-type: circle'>何か食べた（微盛）</li>"
+		elsif aa[0] == '?-'
 			mb_html << "<li style='list-style-type: circle'>何か食べた（小盛）</li>"
 		elsif aa[0] == '?='
 			mb_html << "<li style='list-style-type: circle'>何か食べた（並盛）</li>"
 		elsif aa[0] == '?+'
 			mb_html << "<li style='list-style-type: circle'>何か食べた（大盛）</li>"
+		elsif aa[0] == '?++'
+			mb_html << "<li style='list-style-type: circle'>何か食べた（特盛）</li>"
 		elsif /\-m\-/ =~ aa[0]
 			r = mariadb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false )
 			mb_html << "<li>#{r.first['name']}</li>"

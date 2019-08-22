@@ -269,3 +269,51 @@ var updateKoyomiex = function( dd, item_no, cell_id ){
 	$.post( "koyomiex.cgi", { command:"update", yyyy:yyyy, mm:mm, dd:dd, item_no:item_no, cell:cell }, function( data ){});
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi //////////////////////////////////////////////////////////////
+
+// Ginmi init
+var initGinmi = function(){
+	closeBroseWindows( 1 );
+	$.post( "ginmi.cgi", { command:"menu" }, function( data ){ $( "#bw_level1" ).html( data );});
+	document.getElementById( "bw_level1" ).style.display = 'block';
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi BMI //////////////////////////////////////////////////////////////
+
+var ginmiBMI = function(){
+	$.post( "ginmi.cgi", { command:"bmi", step:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+var ginmiBMIres = function(){
+	var age = document.getElementById( "age" ).value;
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	$.post( "ginmi.cgi", { command:"bmi", step:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Memory playback //////////////////////////////////////////////////////////////
+
+// MemoryPB init
+var initMemoryPB = function(){
+	closeBroseWindows( 3 );
+	$.post( "memorypb.cgi", { command:"init" }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+// MemoryPB next
+var nextMemoryPB = function(){
+	var category = document.getElementById( "category" ).value;
+	$.post( "memorypb.cgi", { command:"category", category:category }, function( data ){ $( "#bw_level4" ).html( data );});
+	document.getElementById( "bw_level4" ).style.display = 'block';
+};
+
+// MemoryPB open
+var openMemoryPB = function(){
+};
