@@ -52,16 +52,20 @@ def config_module( cgi )
 		end
 	end
 
-
 ####
 	t = Time.new
 	koyomiy = t.year
+	breakfast_st = 7
+	lunch_st = 12
+	dinner_st = 19
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-	a = r.first['koyomiy'].split( ':' )
-	koyomiy = a[0].to_i
-	breakfast_st = a[1].to_i
-	lunch_st = a[2].to_i
-	dinner_st = a[3].to_i
+	if r.first['koyomiy']
+		a = r.first['koyomiy'].split( ':' )
+		koyomiy = a[0].to_i
+		breakfast_st = a[1].to_i
+		lunch_st = a[2].to_i
+		dinner_st = a[3].to_i
+	end
 
 	# HTML
 	html = '<div class="container">'
@@ -82,7 +86,7 @@ def config_module( cgi )
 	html << "</div><hr>"
 
 	html << "<div class='row'>"
-	html << "<div class='col-2'>"
+	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
 	html << "<div class='input-group-prepend'><span class='input-group-text'>朝食標準時刻</span></div>"
  	html << "<select class='custom-select' id='breakfast_st'>"
@@ -96,7 +100,7 @@ def config_module( cgi )
   	html << "</select>"
 	html << "</div></div>"
 
-	html << "<div class='col-2'>"
+	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
 	html << "<div class='input-group-prepend'><span class='input-group-text'>昼食標準時刻</span></div>"
  	html << "<select class='custom-select' id='lunch_st'>"
@@ -110,7 +114,7 @@ def config_module( cgi )
   	html << "</select>"
 	html << "</div></div>"
 
-	html << "<div class='col-2'>"
+	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
 	html << "<div class='input-group-prepend'><span class='input-group-text'>夕食標準時刻</span></div>"
  	html << "<select class='custom-select' id='dinner_st'>"
@@ -145,7 +149,7 @@ def config_module( cgi )
 
   	html << "<div class='row'>"
 	html << "<div class='col-2'></div>"
-	html << "<div class='col-4'><button type='button' class='btn btn-outline-warning btn-sm nav_button' onclick=\"koyomiex_cfg( 'update' )\">保存</button></div>"
+	html << "<div class='col-4'><button type='button' class='btn btn-outline-primary btn-sm nav_button' onclick=\"koyomiex_cfg( 'update' )\">保存</button></div>"
 	html << "</div>"
 	html << "</div>"
 

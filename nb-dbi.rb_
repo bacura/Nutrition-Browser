@@ -9,7 +9,7 @@
 #==============================================================================
 #Change log
 #==============================================================================
-##20190716, 0.00, Release
+##20190906, 0.00, Release
 
 
 #==============================================================================
@@ -635,15 +635,15 @@ end
 def koyomi_init()
 	puts 'koyomi'
 
-	query = 'CREATE TABLE koyomi (user VARCHAR(32), fix VARCHAR(16), breakfast VARCHAR(256), lunch VARCHAR(256), dinner VARCHAR(256), supple VARCHAR(256), memo VARCHAR(256), date DATE );'
+	query = 'CREATE TABLE koyomi (user VARCHAR(32), fix VARCHAR(16), tdiv TINYINT(1), koyomi VARCHAR(256), date DATE );'
 	$db.query( query )
 	end
 end
 
 
 #### Koyomi EX table
-def koyomi_init()
-	puts 'koyomi'
+def koyomiex_init()
+	puts 'koyomiex'
 
 	query = 'CREATE TABLE koyomiex (user VARCHAR(32), item0 VARCHAR(16), item1 VARCHAR(16), item2 VARCHAR(16), item3 VARCHAR(16), item4 VARCHAR(16), item5 VARCHAR(16), item6 VARCHAR(16), item7 VARCHAR(16), item8 VARCHAR(16), item9 VARCHAR(16), date DATE );'
 	$db.query( query )

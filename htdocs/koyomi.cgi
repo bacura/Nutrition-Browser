@@ -19,8 +19,10 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'koyomi.cgi'
-$DEBUG = false
+@debug = false
+@tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
+
+
 #==============================================================================
 #DEFINITION
 #==============================================================================
@@ -84,7 +86,7 @@ cgi = CGI.new
 uname, uid, status, aliaseu, language = login_check( cgi )
 lp = lp_init( 'koyomi', language )
 start_year = get_starty( uname )
-if $DEBUG
+if @debug
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"
 	puts "aliaseu:#{aliaseu}<br>\n"
@@ -99,7 +101,7 @@ yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
 dd = 1 if dd == 0
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
 	puts "mm:#{mm}<br>\n"
@@ -128,11 +130,7 @@ MENU
 end
 
 
-
-
-
-
-#### 日付の取得
+#### Getting date
 date = Date.today
 date = Date.new( yyyy, mm, dd ) unless yyyy == 0
 date_first = Date.new( date.year, date.month, 1 )
@@ -143,7 +141,7 @@ if yyyy == 0
 	mm = date.month
 	dd = date.day
 end
-if $DEBUG
+if @debug
 	puts "date:#{date.to_time}<br>\n"
 	puts "first_week:#{first_week}<br>\n"
 	puts "last_day:#{last_day}<br>\n"
@@ -167,11 +165,6 @@ end
 date_html = ''
 week_count = first_week
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false)
-koyomir = []
-r.each do |e| koyomir[e['date'].day] = e end
-
-
 1.upto( last_day ) do |c|
 	date_html << "<tr>"
 	if week_count == 0
@@ -180,80 +173,41 @@ r.each do |e| koyomir[e['date'].day] = e end
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
 
-	if koyomir[c] == nil
-		5.times do |cc| date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}', '#{cc}' )\">-</td>" end
-		date_html << "<td></td>"
-	else
-		if koyomir[c]['fix'] == ''
-			if koyomir[c]['breakfast'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['breakfast'], uname )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['lunch'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['lunch'], uname )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['dinner'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['dinner'], uname )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['supple'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				meal_block = meals( koyomir[c]['supple'], uname )
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{meal_block}</td>"
-			end
-
-			if koyomir[c]['memo'] == ''
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">-</td>"
-			else
-				date_html << "<td onclick=\"editKoyomi_BW2( 'init', '#{c}' )\">#{koyomir[c]['memo']}</td>"
-			end
-
-			date_html << "<td><button class='btn btn-sm btn-outline-primary' onclick=\"fixKoyomi_BW1( 'fix', '#{c}' )\">#{lp[18]}</button></td>"
+	fix_flag = false
+	koyomi_tmp = []
+	5.times do |cc|
+		r = mariadb( "SELECT fix, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
+		if r.first
+			koyomi_tmp << r.first['koyomi']
+			fix_flag = true if r.first['fix'] != ''
 		else
-			if koyomir[c]['breakfast'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['breakfast'], uname )}</td>"
-			end
-
-			if koyomir[c]['lunch'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['lunch'], uname )}</td>"
-			end
-
-			if koyomir[c]['dinner'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['dinner'], uname )}</td>"
-			end
-
-			if koyomir[c]['supple'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{meals( koyomir[c]['supple'], uname )}</td>"
-			end
-
-			if koyomir[c]['memo'] == ''
-				date_html << "<td>-</td>"
-			else
-				date_html << "<td>#{koyomir[c]['memo']}</td>"
-			end
-
-			date_html << "<td><button class='btn btn-sm btn-outline-warning' onclick=\"fixKoyomi_BW1( 'cancel', '#{c}' )\">#{lp[19]}</button></td>"
+			koyomi_tmp << ''
 		end
 	end
+
+	onclick = ''
+	onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\"" unless fix_flag
+	4.times do |cc|
+		if koyomi_tmp[cc] == ''
+			date_html << "<td #{onclick}>-</td>"
+		else
+			meal_block = meals( koyomi_tmp[cc], uname )
+			date_html << "<td #{onclick}>#{meal_block}</td>"
+		end
+	end
+
+	if koyomi_tmp[4] == ''
+		date_html << "<td>-</td>"
+	else
+		date_html << "<td>#{koyomi_tmp[4]}</td>"
+	end
+
+	if fix_flag
+		date_html << "<td><button class='btn btn-sm btn-outline-warning' onclick=\"fixKoyomi_BW1( 'cancel', '#{c}' )\">#{lp[19]}</button></td>"
+	else
+		date_html << "<td><button class='btn btn-sm btn-outline-primary' onclick=\"fixKoyomi_BW1( 'fix', '#{c}' )\">#{lp[18]}</button></td>"
+	end
+
 	date_html << "</tr>"
 	week_count += 1
 	week_count = 0 if week_count > 6

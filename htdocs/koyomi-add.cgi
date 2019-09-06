@@ -19,14 +19,15 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'koyomi-add.cgi'
-$DEBUG = true
+@debug = false
+@tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
+
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
-#
+#### Getting start year & standard time
 def get_starty( uname )
 	t = Time.new
 	start_year = t.year
@@ -34,14 +35,16 @@ def get_starty( uname )
 	lunch_st = 0
 	dinner_st = 0
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-	if r.first
+	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		start_year = a[0].to_i if a[0].to_i != 0
 		breakfast_st = a[1].to_i if a[1].to_i != 0
 		lunch_st = a[2].to_i if a[2].to_i != 0
 		dinner_st = a[3].to_i if a[3].to_i != 0
 	end
-	return start_year, breakfast_st, lunch_st, dinner_st
+	st_set = [ breakfast_st, lunch_st, dinner_st ]
+
+	return start_year, st_set
 end
 
 #==============================================================================
@@ -52,22 +55,20 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliaseu, language = login_check( cgi )
 lp = lp_init( 'koyomi-add', language )
-start_year, breakfast_st, lunch_st, dinner_st = get_starty( uname )
-if $DEBUG
+start_year, st_set = get_starty( uname )
+if @debug
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"
 	puts "aliaseu:#{aliaseu}<br>\n"
 	puts "language:#{language}<br>\n"
 	puts "<hr>\n"
 	puts "start_year:#{start_year}<br>\n"
-	puts "breakfast_st:#{breakfast_st}<br>\n"
-	puts "lunch_st:#{lunch_st}<br>\n"
-	puts "dinner_st:#{dinner_st}<br>\n"
+	puts "st_set:#{st_set}<br>\n"
 	puts "<hr>\n"
 end
 
 
-#### POSTデータの取得
+#### Getting POST
 command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
@@ -76,9 +77,19 @@ code = cgi['code']
 ev = cgi['ev'].to_i
 eu = cgi['eu'].to_s
 tdiv = cgi['tdiv'].to_i
-hh = cgi['hh'].to_i
+hh = cgi['hh']
+order = cgi['order'].to_i
+copy = cgi['copy'].to_i
+origin = cgi['origin']
 dd = 1 if dd == 0
-if $DEBUG
+ev = 100 if ev == 0
+if hh == ''
+	hh = 99
+else
+	hh = hh.to_i
+end
+origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{order}" if command == 'modify' && origin == ''
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "code:#{code}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
@@ -88,11 +99,14 @@ if $DEBUG
 	puts "tdiv:#{tdiv}<br>\n"
 	puts "ev:#{ev}<br>\n"
 	puts "eu:#{eu}<br>\n"
+	puts "order:#{order}<br>\n"
+	puts "copy:#{copy}<br>\n"
+	puts "origin:#{origin}<br>\n"
 	puts "<hr>\n"
 end
 
 
-#### 日付の取得
+#### Getting date
 date = Date.today
 date = Date.new( yyyy, mm, dd ) unless yyyy == 0
 date_first = Date.new( date.year, date.month, 1 )
@@ -103,60 +117,75 @@ if yyyy == 0
 	mm = date.month
 	dd = date.day
 end
-if $DEBUG
+if @debug
 	puts "date:#{date.to_time}<br>\n"
 	puts "first_week:#{first_week}<br>\n"
 	puts "last_day:#{last_day}<br>\n"
 end
 
 
-#### Save food
-if command == 'save'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
-	if r.first
-		breakfast = r.first['breakfast']
-		lunch = r.first['lunch']
-		dinner = r.first['dinner']
-		supple = r.first['supple']
-		delimiter = ''
-		case tdiv
-		when 0
-			delimiter = "\t" if breakfast != ''
-			hh = breakfast_st if hh == 99
-			breakfast << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
-		when 1
-			delimiter = "\t" if lunch != ''
-			hh = lunch_st if hh == 99
-			lunch << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
-		when 2
-			delimiter = "\t" if dinner != ''
-			hh = dinner_st if hh == 99
-			dinner << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
-		when 3
-			delimiter = "\t" if supple != ''
-			supple << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
+#### Move food
+new_solid = ''
+if command == 'move' && copy != 1
+	a = origin.split( ':' )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )
+	if r.first[@tdiv_set[a[3].to_i]]
+		t = r.first[@tdiv_set[a[3].to_i]]
+		aa = t.split( "\t" )
+		0.upto( aa.size ) do |c|
+			new_solid << "#{aa[c]}\t" unless c == a[4].to_i
 		end
-		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
-	else
-		breakfast = ""
-		lunch = ""
-		dinner = ""
-		supple = ""
-		case tdiv
-		when 0
-			hh = breakfast_st if hh == 99
-			breakfast = "#{code}:#{ev}:#{eu}:#{hh}"
-		when 1
-			hh = lunch_st if hh == 99
-			lunch = "#{code}:#{ev}:#{eu}:#{hh}"
-		when 2
-			hh = dinner_st if hh == 99
-			dinner = "#{code}:#{ev}:#{eu}:#{hh}"
-		when 3
-			supple = "#{code}:#{ev}:#{eu}:#{hh}"
-		end
-		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}', memo='', date='#{yyyy}-#{mm}-#{dd}';", false)
+		new_solid.chop! unless new_solid == ''
 	end
+	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )
+end
+
+
+#### Save food
+if command == 'save' || command == 'move'
+	hh = st_set[tdiv] if hh == 99
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+	if r.first
+		koyomi = r.first['koyomi']
+		delimiter = ''
+		delimiter = "\t" if koyomi != ''
+		koyomi << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
+	else
+		koyomi = "#{code}:#{ev}:#{eu}:#{hh}"
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false )
+		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:0" if command == 'move'
+	end
+end
+
+copy_html = ''
+save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomi_BWF( '#{code}', '#{origin}' )\">#{lp[12]}</button>"
+
+
+if command == 'modify' || command == 'move'
+	copy_html << "<div class='form-group form-check'>"
+    copy_html << "<input type='checkbox' class='form-check-input' id='copy'>"
+    copy_html << "<label class='form-check-label'>#{lp[24]}</label>"
+	copy_html << "</div>"
+
+	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"modifysaveKoyomi( '#{code}', '#{origin}' )\">#{lp[23]}</button>"
+end
+
+
+####
+food_name = code
+if /\-m\-/ =~ code
+	r = mariadb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false )
+	food_name = r.first['name']
+elsif /\-/ =~ code
+	r = mariadb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+	food_name = r.first['name']
+else
+	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';"
+	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';" if /^U\d{5}/ =~ code
+	r = mariadb( q, false )
+	food_name = r.first['name']
 end
 
 
@@ -171,46 +200,26 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	else
 		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
-	breakfast_color = 'light'
-	lunch_color = 'light'
-	dinner_color = 'light'
-	supple_color = 'light'
-	breakfast_c = '-'
-	lunch_c = '-'
-	dinner_c = '-'
-	supple_c = '-'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false)
-	if r.first
-		if r.first['fix'] != ''
-			4.times do date_html << "<td class='btn-secondary'></td>" end
+
+	0.upto( 3 ) do |cc|
+		koyomi_c = '-'
+		r = mariadb( "SELECT fix, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
+		onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
+		onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
+		if r.first
+			if r.first['fix'] != ''
+				date_html << "<td class='btn-secondary'></td>"
+			elsif r.first['koyomi'] == ''
+				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+			else
+				koyomi_c = r.first['koyomi'].split( "\t" ).size
+				date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+			end
 		else
-			if r.first['breakfast'] != ''
-				breakfast_color = 'info'
-				breakfast_c = r.first['breakfast'].split( "\t" ).size
-			end
-			if r.first['lunch'] != ''
-				lunch_color = 'info'
-				lunch_c = r.first['lunch'].split( "\t" ).size
-			end
-			if r.first['dinner'] != ''
-				dinner_color = 'info'
-				dinner_c = r.first['dinner'].split( "\t" ).size
-			end
-			if r.first['supple'] != ''
-				supple_color = 'info'
-				supple_c = r.first['supple'].split( "\t" ).size
-			end
-			date_html << "<td class='btn-#{breakfast_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '0' )\">#{breakfast_c}</td>"
-			date_html << "<td class='btn-#{lunch_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '1' )\">#{lunch_c}</td>"
-			date_html << "<td class='btn-#{dinner_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '2' )\">#{dinner_c}</td>"
-			date_html << "<td class='btn-#{supple_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '3' )\">#{supple_c}</td>"
+			date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
 		end
-	else
-		date_html << "<td class='btn-#{breakfast_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '0' )\">#{breakfast_c}</td>"
-		date_html << "<td class='btn-#{lunch_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '1' )\">#{lunch_c}</td>"
-		date_html << "<td class='btn-#{dinner_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '2' )\">#{dinner_c}</td>"
-		date_html << "<td class='btn-#{supple_color}' align='center' onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '3' )\">#{supple_c}</td>"
 	end
+
 	date_html << "</tr>"
 	week_count += 1
 	week_count = 0 if week_count > 6
@@ -219,7 +228,11 @@ end
 
 #### Select HTML
 select_html = ''
-select_html << "<select id='yyyy' class='custom-select custom-select-sm' onChange=\"changeKoyomi_BWF( '#{code}' )\">"
+onchange = "onChange=\"changeKoyomi_BWF( '#{code}', '#{origin}' )\""
+onchange = "onChange=\"modifychangeKoyomi( '#{code}', '#{origin}' )\"" if command == 'modify'
+
+
+select_html << "<select id='yyyy_add' class='custom-select custom-select-sm' #{onchange}>"
 start_year.upto( 2020 ) do |c|
 	if c == yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -229,7 +242,7 @@ start_year.upto( 2020 ) do |c|
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomi_BWF( '#{code}' )\">"
+select_html << "<select id='mm_add' class='custom-select custom-select-sm' #{onchange}>"
 1.upto( 12 ) do |c|
 	if c == mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -249,16 +262,26 @@ select_html << "<select id='dd' class='custom-select custom-select-sm'>"
 end
 select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
 
+tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
 select_html << "<select id='tdiv' class='custom-select custom-select-sm'>"
-select_html << "<option value='0'>#{lp[13]}</option>"
-select_html << "<option value='1'>#{lp[14]}</option>"
-select_html << "<option value='2'>#{lp[15]}</option>"
-select_html << "<option value='3'>#{lp[16]}</option>"
+0.upto( 3 ) do |c|
+	if tdiv == c
+		select_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
+	else
+		select_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
+	end
+end
 select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
 
 select_html << "<select id='hh' class='custom-select custom-select-sm'>"
 select_html << "<option value='99'>時刻</option>"
-0.upto( 23 ) do |c| select_html << "<option value='#{c}'>#{c}</option>" end
+0.upto( 23 ) do |c|
+	if c == hh
+		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
+	else
+		select_html << "<option value='#{c}'>#{c}</option>"
+	end
+end
 select_html << "</select>"
 
 
@@ -270,7 +293,7 @@ rate_html << "<div class='input-group input-group-sm'>"
 rate_html << "	<div class='input-group-prepend'>"
 rate_html << "		<span class='input-group-text' id='basic-addon1'>#{lp[22]}</span>"
 rate_html << "	</div>"
-rate_html << "	<input type='number' id='ev' value='100' class='form-control'>"
+rate_html << "	<input type='number' id='ev' value='#{ev}' class='form-control'>"
 rate_html << "  <div class='input-group-append'>"
 rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
 rate_html << "			<option value='%'>%</option>"
@@ -283,7 +306,7 @@ rate_html << "</div>"
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-11'><h5>#{lp[8]}: #{date.year}#{lp[9]} #{date.month}#{lp[10]}</h5></div>
+		<div class='col-11'><h5>#{food_name}</h5></div>
 		<div class='col-1'><button class='btn btn-success' type='button' onclick="koyomiReturn()">#{lp[11]}</button></div>
 	</div>
 	<div class='row'>
@@ -293,8 +316,11 @@ html = <<-"HTML"
 		<div class='col-3 form-inline'>
 			#{rate_html}
 		</div>
-		<div class='col-2 form-inline'>
-			<button class='btn btn-sm btn-outline-primary' type='button' onclick="saveKoyomi_BWF( '#{code}' )">#{lp[12]}</button>
+		<div class='col-1 form-inline'>
+			#{save_button}
+		</div>
+		<div class='col-1 form-inline'>
+			#{copy_html}
 		</div>
 	</div>
 	<br>

@@ -62,16 +62,17 @@ var memoryFC = function( code ){
 
 // Exchanging menu sets
 var changeMenu = function(){
-	if( menu_status == 0 ){
-		document.getElementById( "normal_menu" ).style.display = 'none';
-		document.getElementById( "guild_menu" ).style.display = 'inline';
-		displayVideo( 'Guild menu');
-		menu_status = 1;
-	}else{
-		document.getElementById( "guild_menu" ).style.display = 'none';
-		document.getElementById( "normal_menu" ).style.display = 'inline';
-		displayVideo( 'Standard menu' );
-		menu_status = 0;
+	switch( menu_status ){
+		case 0:
+			document.getElementById( "guild_menu" ).style.display = 'inline';
+			displayVideo( 'Guild menu');
+			menu_status = 1;
+			break;
+		case 1:
+			document.getElementById( "guild_menu" ).style.display = 'none';
+			displayVideo( 'Standard menu' );
+			menu_status = 0;
+			break;
 	}
 }
 

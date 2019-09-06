@@ -25,6 +25,8 @@ $DEBUG = false
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+####
 def meals( meal )
 	mb_html = '<ul>'
 	a = meal.split( "\t" )
@@ -52,14 +54,16 @@ def meals( meal )
 end
 
 
+#### Getting start year
 def get_starty( uname )
 	t = Time.new
 	start_year = t.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-	if r.first
+	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		start_year = a[0].to_i if a[0].to_i != 0
 	end
+
 	return start_year
 end
 
@@ -81,7 +85,7 @@ if $DEBUG
 end
 
 
-#### POSTデータの取得
+#### Getting POST data
 command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
@@ -100,7 +104,7 @@ if $DEBUG
 end
 
 
-#### 日付の取得
+#### Getting date
 date = Date.today
 date = Date.new( yyyy, mm, dd ) unless yyyy == 0
 date_first = Date.new( date.year, date.month, 1 )
@@ -118,7 +122,7 @@ if $DEBUG
 end
 
 
-#### loading config
+#### Loading config
 item_set = []
 item_set_no = []
 r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
@@ -140,9 +144,6 @@ if command == 'update'
 	end
 end
 
-
-
-
 ####
 th_html = '<thead><tr>'
 th_html << "<th align='center'>日付</th>"
@@ -150,9 +151,6 @@ item_set_no.each do |e|
 	th_html << "<th align='center'>#{item_set[e]}</th>"
 end
 th_html << '</tr></thead>'
-
-
-
 
 
 ####
@@ -163,9 +161,6 @@ r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{uname}' AND ( da
 koyomir = []
 cells = []
 r.each do |e| koyomir[e['date'].day] = e end
-
-
-
 
 
 1.upto( last_day ) do |c|

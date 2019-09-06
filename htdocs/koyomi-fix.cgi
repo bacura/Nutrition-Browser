@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -33,14 +33,16 @@ def get_starty( uname )
 	lunch_st = 0
 	dinner_st = 0
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-	if r.first
+	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		start_year = a[0].to_i if a[0].to_i != 0
 		breakfast_st = a[1].to_i if a[1].to_i != 0
 		lunch_st = a[2].to_i if a[2].to_i != 0
 		dinner_st = a[3].to_i if a[3].to_i != 0
 	end
-	return start_year, breakfast_st, lunch_st, dinner_st
+	st_set = [ breakfast_st, lunch_st, dinner_st ]
+
+	return start_year, st_set
 end
 
 #==============================================================================
@@ -51,17 +53,15 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'koyomi-fix', language )
-start_year, breakfast_st, lunch_st, dinner_st = get_starty( uname )
-if $DEBUG
+start_year, st_set = get_starty( uname )
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
 	puts "aliasu: #{aliasu}<br>"
 	puts "language: #{language}<br>"
 	puts "<hr>"
-	puts "breakfast_st:#{breakfast_st}<br>\n"
-	puts "lunch_st:#{lunch_st}<br>\n"
-	puts "dinner_st:#{dinner_st}<br>\n"
+	puts "st_set:#{st_set}<br>\n"
 	puts "<hr>"
 end
 fct_opt = Hash.new
@@ -80,7 +80,7 @@ food_name = cgi['food_name']
 food_weight = cgi['food_weight']
 food_weight = 100 if food_weight == nil || food_weight == ''|| food_weight == '0'
 food_weight = BigDecimal( food_weight )
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>\n"
 	puts "food_name: #{food_name}<br>\n"
 	puts "food_weight: #{food_weight}<br>\n"
@@ -103,47 +103,13 @@ end
 
 #### Saving Something
 if command == 'some'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
+	hh = st_set[tdiv] if hh == 99
+	koyomi = "#{some}:100:%:#{hh}"
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
 	if r.first
-		breakfast = r.first['breakfast']
-		lunch = r.first['lunch']
-		dinner = r.first['dinner']
-		supple = r.first['supple']
-		delimiter = ''
-
-		case tdiv
-		when 0
-			hh = breakfast_st if hh == 99
-			breakfast = "#{some}:100:%:#{hh}"
-		when 1
-			hh = lunch_st if hh == 99
-			lunch = "#{some}:100:%:#{hh}"
-		when 2
-			hh = dinner_st if hh == 99
-			dinner = "#{some}:100:%:#{hh}"
-		when 3
-			supple = "#{some}:100:%:#{hh}"
-		end
-		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
 	else
-		breakfast = ''
-		lunch = ''
-		dinner = ''
-		supple = ''
-		case tdiv
-		when 0
-			hh = breakfast_st if hh == 99
-			breakfast = "#{some}:100:%:#{hh}"
-		when 1
-			hh = lunch_st if hh == 99
-			lunch = "#{some}:100:%:#{hh}"
-		when 2
-			hh = dinner_st if hh == 99
-			dinner = "#{some}:100:%:#{hh}"
-		when 3
-			supple = "#{some}:100:%:#{hh}"
-		end
-		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}', memo='', date='#{yyyy}-#{mm}-#{dd}';", false)
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false)
 	end
 end
 
@@ -214,44 +180,14 @@ if command == 'save'
  	fix_code = generate_code( uname, 'f' )
 	mariadb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{uname}',#{fix_set};", false )
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
 	if r.first
-		breakfast = r.first['breakfast']
-		lunch = r.first['lunch']
-		dinner = r.first['dinner']
-		supple = r.first['supple']
-		delimiter = ''
-		case tdiv
-		when 0
-			delimiter = "\t" if breakfast != ''
-			breakfast << "#{delimiter}#{fix_code}:100:%:#{hh}"
-		when 1
-			delimiter = "\t" if lunch != ''
-			lunch << "#{delimiter}#{fix_code}:100:%:#{hh}"
-		when 2
-			delimiter = "\t" if dinner != ''
-			dinner << "#{delimiter}#{fix_code}:100:%:#{hh}"
-		when 3
-			delimiter = "\t" if supple != ''
-			supple << "#{delimiter}#{fix_code}:100:%:#{hh}"
-		end
-		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false)
+		koyomi = r.first['koyomi']
+		koyomi << "\t#{fix_code}:100:%:#{hh}"
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
 	else
-		breakfast = ''
-		lunch = ''
-		dinner = ''
-		supple = ''
-		case tdiv
-		when 0
-			breakfast = "#{fix_code}:100:%:#{hh}"
-		when 1
-			lunch = "#{fix_code}:100:%:#{hh}"
-		when 2
-			dinner = "#{fix_code}:100:%:#{hh}"
-		when 3
-			supple = "#{fix_code}:100:%:#{hh}"
-		end
-		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', breakfast='#{breakfast}', lunch='#{lunch}', dinner='#{dinner}', supple='#{supple}', memo='', date='#{yyyy}-#{mm}-#{dd}';", false)
+		koyomi = "#{fix_code}:100:%:#{hh}"
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false)
 	end
 
 
@@ -280,7 +216,7 @@ end
 
 
 #### デバッグ用
-if $DEBUG
+if @debug
 	puts "fct_opt: #{fct_opt}<br>\n"
 	puts "fix_opt: #{fix_opt}<br>\n"
 	puts "<hr>\n"
@@ -396,23 +332,32 @@ html = <<-"HTML"
 		<div class="col-1">
 		#{hh_html}
 		</div>
-		<div class="col-3">
-		#{palette_html}
+		<div class="col-1">
 		</div>
 		<div class="col-2">
+			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )">#{lp[1]}</button>
 		</div>
-		<div class="col-2">
-			<button class='btn btn-success' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )">#{lp[1]}</button>
+		<div class="col-4">
+			曖昧
+			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?--' )">#{lp[10]}</button>
+			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
+			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?=' )">#{lp[8]}</button>
+			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
+			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?++' )">#{lp[11]}</button>
 		</div>
 	</div>
+	<br>
 	<div class="row">
-		<div class="col-2">
+		<div class="col-3">
+			#{palette_html}
+		</div>
+		<div class="col-2" align='right'>
 			<div class="form-group form-check">
     			<input type="checkbox" class="form-check-input" id="fct_check" onChange="koyomiFCTcheck( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{hh}' )">
     			<label class="form-check-label">#{lp[2]}</label>
   			</div>
 		</div>
-		<div class="col-4">
+		<div class="col-3">
 			<div class="input-group input-group-sm">
 				<div class="input-group-prepend">
 					<label class="input-group-text">#{lp[5]}</label>
@@ -420,14 +365,7 @@ html = <<-"HTML"
 				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>&nbsp;g
 			</div>
 		</div>
-		<div class="col-2">
-		</div>
-		<div class="col-4">
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?=' )">#{lp[8]}</button>
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
-			<button class='btn btn-success' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
+		<div class="col-3">
 		</div>
 	</div>
 	<br>

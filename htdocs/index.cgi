@@ -86,7 +86,6 @@ end
 	html = <<-"HTML"
       <nav class='container-fluid'>
           #{g_button}
-          <span id='normal_menu' style="display:inline;">
           <button id=''type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonBWL1( 1 )">#{lp[10]}</button>
           <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summonBWL1( 2 )">#{lp[11]}</button>
           <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summonBWL1( 3 )">#{lp[12]}</button>
@@ -111,19 +110,12 @@ end
           #{recipe_button}
           #{menu_button}
           #{set_button}
-          </span>
-
-          <span id='guild_menu' style="display:none;">
-          #{his_button}
-          #{sum_button}
-          #{recipe_button}
-          #{menu_button}
-          #{set_button}
-          <button type="button" class="btn btn-info btn-sm nav_button" onclick="initKoyomi()">#{lp[37]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" onclick="initGinmi()">#{lp[40]}</button>
-          </span>
           <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
           #{config_button}
+      </nav>
+      <nav class='container-fluid' id='guild_menu' style='display:none;'>
+          <button type="button" class="btn btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
+          <button type="button" class="btn btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
 			</nav>
 HTML
   puts html
