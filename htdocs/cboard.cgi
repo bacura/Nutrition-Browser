@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'cboard.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -64,16 +63,22 @@ end
 def weight_calc( food_list, dish_num )
 	weight = BigDecimal( '0' )
 	weight_checked = BigDecimal( '0' )
+
+	check_all = true
+	food_list.each do |e|
+		check_all = false if e.check == '1'
+	end
+
 	food_list.each do |e|
 		unless e.no == '-' || e.no == '+'
 			weight += BigDecimal( e.weight.to_s )
-			weight_checked +=  BigDecimal( e.weight.to_s ) if e.check == '1'
+			weight_checked +=  BigDecimal( e.weight.to_s ) if e.check == '1' || check_all
 		end
 	end
 	weight = ( weight / dish_num.to_i ).to_i
 	weight_checked = ( weight_checked / dish_num.to_i ).to_i
 
-	return weight, weight_checked
+	return weight, weight_checked, check_all
 end
 
 
@@ -81,6 +86,12 @@ end
 def energy_calc( food_list, uname, dish_num )
 	energy = BigDecimal( '0' )
 	energy_checked = BigDecimal( '0' )
+
+	check_all = true
+	food_list.each do |e|
+		check_all = false if e.check == '1'
+	end
+
 	food_list.each do |e|
 		unless e.no == '-' || e.no == '+'
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCT} WHERE FN='#{e.no}';"
@@ -88,13 +99,13 @@ def energy_calc( food_list, uname, dish_num )
 			r = mariadb( q, false )
 			t = convert_zero( r.first['ENERC_KCAL'] )
 			energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
-			energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1'
+			energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
 		end
 	end
 	energy = ( energy / dish_num.to_i ).to_i
 	energy_checked = ( energy_checked / dish_num.to_i ).to_i
 
-	return energy, energy_checked
+	return energy, energy_checked, check_all
 end
 
 
@@ -162,7 +173,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'cboard', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -182,7 +193,7 @@ option1 = cgi['option1']
 option2 = cgi['option2']
 option3 = cgi['option3']
 code = cgi['code']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
 	puts "order:#{order}<br>"
@@ -207,7 +218,7 @@ dish_num = r.first['dish'].to_i if dish_num == '' || dish_num == nil
 dish_num = 1 if dish_num == 0
 protect = r.first['protect'].to_i
 sum = r.first['sum']
-if $DEBUG
+if @debug
 	puts "code:#{code}<br>"
 	puts "recipe_name:#{recipe_name}<br>"
 	puts "dish_num:#{dish_num}<br>"
@@ -282,21 +293,21 @@ when 'weight'
 	uk = BigDecimal( '1' )
 	if food_list[order_no].unit.to_i == 1
 		# カロリー換算
-		puts 'カロリー' if $DEBUG
+		puts 'カロリー' if @debug
 		rr = mariadb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false )
 		if rr.first['ENERC_KCAL']
 			uk = BigDecimal( '100' ) / rr.first['ENERC_KCAL']
 		end
 	elsif food_list[order_no].unit.to_i == 15
 		# 廃棄前g
-		puts '廃棄前g' if $DEBUG
+		puts '廃棄前g' if @debug
 		rr = mariadb( "SELECT REFUSE FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false )
 		if rr.first['REFUSE']
 			uk = BigDecimal(( 100 - rr.first['REFUSE'].to_i ).to_s ) / 100
 		end
 	elsif r.first['unitc']
 		# 単位変換
-		puts 'その他' if $DEBUG
+		puts 'その他' if @debug
 		a = r.first['unitc'].split( ':' )
 		t = a[food_list[order_no].unit.to_i]
 		t = '1' if t == ''
@@ -331,7 +342,7 @@ when 'add'
 	option1.gsub!( /\s+/, ' ' )
 	option1.tr!( "０-９", "0-9" ) if /[０-９]/ =~ option2
 	option1.sub!( '．', '.')
-	p option1 if $DEBUG
+	p option1 if @debug
 
 	t = option1.split( ' ' )
 	add_food_no = t[0]
@@ -339,7 +350,7 @@ when 'add'
 	add_food_weight = t[1] unless t[1] == nil
 	add_food_weight = 100 unless /[0-9\.]+/ =~ t[1]
 	add_food_no = '00000' if add_food_no == '0'
-	p add_food_no if $DEBUG
+	p add_food_no if @debug
 
 	if add_food_no == nil
 		food_list << Food.new( '-', '-', '-', '-', 0, '-', '-', '-' )
@@ -365,7 +376,7 @@ when 'check_box'
 #### Switching all check box
 when 'allSwitch'
 	allSwitch = cgi['allSwitch']
-	puts "allSwitch:#{allSwitch}<br>" if $DEBUG
+	puts "allSwitch:#{allSwitch}<br>" if @debug
 
 	food_list.size.times do |c|
 		food_list[c].check = allSwitch
@@ -378,6 +389,7 @@ when 'dish'
 	dish_num = 1 unless dish_num =~ /\d+/
 	dish_num.tr!( "０-９", "0-9" ) if /[０-９]/ =~ dish_num.to_s
 	update = '*'
+
 
 #### レシピデータのクイック保存
 when 'quick_save'
@@ -403,7 +415,7 @@ when 'gn_exchange'
 #### 調味％
 when 'seasoning'
 	seasoning = cgi['seasoning']
-	puts "seasoning:#{seasoning}<br>" if $DEBUG
+	puts "seasoning:#{seasoning}<br>" if @debug
 
 	total_weight = BigDecimal( 0 )
 	target_weight = BigDecimal( 0 )
@@ -434,14 +446,17 @@ when 'seasoning'
 
 #### Adjusting tootal food weight
 when 'wadj'
-	weight_adj = cgi[''].to_i
-	puts "weight_adj:#{weight_adj}<br>" if $DEBUG
+	weight_adj = cgi['weight_adj'].to_i
+	puts "weight_adj:#{weight_adj}<br>" if @debug
 
-	weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
+	weight_ctrl, weight_checked, check_all = weight_calc( food_list, dish_num )
 #	break if ( weight_ctrl - weight_checked ) < 10
 	wadj_rate = BigDecimal( weight_adj - ( weight_ctrl - weight_checked )) / ( weight_checked )
+
+
+
 	food_list.size.times do |c|
-		if food_list[c].check == '1'
+		if food_list[c].check == '1' || check_all
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * wadj_rate )
 			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * wadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * wadj_rate )
@@ -453,13 +468,13 @@ when 'wadj'
 #### Adjusting tootal food energy
 when 'eadj'
 	energy_adj = cgi['energy_adj'].to_i
-	puts "energy_adj:#{energy_adj}<br>" if $DEBUG
+	puts "energy_adj:#{energy_adj}<br>" if @debug
 
-	energy_ctrl, energy_checked = energy_calc( food_list, uname, dish_num )
+	energy_ctrl, energy_checked, check_all = energy_calc( food_list, uname, dish_num )
 #	break if ( energy_ctrl - energy_checked ) < 10
 	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
 	food_list.size.times do |c|
-		if food_list[c].check == '1'
+		if food_list[c].check == '1' || check_all
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * eadj_rate )
 			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * eadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * eadj_rate )
@@ -471,7 +486,7 @@ when 'eadj'
 #### Adjusting feeding rate by food loss
 when 'ladj'
 	loss_adj = cgi['loss_adj'].to_i
-	puts "loss_adj:#{loss_adj}<br>" if $DEBUG
+	puts "loss_adj:#{loss_adj}<br>" if @debug
 
 	weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
 	ladj_rate = ( BigDecimal( weight_checked - loss_adj ) / ( weight_checked )).round( 2 ).to_f
@@ -490,7 +505,7 @@ end
 
 #### 更新チェック
 update = '' if recipe_name == ''
-if $DEBUG
+if @debug
 	puts "update:#{update}<br>"
 	puts "<hr>"
 end
@@ -662,7 +677,7 @@ HTML
 
 c = 0
 food_list.each do |e|
-	p e.no if $DEBUG
+	p e.no if @debug
 
 	# フードチェック
 	if e.check == '1'

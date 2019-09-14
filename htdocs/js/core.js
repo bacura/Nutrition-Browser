@@ -401,9 +401,21 @@ var memoryOpen = function( com, category, pointer, depth ){
 	document.getElementById( "bw_level" + depth ).style.display = 'block';
 };
 
+// MemoryPB init
+var initMemoryPB = function(){
+	closeBroseWindows( 3 );
+	$.post( "memorypb.cgi", { command:"init" }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
 
-
-
+// MemoryPB next
+var nextMemoryPB = function(){
+	var category = document.getElementById( "category" ).value;
+	var open_res = 0;
+	if( document.getElementById( "open_res" ).checked ){ open_res = 1; }
+	$.post( "memorypb.cgi", { command:"category", category:category, open_res:open_res }, function( data ){ $( "#bw_level4" ).html( data );});
+	document.getElementById( "bw_level4" ).style.display = 'block';
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////

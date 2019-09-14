@@ -63,7 +63,11 @@ onclick = ''
 case command
 when 'init'
 	r = mariadb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY} ORDER BY category ASC;", false )
-	memory_html << "<button type='button' class='btn btn-primary btn-sm nav_button' onclick=\"initMemoryPB()\">#{lp[4]}</button>\n"
+	if status.to_i >= 1
+		memory_html << "<button type='button' class='btn btn-primary btn-sm nav_button' onclick=\"initMemoryPB()\">#{lp[4]}</button>"
+	else
+		memory_html << "<button type=\"button\" class=\"btn btn-dark text-secondary btn-sm nav_button\" onclick=\"displayVideo( '#{lp[5]}' )\">#{lp[4]}</button>"
+	end
 	r.each do |e|
 		memory_html << "<button type='button' class='btn btn-outline-secondary btn-sm nav_button' onclick=\"memoryOpen( 'category', '#{e['category']}', '', 2 )\">#{e['category']}</button>\n"
 	end
