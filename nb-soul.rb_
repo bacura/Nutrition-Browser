@@ -72,18 +72,6 @@ $RECIPE_TECH = ['未設定','煮る・茹でる','焼く・炙る','炒める・
 $RECIPE_TIME = ['未設定','～5','～10','～15','～20','～30','～45','～60','～120']
 $RECIPE_COST = ['未設定','50円未満','100円未満','150円未満','200円未満','300円未満','400円未満','500円未満','600円未満','800円未満','1000円未満', '1000円以上']
 
-$PALETTE = []
-#$PALETTE[0] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]
-#$PALETTE[1] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0]
-#$PALETTE[2] = [0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0]
-#$PALETTE[3] = [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0]
-
-$PALETTE_NAME = []
-#$PALETTE_NAME[0] = "基本の5成分"
-#$PALETTE_NAME[1] = "基本の12成分"
-#$PALETTE_NAME[2] = "基本の14成分"
-#$PALETTE_NAME[3] = "全て"
-
 #         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15
 $UNIT = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前']
 
@@ -98,6 +86,12 @@ $COLOR = ['未指定','赤','ピンク','オレンジ','黄','緑','青','紫','
 
 #           0      1      2       3        4           5         6    7   8       9
 $ACCOUNT = ['退会','一般','ギルメン','guest', 'ギルメン・萌','ギルメン・旬','-','-','サブマス','ギルマス']
+
+#           0           1       2       3       4     5         6       7         8
+$KEX_ITEM = ['未設定', '独自→', '身長', '体重', 'BMI', '体脂肪率', '腹囲', '首回り', '骨盤上部周囲']
+$KEX_UNIT = ['',       ''   , 'cm',   'kg',  '',     '%',       'cm',  'cm',    'cm']
+
+$DATETIME = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 
 $HISTORY_LIMIT = 200
 
@@ -155,34 +149,35 @@ def html_head( interrupt, status, sub_title )
   <!-- bootstrap -->
   <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
-</head>
 
 <!-- Jquery -->
-<script type="text/javascript" src="./jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="./jquery-3.2.1.min.js"></script>
 <!-- bootstrap -->
-<script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
-<script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
-<script type='text/javascript' src='#{$JS_PATH}/menu.js'></script>
-<script type='text/javascript' src='#{$JS_PATH}/config.js'></script>
-#{js_guild}
-#{js_master}
+  <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
+  <script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
+  <script type='text/javascript' src='#{$JS_PATH}/menu.js'></script>
+  <script type='text/javascript' src='#{$JS_PATH}/config.js'></script>
+  #{js_guild}
+  #{js_master}
 
-<!-- Piwik -->
-<script type="text/javascript">
-  var _paq = _paq || [];
-  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
-  (function() {
-    var u="//bacura.jp/piwik/";
-    _paq.push(['setTrackerUrl', u+'piwik.php']);
-    _paq.push(['setSiteId', '5']);
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<!-- End Piwik Code -->
+<!-- Matomo -->
+  <script type="text/javascript">
+    var _paq = window._paq || [];
+    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u="//bacura.jp/piwik/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '5']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+  <!-- End Matomo Code -->
+
+</head>
 
 <body class="body">
   <span class="world_frame" id="world_frame">

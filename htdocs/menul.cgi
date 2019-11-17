@@ -18,9 +18,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'menul.cgi'
 $PAGE_LIMIT = 20
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -109,7 +108,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'menul', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -121,7 +120,7 @@ end
 command = cgi['command']
 code = cgi['code']
 page = cgi['page']
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "page: #{page}<br>"
@@ -147,7 +146,7 @@ else
 	range = cgi['range'].to_i
 	label = cgi['label']
 end
-if $DEBUG
+if @debug
 	puts "page: #{page}<br>"
 	puts "range: #{range}<br>"
 	puts "label: #{label}<br>"
@@ -181,7 +180,7 @@ if command == 'import'
 		new_code = "x" + uname[0, 1] if new_code == nil
 		new_code = "#{new_code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
 
-		mariadb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{uname}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{Time.now}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{uname}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{$DATETIME}';", false )
 	end
 
 end
@@ -229,7 +228,7 @@ html_paging = pageing_html( page, page_start, page_end, page_max, lp )
 menu_start = $PAGE_LIMIT * ( page - 1 )
 menu_end = menu_start + $PAGE_LIMIT - 1
 menu_end = r.size if menu_end >= r.size
-if $DEBUG
+if @debug
 	puts "page_start: #{page_start}<br>"
 	puts "page_end: #{page_end}<br>"
 	puts "page_max: #{page_max}<br>"

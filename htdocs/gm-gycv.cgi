@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-gycv.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-gycv', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -55,7 +54,7 @@ end
 #### POSTデータの取得
 command = cgi['command']
 food_no = cgi['food_no']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "food_no:#{food_no}<br>\n"
 	puts "<hr>\n"

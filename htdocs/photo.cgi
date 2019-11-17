@@ -1,7 +1,7 @@
 #! /usr/bin/ruby
 #encoding: utf-8
 #Nutrition browser recipe photo 0.00
-
+/usr/ports/fonts/ja-kanjistrokeorders-ttf
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
@@ -18,7 +18,6 @@ require 'nkf'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'fctb-photo.cgi'
 $SIZE_MAX = 20000000
 $TN_SIZE = 400
 $TNS_SIZE = 40
@@ -26,7 +25,7 @@ $PHOTO_SIZE_MAX = 2000
 
 $WM_FONT = 'さざなみゴシック'
 
-$DEBUG = false
+@debug = false
 #==============================================================================
 #DEFINITION
 #==============================================================================
@@ -40,7 +39,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'photo', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -53,7 +52,7 @@ command = cgi['command']
 code = cgi['code']
 slot = cgi['slot']
 slot_no = slot[-1]
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "slot: #{slot}<br>"
@@ -161,7 +160,7 @@ when 'upload'
 	photo_size = photo_body.size.to_i
 
 	# デバッグ用
-	if $DEBUG
+	if @debug
 		puts "tmp:#{$PHOTO_PATH_TMP}/#{photo_name}<br>"
 		puts "photo:#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg<br>"
 		puts "tn:#{$PHOTO_PATH}/#{code}-#{slot_no}tn.jpg<br>"
@@ -192,7 +191,7 @@ when 'upload'
 			tns_ratio = $TNS_SIZE / photo_y
 			photo_ratio = $PHOTO_SIZE_MAX / photo_y if photo_y >= $PHOTO_SIZE_MAX
 		end
-		puts "Image magick resize" if $DEBUG
+		puts "Image magick resize" if @debug
 
 		# サムネイル中のサイズ変更と保存
 		tn_file = photo.thumbnail( tn_ratio )
@@ -206,8 +205,8 @@ when 'upload'
 		photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
 
 		# ウォーターマーク合成
-		wm_text = "FCTB2015 #{code} by #{uname}"
-#		wm_text = "食品成分表ブラウザ 2015\nPhoto by #{uname} in #{Time.now.year}"
+		wm_text = "BN2015 #{code} by #{uname}"
+#		wm_text = "食品成分表ブラウザ 2015\nPhoto by #{uname} in #{#DATETIME.year}"
 		wm_img = Magick::Image.new( photo.columns, photo.rows )
 		wm_drew = Magick::Draw.new
 		wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do

@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'print.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'print', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -48,7 +47,7 @@ end
 #### POSTデータの取得
 command = cgi['command']
 code = cgi['code']
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "<hr>"

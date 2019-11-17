@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'lucky.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -60,7 +59,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'lucky', language )
-if $DEBUG
+if @debug
 	puts "uname:#{uname}<br>"
 	puts "uid:#{uname}<br>"
 	puts "status:#{status}<br>"
@@ -72,7 +71,7 @@ end
 command = cgi['command']
 mode = cgi['mode']
 lucky_data = cgi['lucky_data']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>"
 	puts "mode:#{mode}<br>"
 	puts "lucky_data:#{lucky_data}<br>"
@@ -149,7 +148,7 @@ when 'analyze'
 		end
 		candidate = 'general' if simple_flag
 	end
-	puts "candidate:#{candidate}<br>" if $DEBUG
+	puts "candidate:#{candidate}<br>" if @debug
 
 	case candidate
 	when 'eiyo_kun'

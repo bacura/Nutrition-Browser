@@ -29,8 +29,7 @@ require '/var/www/nb-soul.rb'
 
 #### Getting start year & standard time
 def get_starty( uname )
-	t = Time.new
-	start_year = t.year
+	start_year = $DATETIME.year
 	breakfast_st = 0
 	lunch_st = 0
 	dinner_st = 0

@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'menu-analysis.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -65,7 +64,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'menu-analysis', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -88,7 +87,7 @@ frct_mode = 0 if frct_mode == nil
 frct_mode = frct_mode.to_i
 frct_accu = 0 if frct_accu == nil
 frct_accu = frct_accu.to_i
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "ew_mode: #{ew_mode}<br>"

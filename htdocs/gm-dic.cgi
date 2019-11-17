@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-dic.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-dic', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -57,7 +56,7 @@ command = cgi['command']
 org_name = cgi['org_name']
 tn = cgi['tn']
 aliases = cgi['aliases']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "org_name:#{org_name}<br>\n"
 	puts "aliases:#{aliases}<br>\n"

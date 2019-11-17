@@ -253,3 +253,17 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 	}
 	document.getElementById( "bw_level2" ).style.display = 'block';
 };
+
+var kexChangeselect = function( no ){
+	var select_id = 'kex_select' + no;
+	displayVideo( document.getElementById( select_id ).value );
+
+	if( document.getElementById( select_id ).value == 1 ){
+
+		document.getElementById('item' + no ).disabled = false;
+		document.getElementById('unit' + no ).disabled = false;
+	}else{
+		document.getElementById('item' + no ).disabled = true;
+		document.getElementById('unit' + no ).disabled = true;
+	}
+};

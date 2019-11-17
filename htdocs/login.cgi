@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'login.cgi'
+@debug = false
 
 
 #==============================================================================
@@ -87,7 +87,7 @@ when 'check'
 
     #### ユーザー情報の更新
     count = r.first['count'] += 1
-    mariadb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', login_date='#{Time.now}', count=#{count} WHERE user='#{cgi['id']}';", true )
+    mariadb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', login_date='#{$DATETIME}', count=#{count} WHERE user='#{cgi['id']}';", true )
 
     html_init( cookie )
     html_head( 'refresh', status, nil )

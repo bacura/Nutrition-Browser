@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 @tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
 
@@ -53,7 +53,7 @@ def meals( meal, uname )
 			mb_html << "<li>#{r.first['name']}</li>"
 		else
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
-			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U\d{5}/ =~ aa[0]
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U/ =~ aa[0]
 			r = mariadb( q, false )
 			mb_html << "<li style='list-style-type: square'>#{r.first['name']}</li>"
 		end
@@ -66,8 +66,7 @@ end
 
 ####
 def get_starty( uname )
-	t = Time.new
-	start_year = t.year
+	start_year = $DATETIME.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
@@ -75,6 +74,100 @@ def get_starty( uname )
 	end
 
 	return start_year
+end
+
+
+#### Multi calc
+def multi_calc( cs, vs, us, ts, fix_code, uname )
+p fix_code
+	b = []
+	l = []
+	d = []
+	s = []
+	fct_solid = [b, l, d, s]
+	some = [ '', '', '', '' ]
+p cs
+p ts
+	cs.size.times do |c|
+		if cs[c] == '?--' || cs[c] == '?-' || cs[c] == '?=' || cs[c] == '?+' || cs[c] == '?++'
+			some[ts[c]] << "#{cs[c]}\t"
+		elsif /\-f\-/ =~ cs[c]
+			r = mariadb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{cs[c]}';", false )
+			if r.first
+				fct_tmp = []
+				fct_tmp2 = []
+				5.upto(65) do |cc|
+					t = convert_zero( r.first[$FCT_ITEM[cc]] )
+					fct_tmp2 << BigDecimal( num_opt( t, vs[c], 1, $FCT_FRCT[$FCT_ITEM[cc]] + 3 ))
+				end
+				fct_tmp << Marshal.load( Marshal.dump( fct_tmp2 ))
+				fct_solid[ts[c]] << Marshal.load( Marshal.dump( fct_tmp ))
+			end
+		else
+			code_solid = [cs[c]]
+			volume_solid = [vs[c]]
+			if /\-/ =~ cs[c]
+				recipe_solid = [cs[c]]
+
+				if /\-m\-/ =~ cs[c]
+					r = mariadb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE code='#{cs[c]}';", false )
+					a = r.first['meal'].split( "\t" )
+					recipe_solid = []
+					a.each do |e| recipe_solid << e end
+				end
+
+				recipe_solid.each do |e|
+					r = mariadb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
+					a =  r.first['sum'].split( "\t" )
+					dish =  r.first['dish'].to_i
+					code_solid = []
+					volume_solid = []
+					total_ew = 0
+					ratio = BigDecimal( vs[c] / 100 )
+					a.each do |ee|
+						aa =  ee.split( ":" )
+						if aa[0] != '+' &&  aa[0] != '-'
+							code_solid << aa[0]
+							volume_solid << BigDecimal( aa[7] ) / dish
+							total_ew += BigDecimal( aa[7] ) / dish
+						end
+					end
+
+					ratio = vs[c] / total_ew if us[c] == 'g'
+					volume_solid.size.times do  |cc|
+						volume_solid[cc] *= ratio
+					end
+				end
+			end
+			fct_tmp = []
+			code_solid.size.times do |cc|
+				query = ''
+				if /^P/ =~ code_solid[cc]
+					query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{code_solid[cc]}';"
+				elsif /^U/ =~ code_solid[cc]
+					query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{code_solid[cc]}' AND user='#{uname}';"
+				else
+					query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{code_solid[cc]}';"
+				end
+				r = mariadb( query, false )
+				if r.first
+					# Precision calculation
+					fct_tmp2 = []
+					5.upto(65) do |ccc|
+						t = convert_zero( r.first[$FCT_ITEM[ccc]] )
+						fct_tmp2 << BigDecimal( num_opt( t, volume_solid[cc], 1, $FCT_FRCT[$FCT_ITEM[ccc]] + 3 ))
+					end
+					fct_tmp << Marshal.load( Marshal.dump( fct_tmp2 ))
+				end
+			end
+			fct_solid[ts[c]] << Marshal.load( Marshal.dump( fct_tmp ))
+		end
+	end
+p some
+p fct_solid
+p 'ok'
+exit()
+	return fcsz
 end
 
 #==============================================================================
@@ -115,11 +208,11 @@ if command == 'menu'
 html = <<-"MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">食事記録</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">拡張記録</button></div>
-		<div class='col-2'></div>
-		<div class='col-2'></div>
-		<div class='col-2'></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">#{lp[23]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">#{lp[24]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">#{lp[25]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">#{lp[26]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">#{lp[27]}</button></div>
 		<div class='col-2'></div>
 	</div>
 </div>
@@ -150,49 +243,75 @@ end
 
 ####
 case command
-when 'fix'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='1' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
-when 'fix_all'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='1' WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false )
-when 'cancel'
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
-when 'cancel_all'
+when 'freeze'
+	code_solid = []
+	volume_solid = []
+	unit_solid = []
+	tdiv_solid = []
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' ) AND ( tdiv='0' OR tdiv='1' OR tdiv='2' OR tdiv='3' );", false )
+ 	if r.first
+ 		r.each do |e|
+ 			a = e['koyomi'].split( "\t" )
+ 			a.each do |ee|
+ 				aa = ee.split( ":" )
+				code_solid << aa[0]
+				volume_solid << aa[1].to_i
+				unit_solid << aa[2]
+			end
+			tdiv_solid << e['tdiv'].to_i
+		end
+
+	 	fix_code = generate_code( uname, 'z' )
+
+		fcsz = multi_calc( code_solid, volume_solid, unit_solid, tdiv_solid, fix_code, uname )
+
+		fix_set = "name=''"
+#	   	mariadb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', user='#{uname}', #{fcsz};", false )
+
+		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='#{fix_code}' WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false )
+ 	end
+
+
+when 'thaw'
 	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fix='' WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false )
 end
 
 
 ####
 date_html = ''
+onclick = ''
 week_count = first_week
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
+fix_flag = false
+r = mariadb( "SELECT fix, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false)
+if r.first
+	fix_flag = true if r.first['fix'] != ""
+end
+
 1.upto( last_day ) do |c|
-	date_html << "<tr>"
+	koyomi_tmp = []
+	5.times do |cc|
+		r = mariadb( "SELECT fix, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
+		if r.first
+			koyomi_tmp << r.first['koyomi']
+		else
+			koyomi_tmp << ''
+		end
+	end
+	onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\"" unless fix_flag
+	date_html << "<tr #{onclick}>"
 	if week_count == 0
 		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
 	else
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
 
-	fix_flag = false
-	koyomi_tmp = []
-	5.times do |cc|
-		r = mariadb( "SELECT fix, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
-		if r.first
-			koyomi_tmp << r.first['koyomi']
-			fix_flag = true if r.first['fix'] != ''
-		else
-			koyomi_tmp << ''
-		end
-	end
-
-	onclick = ''
-	onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\"" unless fix_flag
 	4.times do |cc|
 		if koyomi_tmp[cc] == ''
-			date_html << "<td #{onclick}>-</td>"
+			date_html << "<td>-</td>"
 		else
 			meal_block = meals( koyomi_tmp[cc], uname )
-			date_html << "<td #{onclick}>#{meal_block}</td>"
+			date_html << "<td>#{meal_block}</td>"
 		end
 	end
 
@@ -200,12 +319,6 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<td>-</td>"
 	else
 		date_html << "<td>#{koyomi_tmp[4]}</td>"
-	end
-
-	if fix_flag
-		date_html << "<td><button class='btn btn-sm btn-outline-warning' onclick=\"fixKoyomi_BW1( 'cancel', '#{c}' )\">#{lp[19]}</button></td>"
-	else
-		date_html << "<td><button class='btn btn-sm btn-outline-primary' onclick=\"fixKoyomi_BW1( 'fix', '#{c}' )\">#{lp[18]}</button></td>"
 	end
 
 	date_html << "</tr>"
@@ -243,6 +356,14 @@ select_html << "<div class='input-group-append'><label class='input-group-text'>
 select_html << "</div>"
 
 
+fix_html = ''
+if fix_flag
+	fix_html = "<button class='btn btn-sm btn-outline-warning' onclick=\"thawKoyomi()\">#{lp[21]}</button>"
+else
+	fix_html = "<button class='btn btn-sm btn-outline-primary' onclick=\"freezeKoyomi()\">#{lp[20]}</button>"
+end
+
+
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
@@ -250,14 +371,11 @@ html = <<-"HTML"
 		<div class='col-5 form-inline'>
 			#{select_html}
 		</div>
-		<div class='col-1'>
-			<button class='btn btn-sm btn-outline-primary' onclick="fixKoyomi_BW1( 'fix_all', '#{dd}' )">#{lp[20]}</button>
+		<div class='col-3'>
+			#{fix_html}
 		</div>
 		<div class='col-2'>
-			<button class='btn btn-sm btn-outline-warning' onclick="fixKoyomi_BW1( 'cancel_all', '#{dd}' )">#{lp[21]}</button>
-		</div>
-		<div class='col-2'>
-			<button class='btn btn-success' onclick="initKoyomiex_BW1( '#{yyyy}', '#{mm}' )">#{lp[22]}</button>
+			<button class='btn btn-sm btn-success' onclick="initKoyomiex_BW1( '#{yyyy}', '#{mm}' )">#{lp[22]}</button>
 		</div>
 	</div>
 	<div class='row'>
@@ -274,7 +392,6 @@ html = <<-"HTML"
      		<th align='center'>#{lp[14]}</th>
      		<th align='center'>#{lp[15]}</th>
      		<th align='center'>#{lp[16]}</th>
-     		<th align='center'>#{lp[17]}</th>
     	</tr>
   	</thead>
 	#{date_html}

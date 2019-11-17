@@ -1,17 +1,17 @@
 
-// まな板 ////////////////////////////////////////////////////////////////////////
+// Chopping boad ////////////////////////////////////////////////////////////////////////
 
-// 追加ボタンを押してsumに食品を追加して、まな板カウンタを増やす
+// Add food into sum, and reload CB counter
 var addingCB = function( fn, weight_id ){
 	if( weight_id != '' ){
 		var weight = document.getElementById( weight_id ).value;
 	}
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){ $( "#cb_num" ).html( data );});
-	if( fn != '' ){ displayVideo( fn + 'を追加' ); }
+	if( fn != '' ){ displayVideo( '+' + fn ); }
 };
 
 
-// まな板カウンタを更新するだけ
+// Only reload CB counter
 var refreshCB = function(){
 	$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#cb_num" ).html( data );});
 };
@@ -22,13 +22,13 @@ var changingCB = function( fn, base_fn ){
 	var weight = document.getElementById( "weight" ).value;
 
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){ $( "#cb_num" ).html( data );});
-	if( fn != '' ){ displayVideo( fn + 'に変更' ); }
+	if( fn != '' ){ displayVideo( fn + 'has modified' ); }
 	$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#bw_level1" ).html( data );});
 	closeBroseWindows( 1 );
 };
 
 
-// まな板をL1にリストに表示
+// Display CB sum in L1
 var initCB_BWL1 = function( com, code ){
 	closeBroseWindows( 1 );
 	$.post( "cboard.cgi", { command:com, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
@@ -42,7 +42,7 @@ var initCB_BWL1 = function( com, code ){
 };
 
 
-// 食品クリアボタンを押してまな板リストを更新してL1に表示、そしてまな板カウンターの更新
+// Clear foods, and reload CB counter
 var clear_BWL1 = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'all_check' ).checked ){
@@ -51,9 +51,9 @@ var clear_BWL1 = function( order, code ){
 			document.getElementById( "bw_level2" ).style.display = 'none';
 			document.getElementById( "bw_level3" ).style.display = 'none';
 
-			displayVideo( 'まな板を初期化' );
+			displayVideo( 'CB has cleared' );
 		} else{
-			displayVideo( 'チェックが必要' );
+			displayVideo( '(>_<)cheack!' );
 		}
 	} else{
 		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
@@ -78,7 +78,7 @@ var lower_BWL1 = function( order, code ){
 
 
 // Changing dish number
-var dishCB_BWL1 = function( code ){
+var dishCB = function( code ){
 	var dish_num = document.getElementById( "dish_num" ).value;
 	$.post( "cboard.cgi", { command:'dish', code:code, dish_num:dish_num }, function( data ){ $( "#bw_level1" ).html( data );});
 };
@@ -174,8 +174,8 @@ var checkCB_BWL1 = function( order, code, check_id ){
 };
 
 
-// まな板のQuick保存を押してL1にリストを更新
-var quickSave_BWL1 = function( code ){
+// Quick Save
+var quickSave = function( code ){
 	$.post( "cboard.cgi", { command:'quick_save', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 	displayVideo( 'Saved' );
 };
@@ -203,7 +203,7 @@ var cb_summonBWL5 = function( key, weight, base_fn ){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// レシピ ////////////////////////////////////////////////////////////////////////
+// Recipe ////////////////////////////////////////////////////////////////////////
 
 // レシピ編集のレシピボタンを押してL2にレシピを表示
 var recipeEdit_BWL2 = function( com, code ){

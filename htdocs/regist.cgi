@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'regist.cgi'
+@debug = false
 
 
 #==============================================================================
@@ -54,30 +54,30 @@ def html_regist_confirm( id, mail, pass, aliasu, lp )
     html = <<-"HTML"
       <div class="container">
         <form action="regist.cgi?mode=finish" method="post" class="form-signin login_form">
-          <p class="msg_small">#{lp[10]}下記の内容でよろしければ登録してください。</p>
+          <p class="msg_small">#{lp[10]}</p>
           <table class="table">
               <tr>
-                <td>#{lp[11]}ID</td>
+                <td>#{lp[11]}</td>
                 <td>#{id}</td>
               </tr>
               <tr>
-                <td>#{lp[12]}二つ名</td>
+                <td>#{lp[12]}</td>
                 <td>#{aliasu}</td>
               </tr>
               <tr>
-                <td>#{lp[13]}メールアドレス</td>
+                <td>#{lp[13]}</td>
                 <td>#{mail}</td>
               </tr>
               <tr>
-                <td>#{lp[14]}パスワード</td>
+                <td>#{lp[14]}</td>
                 <td>#{pass}</td>
               </tr>
           </table>
-          <input type="hidden" name="id" value="#{id}" id="inputID" class="form-control login_input" placeholder="#{lp[11]}ID">
-          <input type="hidden" name="alias" value="#{aliasu}" id="inputAlias" class="form-control login_input" placeholder="#{lp[12]}二つ名">
-          <input type="hidden" name="mail" value="#{mail}" id="inputMail" class="form-control login_input" placeholder="#{lp[13]}メールアドレス">
-          <input type="hidden" name="pass" value="#{pass}" id="inputPassword" class="form-control login_input" placeholder="#{lp[14]}パスワード">
-          <input type="submit" value="#{lp[15]}登録" class="btn btn-lg btn-warning btn-block"></input>
+          <input type="hidden" name="id" value="#{id}" id="inputID" class="form-control login_input" placeholder="#{lp[11]}">
+          <input type="hidden" name="alias" value="#{aliasu}" id="inputAlias" class="form-control login_input" placeholder="#{lp[12]}">
+          <input type="hidden" name="mail" value="#{mail}" id="inputMail" class="form-control login_input" placeholder="#{lp[13]}">
+          <input type="hidden" name="pass" value="#{pass}" id="inputPassword" class="form-control login_input" placeholder="#{lp[14]}">
+          <input type="submit" value="#{lp[15]}" class="btn btn-lg btn-warning btn-block"></input>
         </form>
       </div>
 HTML
@@ -90,7 +90,7 @@ end
 def html_regist_finish( lp )
     html = <<-"HTML"
       <div class="container">
-          <p class="reg_msg">#{lp[16]}ご登録ありがとうございました。<a href="login.cgi">#{lp[17]}ログイン<a/>#{lp[18]}して引き続きご利用ください。</p>
+          <p class="reg_msg">#{lp[16]}<a href="login.cgi">#{lp[17]}<a/>#{lp[18]}</p>
       </div>
 HTML
 
@@ -150,7 +150,7 @@ when 'finish'
   aliasu = post_data['alias']
   aliasu = post_data['id'] if aliasu == ''
 
-  mariadb( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{post_data['id']}', pass='#{post_data['pass']}', mail='#{post_data['mail']}',aliasu='#{aliasu}', status=1, reg_date='#{Time.now}', count=0;", false )
+  mariadb( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{post_data['id']}', pass='#{post_data['pass']}', mail='#{post_data['mail']}',aliasu='#{aliasu}', status=1, reg_date='#{$DATETIME}', count=0;", false )
 
   #パレットテーブルの登録
   mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
@@ -168,7 +168,7 @@ when 'finish'
   mariadb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{post_data['id']}', meal='';", false )
 
   #コンフィグテーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{post_data['id']}', recipel='1:0:0:0:0:0:0';", false )
+  mariadb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{post_data['id']}', recipel='1:0:99:99:99:99:99';", false )
 
   html_regist_finish( lp )
 

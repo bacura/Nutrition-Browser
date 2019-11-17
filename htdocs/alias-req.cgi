@@ -18,8 +18,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'alias-req.cgi'
-$DEBUG = false
+@debug = false
+
 
 #==============================================================================
 #DEFINITION
@@ -32,9 +32,8 @@ $DEBUG = false
 html_init( nil ) if $DEBUG
 
 cgi = CGI.new
-rec_date = Time.new
 uname, uid, status = login_check( cgi )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -44,7 +43,7 @@ end
 #### POSTデータの取得
 food_no = cgi['food_no']
 request_alias = cgi['alias']
-if $DEBUG
+if @debug
 	puts "food_no: #{food_no}<br>"
 	puts "request_alias: #{request_alias}<br>"
 	puts "<hr>"
@@ -52,5 +51,5 @@ end
 
 #### 別名リクエストの記録
 if request_alias != '' && request_alias != nil
-	mariadb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET code='#{food_no}', user='#{uname}', words='#{request_alias}', date='#{rec_date}';", false )
+	mariadb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET code='#{food_no}', user='#{uname}', words='#{request_alias}', date='#{$DATETIME}';", false )
 end

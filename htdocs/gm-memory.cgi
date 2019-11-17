@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 $SCRIPT = 'gm-memory.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -108,7 +108,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-account', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -135,7 +135,7 @@ post_process = cgi['post_process']
 memory = cgi['memory']
 memory_solid = cgi['memory']
 memory_solid.gsub!( ',', "\t" ) if memory_solid != nil && memory_solid != ''
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "mode:#{mode}<br>\n"
 	puts "category:#{category}<br>\n"
@@ -184,7 +184,7 @@ when 'new_category'
 
 when 'save_category'
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false )
-	mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='', memory='', category='#{category}', rank='1', date='#{Time.now}';", false ) unless r.first
+	mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='', memory='', category='#{category}', rank='1', date='#{$DATETIME}';", false ) unless r.first
 
 	new_html, memory_html = init()
 
@@ -239,13 +239,13 @@ when 'save'
 		rank = a[3].to_i
 		rank = 1 if rank == 0
 		if mode == 'insert'
-			mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory}', category='#{category}', rank='#{rank}', date='#{Time.now}';", false ) if pointer != ''
+			mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory}', category='#{category}', rank='#{rank}', date='#{$DATETIME}';", false ) if pointer != ''
 		else
 			r = mariadb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 			if r.first
-				mariadb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory}', category='#{category}', rank='#{rank}', date='#{Time.now}' WHERE category='#{category}' AND pointer='#{pointer}';", false ) if pointer != ''
+				mariadb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory}', category='#{category}', rank='#{rank}', date='#{$DATETIME}' WHERE category='#{category}' AND pointer='#{pointer}';", false ) if pointer != ''
 			else
-				mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory}', category='#{category}', rank='#{rank}', date='#{Time.now}';", false ) if pointer != ''
+				mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory}', category='#{category}', rank='#{rank}', date='#{$DATETIME}';", false ) if pointer != ''
 			end
 		end
 	end
@@ -263,9 +263,9 @@ when 'delete_pointer'
 when 'save_pointer'
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	if r.first
-		mariadb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{Time.now}' WHERE category='#{category}' AND pointer='#{pointer}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{$DATETIME}' WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	else
-		mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{Time.now}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{uname}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{$DATETIME}';", false )
 	end
 
 	new_html, memory_html = edit( category )

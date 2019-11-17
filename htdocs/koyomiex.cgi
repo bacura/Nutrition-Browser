@@ -19,8 +19,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'koyomiex.cgi'
-$DEBUG = false
+@debug = false
+
 
 #==============================================================================
 #DEFINITION
@@ -56,8 +56,7 @@ end
 
 #### Getting start year
 def get_starty( uname )
-	t = Time.new
-	start_year = t.year
+	start_year = $DATETIME.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
@@ -76,7 +75,7 @@ cgi = CGI.new
 uname, uid, status, aliaseu, language = login_check( cgi )
 lp = lp_init( 'koyomiex', language )
 start_year = get_starty( uname )
-if $DEBUG
+if @debug
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"
 	puts "aliaseu:#{aliaseu}<br>\n"
@@ -93,7 +92,7 @@ dd = cgi['dd'].to_i
 dd = 1 if dd == 0
 item_no = cgi['item_no'].to_i
 cell = cgi['cell']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
 	puts "mm:#{mm}<br>\n"
@@ -115,7 +114,7 @@ if yyyy == 0
 	mm = date.month
 	dd = date.day
 end
-if $DEBUG
+if @debug
 	puts "date:#{date.to_time}<br>\n"
 	puts "first_week:#{first_week}<br>\n"
 	puts "last_day:#{last_day}<br>\n"

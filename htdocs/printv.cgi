@@ -17,8 +17,7 @@ require 'rqrcode'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'print.cgi'
-$DEBUG = false
+@debug = false
 fct_num = 14
 
 
@@ -46,7 +45,7 @@ end
 
 
 #### 食材抽出
-def extract_foods( sum, dish_recipe, dish, template, ew_mode )
+def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 	calc_weight = [ '単純換算g','予想摂取g' ]
 	return_foods = "<table class='table table-sm'>\n"
 	case template
@@ -106,11 +105,19 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode )
 			when 7, 8
 				tags = bind_tags( res )
 				refuse = 0
-				query = "SELECT REFUSE from #{$MYSQL_TB_FCT} WHERE FN='#{fn}';"
+				query = ''
+				if /U|P/ =~ fn
+					query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{fn}' AND ( user='#{uname}' OR user='#{$GM}' );"
+				else
+					query = "SELECT REFUSE from #{$MYSQL_TB_FCT} WHERE FN='#{fn}';"
+				end
 				res = db.query( query )
 				refuse = res.first['REFUSE'].to_i if res.first
-				t = ( BigDecimal( fw ) * BigDecimal( dish ) / ( 100 - refuse ) / BigDecimal( 10 )).ceil( 2 ).to_f.to_s
-
+				if fuv >= 10
+					t = ( fuv / ( 100 - refuse ) / BigDecimal( 10 )).ceil( 2 ).to_f.to_s
+				else
+					t = ( fuv / ( 100 - refuse ) / BigDecimal( 10 )).ceil( 3 ).to_f.to_s
+				end
 				df = t.split( '.' )
 				comp = ( 2 - df[1].size )
 				comp.times do |c| df[1] = df[1] << '0' end
@@ -249,7 +256,7 @@ hr_image = get_data['hr'].to_i
 url = "http://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&hr=#{hr_image}"
 
 #### デバッグ用
-if $DEBUG
+if @debug
 	puts "code: #{code}<br>"
 	puts "template: #{template}<br>"
 	puts "dish: #{dish}<br>"
@@ -272,7 +279,7 @@ protocol = r.first['protocol']
 fig1 = r.first['fig1'].to_i
 fig2 = r.first['fig2'].to_i
 fig3 = r.first['fig3'].to_i
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "recipe_name: #{recipe_name}<br>"
 	puts "sum: #{sum}<br>"
@@ -286,8 +293,8 @@ end
 
 
 #### 食材変換
-foods = extract_foods( sum, dish_recipe, dish, template, ew_mode )
-puts "foods: #{foods}<br>" if $DEBUG
+foods = extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
+puts "foods: #{foods}<br>" if @debug
 
 
 #### プロトコール変換
@@ -470,15 +477,33 @@ end
 #### 共通ヘッダ
 html_head = <<-"HTML"
 <div class='container'>
+	<br>
 	<div class='row'>
 		<div class='col-6'>
 			<h4>#{recipe_name}</h4>
 		</div>
 		<div class='col-2'>
-			<h5>#{dish}人分</h5>
+			<form action='' method='get'>
+				<div class="input-group input-group-sm mb-3">
+					<div class="input-group-prepend">
+						<span for="dish_num" class="input-group-text">人数</span>
+					</div>
+					<input type='number' name='d' size='3' min='1' value='#{dish}' class="form-control">&nbsp;
+					<input type='submit' value='変更' class='btn btn-sm btn-outline-primary'>
+				</div>
+				<input type='hidden' name='c' value='#{code}'>
+				<input type='hidden' name='t' value='#{template}'>
+				<input type='hidden' name='p' value='#{palette}'>
+				<input type='hidden' name='fa' value='#{frct_accu}'>
+				<input type='hidden' name='ew' value='#{ew_mode}'>
+				<input type='hidden' name='fm' value='#{frct_mode}'>
+				<input type='hidden' name='hr' value='#{hr_image}'>
+			</form>
 		</div>
-		<div class='col-4'>
-			<h5>#{code}</h5>
+		<div class='col-1'>
+		</div>
+		<div class='col-3'>
+			Recipe code:#{code}
 		</div>
 	</div>
 	<hr>

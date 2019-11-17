@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'menu-calcex.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -76,7 +75,7 @@ frct_mode = get['frct_mode']
 frct_accu = get['frct_accu']
 palette = get['palette']
 lp = lp_init( 'menu-calcex', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"

@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -70,7 +70,7 @@ cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 status = 0 if status == nil
 lp = lp_init( 'detail', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -88,7 +88,7 @@ food_no = get_data['food_no']
 dir = get_data['dir']
 sid = get_data['sid']
 sid_flag = true if sid
-if $DEBUG
+if @debug
 	puts "frct_mode: #{frct_mode}<br>"
 	puts "food_weight: #{food_weight}<br>"
 	puts "food_no: #{food_no}<br>"

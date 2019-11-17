@@ -18,9 +18,9 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-unitc.cgi'
+@debug = false
 
-$DEBUG = false
+
 #==============================================================================
 #DEFINITION
 #==============================================================================
@@ -34,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-unitc', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -58,7 +58,7 @@ code = '' if code == nil
 code.gsub!( /\s/, ',' )
 code.gsub!( '　', ',' )
 
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "code:#{code}<br>\n"
 

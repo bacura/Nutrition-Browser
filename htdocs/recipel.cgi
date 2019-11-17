@@ -18,9 +18,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'fctb-recopel.cgi'
 $PAGE_LIMIT = 50
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -179,7 +178,6 @@ end
 
 
 def referencing( words, uname )
-	rec_date = Time.new
 	words.gsub!( /\s+/, "\t")
 	words.gsub!( /　+/, "\t")
 	words.gsub!( /,+/, "\t")
@@ -191,7 +189,7 @@ def referencing( words, uname )
 	# Recoding query & converting by DIC
 	true_query = []
 	query_word.each do |e|
-		mariadb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{rec_date}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false )
 
 		r = mariadb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false )
 		if r.first
@@ -200,7 +198,7 @@ def referencing( words, uname )
 			true_query << e
 		end
 	end
-	if $DEBUG
+	if @debug
 		puts "query_word: #{query_word}<br>"
 		puts "true_query: #{true_query}<br>"
 		puts "<hr>"
@@ -253,7 +251,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'recipel', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -267,7 +265,7 @@ end
 command = cgi['command']
 code = cgi['code']
 words = cgi['words']
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "words: #{words}<br>"
@@ -319,7 +317,7 @@ else
 		words = recipe_code_list.shift
 	end
 end
-if $DEBUG
+if @debug
 	puts "page: #{page}<br>"
 	puts "range: #{range}<br>"
 	puts "type: #{type}<br>"
@@ -385,7 +383,7 @@ if command == 'import'
 			import_fig3 = 1
 		end
 
-		mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{uname}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{Time.now}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{uname}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{$DATETIME}';", false )
 		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{uname}';", false )
 	end
 

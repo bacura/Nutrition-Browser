@@ -19,8 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'search-food.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -46,8 +45,7 @@ def shun_result( words )
 	words.tr!( "０-９", "0-9" ) if /[０-９]/ =~ words
 	a = words.scan( /\d+/ )
 	if a.size == 0
-		t = Time.new
-		sm = t.month
+		sm = $DATETIME.month
 	else
 		sm = a[0].to_i
 	end
@@ -91,9 +89,8 @@ end
 html_init( nil )
 
 cgi = CGI.new
-rec_date = Time.new
 uname, uid, status = login_check( cgi )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -109,7 +106,7 @@ words.gsub!( /、+/, "\t")
 words.gsub!( /\t{2,}/, "\t")
 query_word = words.split( "\t" )
 query_word.uniq!
-if $DEBUG
+if @debug
 	puts "query_word: #{query_word}<br>"
 	puts "<hr>"
 end
@@ -131,7 +128,7 @@ else
 	result_keys = []
 	query_word.each do |e|
 		# 記録
-		mariadb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET user='#{uname}', words='#{e}', date='#{rec_date}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false )
 
 		# 変換
 		r = mariadb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false )
@@ -166,12 +163,12 @@ else
 			end
 
 			# 検索結果コードの記録
-			mariadb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='#{result_keys.size}' WHERE user='#{uname}' AND words='#{query_word[words_count]}' AND date='#{rec_date}';", false )
+			mariadb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='#{result_keys.size}' WHERE user='#{uname}' AND words='#{query_word[words_count]}' AND date='#{$DATETIME}';", false )
 			words_count += 1
 		end
 	else
 		# 検索結果無しコードの記録
-		query_word.each do |e| mariadb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='0' WHERE user='#{uname}' AND words='#{e}' AND date='#{rec_date}';", false ) end
+		query_word.each do |e| mariadb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='0' WHERE user='#{uname}' AND words='#{e}' AND date='#{$DATETIME}';", false ) end
 	end
 end
 

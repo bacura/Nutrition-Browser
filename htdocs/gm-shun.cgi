@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-shun.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-shun', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -61,7 +60,7 @@ shun2e = cgi['shun2e'].to_i
 code = +cgi['code']
 code.gsub!( /\s/, ',' )
 code.gsub!( '　', ',' )
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "code:#{code}<br>\n"
 	puts "shun1s:#{shun1s}<br>\n"

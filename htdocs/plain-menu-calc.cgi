@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'plain-menu-calc.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -74,7 +73,7 @@ ew_mode = get['ew_mode']
 frct_mode = get['frct_mode']
 frct_accu = get['frct_accu']
 palette = get['palette']
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -333,7 +332,7 @@ fct_txt_sum.chop!
 fct_txt_sum << "\n"
 
 # 合計値
-fct_txt_sum << "\t\t#{lp[11]}\t#{total_weight.to_f}\t"
+fct_txt_sum << "\t\t#{lp[11]}\t#{total_total_weight.to_f}\t"
 fct_item.size.times do |c|
 	if fct_item[c] == 'REFUSE' || fct_item[c] == 'WCR' || fct_item[c] == 'Notice'
 		fct_txt_sum << "\t"

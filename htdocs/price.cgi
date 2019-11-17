@@ -24,7 +24,7 @@ $SCRIPT = 'price.cgi'
 #==============================================================================
 #DEFINITION
 #==============================================================================
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +35,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'price', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -51,7 +51,7 @@ code = cgi['code']
 food_volume_p = cgi['food_volume'].to_i
 food_price_p = cgi['food_price'].to_i
 food_no_p = cgi['food_no']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
 	puts "food_volume:#{food_volume_p}<br>"

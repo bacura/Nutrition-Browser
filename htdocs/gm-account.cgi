@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-account.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-account', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -60,7 +59,7 @@ target_mail = cgi['target_mail']
 target_aliasu = cgi['target_aliasu']
 target_status = cgi['target_status']
 target_language = cgi['target_language']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>\n"
 	puts "target_uid:#{target_uid}<br>\n"
 	puts "target_pass:#{target_pass}<br>\n"

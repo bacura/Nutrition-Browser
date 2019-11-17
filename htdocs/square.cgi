@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -81,7 +81,7 @@ cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 status = 0 if status == nil
 lp = lp_init( 'square', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -100,7 +100,7 @@ food_weight = CGI.unescape( get_data['food_weight'] ) if get_data['food_weight']
 food_no = get_data['food_no']
 base = get_data['base']
 base_fn = get_data['base_fn']
-if $DEBUG
+if @debug
 	puts "channel: #{channel}<br>"
 	puts "category: #{category}<br>"
 	puts "food_key: #{food_key}<br>"
@@ -118,7 +118,7 @@ if category > 9
 else
 	@fg = "0#{category}"
 end
-puts "@fg: #{@fg}<br>" if $DEBUG
+puts "@fg: #{@fg}<br>" if @debug
 
 
 #### 食品重量の決定
@@ -131,7 +131,7 @@ frct_mode, frct_select = frct_check( frct_mode )
 
 #### 名前の履歴の取得
 name_his = get_history_name( uname, @fg )
-#puts "name_his: #{name_his}<br>" if $DEBUG
+#puts "name_his: #{name_his}<br>" if @debug
 
 
 #### 食品キーチェーン
@@ -151,7 +151,7 @@ unless class3 == nil || class3 == ''
 	class_name = class3
 	class_no = 3
 end
-if $DEBUG
+if @debug
 	puts "fg_key: #{fg_key}<br>"
 	puts "class1: #{class1}<br>"
 	puts "class2: #{class2}<br>"
@@ -483,7 +483,7 @@ when 'fctb_l5'
 		else
 			query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no_list[c]}';"
 		end
-		p query if $DEBUG
+		p query if @debug
 		res = db.query( query )
 		sub_components = ''
 		fc_items.each do |e|

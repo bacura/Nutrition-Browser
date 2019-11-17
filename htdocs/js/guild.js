@@ -22,11 +22,18 @@ var returnKoyomi_BW1 = function( yyyy, mm ){
 	$.post( "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#bw_level2" ).html( data );});
 };
 
-// Koyomi fix
-var fixKoyomi_BW1 = function( com, dd ){
+// Koyomi freeze
+var freezeKoyomi = function(){
 	var yyyy = document.getElementById( "yyyy" ).value;
 	var mm = document.getElementById( "mm" ).value;
-	$.post( "koyomi.cgi", { command:com, yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "koyomi.cgi", { command:'freeze', yyyy:yyyy, mm:mm }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+// Koyomi thaw
+var thawKoyomi = function(){
+	var yyyy = document.getElementById( "yyyy" ).value;
+	var mm = document.getElementById( "mm" ).value;
+	$.post( "koyomi.cgi", { command:'thaw', yyyy:yyyy, mm:mm }, function( data ){ $( "#bw_level2" ).html( data );});
 };
 
 // Koyomi edit
@@ -58,21 +65,26 @@ var editKoyomiR_BW1 = function( yyyy, mm ){
 	document.getElementById( "bw_level4" ).style.display = 'none';
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi Direct fix data //////////////////////////////////////////////////////////////
+
 // Koyomi fix
-var fixKoyomi_BW3 = function( com, yyyy, mm, dd, tdiv ){
+var fixKoyomi = function( com, yyyy, mm, dd, tdiv ){
 	$.post( "koyomi-fix.cgi", { command:com, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){ $( "#bw_level4" ).html( data );});
 	document.getElementById( "bw_level4" ).style.display = 'block';
 };
 
 // Koyomi fix
-var paletteKoyomi_BW3 = function( yyyy, mm, dd, tdiv ){
+var paletteKoyomi = function( yyyy, mm, dd, tdiv, modifyf ){
+	displayVideo( modifyf );
 	var palette = document.getElementById( "palette" ).value;
-	$.post( "koyomi-fix.cgi", { command:'palette', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, palette:palette }, function( data ){ $( "#bw_level4" ).html( data );});
+	$.post( "koyomi-fix.cgi", { command:'palette', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, palette:palette, modifyf:modifyf }, function( data ){ $( "#bw_level4" ).html( data );});
 };
 
-// Koyomi fix FCT check
-var koyomiFCTcheck = function(){
-	if(document.getElementById( "fct_check" ).checked){
+// Koyomi fix 100g check
+var koyomiG100check = function(){
+	if(document.getElementById( "g100_check" ).checked){
 		document.getElementById( "food_weight" ).disabled = false;
 	}else{
 		document.getElementById( "food_weight" ).disabled = true;
@@ -95,14 +107,17 @@ var koyomiSaveSome = function( yyyy, mm, dd, tdiv, some ){
 };
 
 // Koyomi fix save
-var koyomiSaveFix = function( yyyy, mm, dd, tdiv ){
+var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 	var food_name = document.getElementById( "food_name" ).value;
 	var hh = document.getElementById( "hh" ).value;
+	var food_number = document.getElementById( "food_number" ).value;
 
 	if( food_name != '' ){
-		var food_weight = document.getElementById( "food_weight" ).value;
-
-		var REFUSE = document.getElementById( "REFUSE" ).value;
+		if(document.getElementById( "g100_check" ).checked){
+			var food_weight = document.getElementById( "food_weight" ).value;
+		}else{
+			var food_weight = 100;
+		}
 		var ENERC_KCAL = document.getElementById( "ENERC_KCAL" ).value;
 		var ENERC = document.getElementById( "ENERC" ).value;
 		var WATER = document.getElementById( "WATER" ).value;
@@ -169,17 +184,16 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv ){
 		var ACEAC = document.getElementById( "ACEAC" ).value;
 		var COIL = document.getElementById( "COIL" ).value;
 		var OA = document.getElementById( "OA" ).value;
-		var WCR = document.getElementById( "WCR" ).value;
 
 		$.post( "koyomi-fix.cgi", {
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh,
-			food_name:food_name, food_weight:food_weight,
-			REFUSE:REFUSE, ENERC_KCAL:ENERC_KCAL, ENERC:ENERC, WATER:WATER,
+			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, order:order,
+			ENERC_KCAL:ENERC_KCAL, ENERC:ENERC, WATER:WATER,
 			PROT:PROT, PROTCAA:PROTCAA, FAT:FAT, FATNLEA:FATNLEA, FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, CHOLE:CHOLE, CHO:CHO, CHOAVLM:CHOAVLM, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTG:FIBTG,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
 			THIAHCL:THIAHCL, RIBF:RIBF, NIA:NIA, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
-			NACL_EQ:NACL_EQ, ALC:ALC, NITRA:NITRA, THEBRN:THEBRN, CAFFN:CAFFN, TAN:TAN, POLYPHENT:POLYPHENT, ACEAC:ACEAC, COIL:COIL, OA:OA, WCR:WCR
+			NACL_EQ:NACL_EQ, ALC:ALC, NITRA:NITRA, THEBRN:THEBRN, CAFFN:CAFFN, TAN:TAN, POLYPHENT:POLYPHENT, ACEAC:ACEAC, COIL:COIL, OA:OA
 		}, function( data ){});
 
 		displayVideo( food_name + ' saved' );
@@ -194,6 +208,15 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv ){
 		displayVideo( 'Food name! (>_<)' );
 	}
 };
+
+
+// Koyomi modify or copy panel fix
+var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
+	closeBroseWindows( 3 );
+	$.post( "koyomi-fix.cgi", {command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, order:order }, function( data ){ $( "#bw_level4" ).html( data );});
+	document.getElementById( "bw_level4" ).style.display = 'block';
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi import panel//////////////////////////////////////////////////////////////
@@ -257,6 +280,7 @@ var modifyKoyomi = function( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ){
 	$.post( "koyomi-add.cgi", {command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, order:order }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
+
 
 // Modifying or copying code in Koyomi
 var modifysaveKoyomi = function( code, origin ){
@@ -334,18 +358,41 @@ var initGinmi = function(){
 	document.getElementById( "bw_level1" ).style.display = 'block';
 };
 
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi BMI //////////////////////////////////////////////////////////////
-
-var ginmiBMI = function(){
-	$.post( "ginmi.cgi", { mod:"bmi", command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
+var ginmiForm = function( mod ){
+	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi BMI //////////////////////////////////////////////////////////////
 
 var ginmiBMIres = function(){
 	var age = document.getElementById( "age" ).value;
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
 	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi kaup //////////////////////////////////////////////////////////////
+
+var ginmiKaupres = function(){
+	var age = document.getElementById( "age" ).value;
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	$.post( "ginmi.cgi", { mod:"kaupi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi laurel //////////////////////////////////////////////////////////////
+
+var ginmiLaurelres = function(){
+	var age = document.getElementById( "age" ).value;
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	$.post( "ginmi.cgi", { mod:"laureli", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
 	document.getElementById( "bw_level3" ).style.display = 'block';
 };

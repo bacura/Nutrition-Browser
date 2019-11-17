@@ -393,7 +393,7 @@ when 'dish'
 
 #### レシピデータのクイック保存
 when 'quick_save'
-	 mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{Time.now}' WHERE user='#{uname}' and code='#{code}';", false )
+	 mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{$DATETIME}', dish='#{dish_num}' WHERE user='#{uname}' and code='#{code}';", false )
 
 
 #### GN変換
@@ -452,11 +452,8 @@ when 'wadj'
 	weight_ctrl, weight_checked, check_all = weight_calc( food_list, dish_num )
 #	break if ( weight_ctrl - weight_checked ) < 10
 	wadj_rate = BigDecimal( weight_adj - ( weight_ctrl - weight_checked )) / ( weight_checked )
-
-
-
 	food_list.size.times do |c|
-		if food_list[c].check == '1' || check_all
+		if ( food_list[c].check == '1' || check_all ) && food_list[c].weight != '-' && food_list[c].weight != '+'
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * wadj_rate )
 			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * wadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * wadj_rate )
@@ -474,7 +471,7 @@ when 'eadj'
 #	break if ( energy_ctrl - energy_checked ) < 10
 	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
 	food_list.size.times do |c|
-		if food_list[c].check == '1' || check_all
+		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * eadj_rate )
 			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * eadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * eadj_rate )
@@ -491,12 +488,14 @@ when 'ladj'
 	weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
 	ladj_rate = ( BigDecimal( weight_checked - loss_adj ) / ( weight_checked )).round( 2 ).to_f
 	food_list.size.times do |c|
-		if food_list[c].check == '1'
-			food_list[c].rr = ladj_rate
-			food_list[c].ew = BigDecimal( food_list[c].weight ) * ladj_rate
-		else
-			food_list[c].rr = "1.0"
-			food_list[c].ew = food_list[c].weight
+		if food_list[c].weight != '-' && food_list[c].weight != '+'
+			if food_list[c].check == '1'
+				food_list[c].rr = ladj_rate
+				food_list[c].ew = BigDecimal( food_list[c].weight ) * ladj_rate
+			else
+				food_list[c].rr = "1.0"
+				food_list[c].ew = food_list[c].weight
+			end
 		end
 	end
 	update = '*'
@@ -577,9 +576,9 @@ html = <<-"HTML"
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="dish_num">#{lp[2]}</label>
 				</div>
-  				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB_BWL1( '#{code}' )\">
+  				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
 				<div class="input-group-append">
-	        		<button class='btn btn-outline-primary' type='button' onclick=\"dishCB_BWL1( '#{code}' )\">#{lp[3]}</button>
+	        		<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{lp[3]}</button>
 	        	</div>
 			</div>
 		</div>
@@ -797,7 +796,7 @@ html << "</div>"
 if recipe_name == '' || protect == 1
 	html << "	<div class='col-2'></div>"
 else
-	html << "	<div class='col-2'><button type='button' class='btn btn-outline-danger btn-sm' onclick=\"quickSave_BWL1( '#{code}' )\">#{lp[23]}</button></div>"
+	html << "	<div class='col-2'><button type='button' class='btn btn-outline-danger btn-sm' onclick=\"quickSave( '#{code}' )\">#{lp[23]}</button></div>"
 end
 
 html << "</div>"

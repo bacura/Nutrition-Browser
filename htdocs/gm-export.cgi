@@ -18,8 +18,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-export.cgi'
-$DEBUG = false
+@debug = false
+
 
 #==============================================================================
 #DEFINITION
@@ -29,14 +29,14 @@ $DEBUG = false
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil ) if $DEBUG
+html_init( nil ) if @debug
 
 puts "Content-type: text/text\n\n"
 
 #### GETデータの取得
 get_data = get_data()
 extag = get_data['extag']
-puts "extag:#{extag}\n" if $DEBUG
+puts "extag:#{extag}\n" if @debug
 
 cgi = CGI.new
 uname, uid, status = login_check( cgi )

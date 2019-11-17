@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-color.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-color', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -58,7 +57,7 @@ code = cgi['code']
 code = '' if code == nil
 code.gsub!( /\s/, ',' )
 code.gsub!( '　', ',' )
-if $DEBUG
+if @debug
 	puts "uname:#{uname}<br>\n"
 	puts "uid:#{uid}<br>\n"
 	puts "status:#{status}<hr>\n"
@@ -83,7 +82,7 @@ when 'update'
 	color1h = color1 if color1 != 0 && color1h == 0
 	color2h = color1 if color2 != 0 && color2h == 0
 	fn = code.split( ',' )
-	if $DEBUG
+	if @debug
 		puts "color1: #{color1}<br>\n"
 		puts "color2: #{color2}<br>\n"
 		puts "color1h: #{color1h}<br>\n"

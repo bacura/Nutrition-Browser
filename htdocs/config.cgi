@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'config.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -47,7 +46,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'config', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -58,7 +57,7 @@ end
 
 
 command = cgi['command']
-if $DEBUG
+if @debug
 	puts"command: #{command}"
 	puts"<hr>"
 end

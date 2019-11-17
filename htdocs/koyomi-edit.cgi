@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug =false
+@debug = false
 @tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
 
@@ -60,7 +60,7 @@ def meals( e, lp, uname )
 		elsif /\-f\-/ =~ aa[0]
 			rr = mariadb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false )
 			item_name = rr.first['name']
-			onclick = ''
+			onclick = " onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\""
 		elsif /\-/ =~ aa[0]
 			rr = mariadb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false )
 			item_name = rr.first['name']
@@ -183,19 +183,19 @@ html = <<-"HTML"
 		<div class='col-3'><h5>#{yyyy} / #{dd} / #{dd}</h5></div>
 		<div class='col-8'></div>
 		<div class='col-1'>
-			<button class='btn btn-success' onclick="editKoyomiR_BW1( '#{yyyy}', '#{mm}' )">#{lp[7]}</button>
+			<button class='btn btn-sm btn-success' onclick="editKoyomiR_BW1( '#{yyyy}', '#{mm}' )">#{lp[7]}</button>
 		</div>
 	</div>
 	<div class='row'>
 		<div class='col-6'>
 			<h5>#{lp[1]}</h5>
 			#{koyomi_html[0]}
-			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 0 )">＋</button>
+			<button class='btn btn-sm btn-primary' onclick="fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', 0 )">＋</button>
 		</div>
 		<div class='col-6'>
 			<h5>#{lp[2]}</h5>
 			#{koyomi_html[1]}
-			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 1 )">＋</button>
+			<button class='btn btn-sm btn-primary' onclick="fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', 1 )">＋</button>
 		</div>
 	</div>
 	<br>
@@ -203,12 +203,12 @@ html = <<-"HTML"
 		<div class='col-6'>
 			<h5>#{lp[3]}</h5>
 			#{koyomi_html[2]}
-			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 2 )">＋</button>
+			<button class='btn btn-sm btn-primary' onclick="fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', 2 )">＋</button>
 		</div>
 		<div class='col-6'>
 			<h5>#{lp[4]}</h5>
 			#{koyomi_html[3]}
-			<button class='btn btn-sm btn-primary' onclick="fixKoyomi_BW3( 'init', '#{yyyy}', '#{mm}', '#{dd}', 3 )">＋</button>
+			<button class='btn btn-sm btn-primary' onclick="fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', 3 )">＋</button>
 		</div>
 	</div>
 	<br>

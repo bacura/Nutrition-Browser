@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'menu.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -35,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'menu', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -54,7 +53,7 @@ protect = cgi['protect'].to_i
 label = cgi['label']
 new_label = cgi['new_label']
 fig = 0
-if $DEBUG
+if @debug
 	puts "commnad:#{command}<br>"
 	puts "code:#{code}<br>"
 	puts "menu_name:#{menu_name}<br>"
@@ -100,7 +99,7 @@ when 'save'
 	r = mariadb( "SELECT name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
 	meal = r.first['meal']
 	meal_name = r.first['name']
-	p meal if $DEBUG
+	p meal if @debug
 
 	label = new_label unless new_label == ''
 
@@ -117,19 +116,19 @@ when 'save'
 	end
 
 	# 上書き保存
-	mariadb( "UPDATE #{$MYSQL_TB_MENU} SET name='#{menu_name}', public='#{public_bit}', protect='#{protect}', meal='#{meal}', label='#{label}', date='#{Time.now}' WHERE user='#{uname}' and code='#{code}';", false )
+	mariadb( "UPDATE #{$MYSQL_TB_MENU} SET name='#{menu_name}', public='#{public_bit}', protect='#{protect}', meal='#{meal}', label='#{label}', date='#{$DATETIME}' WHERE user='#{uname}' and code='#{code}';", false )
 	mariadb( "UPDATE #{$MYSQL_TB_MEAL} SET name='#{menu_name}', code='#{code}' WHERE user='#{uname}';", false )
 end
 
 
 # 公開チェック
-p public_bit if $DEBUG
+p public_bit if @debug
 check_public = ''
 check_public = 'CHECKED' if public_bit == 1
 
 
 # 保護チェック
-p protect if $DEBUG
+p protect if @debug
 check_protect = ''
 check_protect = 'CHECKED' if protect == 1
 

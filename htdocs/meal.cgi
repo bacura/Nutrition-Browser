@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'fctb-meal.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -51,7 +50,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'meal', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -65,7 +64,7 @@ end
 command = cgi['command']
 code = cgi['code']
 order = cgi['order']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
 	puts "order:#{order}<br>"
@@ -85,7 +84,7 @@ meal_name = r.first['name']
 meal = r.first['meal']
 protect = r.first['protect'].to_i
 update = ''
-if $DEBUG
+if @debug
 	puts "code:#{code}<br>"
 	puts "meal_name:#{meal_name}<br>"
 	puts "protect:#{protect}<br>"

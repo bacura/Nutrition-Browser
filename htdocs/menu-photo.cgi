@@ -18,15 +18,13 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'menu-photo.cgi'
 $SIZE_MAX = 20000000
 $TN_SIZE = 400
 $TNS_SIZE = 40
 $PHOTO_SIZE_MAX = 2000
+@debug = false
 
-$WM_FONT = 'さざなみゴシック'
 
-$DEBUG = false
 #==============================================================================
 #DEFINITION
 #==============================================================================
@@ -40,7 +38,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'menu-photo', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -52,7 +50,7 @@ end
 command = cgi['command']
 code = cgi['code']
 slot = cgi['slot']
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "slot: #{slot}<br>"

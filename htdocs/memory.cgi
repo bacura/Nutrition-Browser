@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -34,7 +34,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'memory', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -49,7 +49,7 @@ command = cgi['command']
 category = cgi['category']
 pointer = cgi['pointer']
 depth = cgi['depth']
-if $DEBUG
+if @debug
 	puts "command:#{command}<br>"
 	puts "category:#{category}<br>"
 	puts "pointer:#{pointer}<br>"

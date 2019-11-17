@@ -18,8 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'recipe.cgi'
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -107,7 +106,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'recipe', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -130,7 +129,7 @@ tech = cgi['tech'].to_i
 time = cgi['time'].to_i
 cost = cgi['cost'].to_i
 protocol = cgi['protocol']
-if $DEBUG
+if @debug
 	puts "commnad:#{command}<br>"
 	puts "code:#{code}<br>"
 	puts "recipe_name:#{recipe_name}<br>"
@@ -208,7 +207,7 @@ when 'save'
 
 	new_code_flag = false
 	source_code = code
-	p sum if $DEBUG
+	p sum if @debug
 
 	# レシピ名の確認と新しいコード
 	unless sum_name == ''
@@ -281,7 +280,7 @@ when 'save'
 
 
 	# 上書き保存
-	mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{recipe_name}', dish='#{dish_num}',type='#{type}', role='#{role}', tech='#{tech}', time='#{time}', cost='#{cost}', sum='#{sum}', protocol='#{protocol}', public='#{public_bit}',protect='#{protect}',draft='#{draft}', fig1='#{fig1}', fig2='#{fig2}', fig3='#{fig3}', date='#{Time.now}' WHERE user='#{uname}' and code='#{code}';", false )
+	mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{recipe_name}', dish='#{dish_num}',type='#{type}', role='#{role}', tech='#{tech}', time='#{time}', cost='#{cost}', sum='#{sum}', protocol='#{protocol}', public='#{public_bit}',protect='#{protect}',draft='#{draft}', fig1='#{fig1}', fig2='#{fig2}', fig3='#{fig3}', date='#{$DATETIME}' WHERE user='#{uname}' and code='#{code}';", false )
 	mariadb( "UPDATE #{$MYSQL_TB_SUM} SET name='#{recipe_name}', code='#{code}', protect='#{protect}' WHERE user='#{uname}';", false )
 
 #	update_recipei( code, recipe_name, sum, protocol )
@@ -290,19 +289,19 @@ end
 
 
 # 公開チェック
-p public_bit if $DEBUG
+p public_bit if @debug
 check_public = ''
 check_public = 'CHECKED' if public_bit == 1
 
 
 # ロックチェック
-p protect if $DEBUG
+p protect if @debug
 check_protect = ''
 check_protect = 'CHECKED' if protect == 1
 
 
 # 下書きチェック
-p draft if $DEBUG
+p draft if @debug
 check_draft = ''
 check_draft = 'CHECKED' if draft == 1
 

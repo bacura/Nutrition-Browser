@@ -19,7 +19,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -29,11 +29,17 @@ require '/var/www/nb-soul.rb'
 #### 初期画面
 def init( lp, status )
 	html = <<-"HTML"
-	<div class='row'>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="ginmiBMI()">BMI</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">MNA</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">SGA</button></div>
-	</div>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'bmi' )">BMI</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'kaupi' )">カウプ指数</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'laureli' )">ローレル指数</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">肥満度</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">エネルギー・参照</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">エネルギー・BEE</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">推定身長</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">推定骨格筋量</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">MNA</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">MNA-SF</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="">SGA</button>
 HTML
 
 	return html

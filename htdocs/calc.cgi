@@ -18,9 +18,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'calc.cgi'
 fct_num = 14
-$DEBUG = false
+@degug = false
 
 
 #==============================================================================
@@ -67,7 +66,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'calc', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -104,7 +103,7 @@ frct_mode = frct_mode.to_i
 frct_accu = frct_accu.to_i
 palette = 0 if palette == nil
 palette = palette.to_i
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "ew_mode: #{ew_mode}<br>"

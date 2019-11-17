@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-$DEBUG = false
+@debug = false
 
 
 #==============================================================================
@@ -65,7 +65,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'pseudo_r2f', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -97,7 +97,7 @@ tag2 = cgi['tag2']
 tag3 = cgi['tag3']
 tag4 = cgi['tag4']
 tag5 = cgi['tag5']
-if $DEBUG
+if @debug
 	puts "command: #{command}<br>\n"
 	puts "code: #{code}<br>\n"
 	puts "ew_mode: #{ew_mode}<br>"

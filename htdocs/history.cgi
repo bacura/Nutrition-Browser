@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-$DEBUG = false
+@debug = false
 $LIMIT = 100
 
 
@@ -58,7 +58,7 @@ html_init( nil )
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'history', language )
-if $DEBUG
+if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
 	puts "status: #{status}<br>"
@@ -74,7 +74,7 @@ food_weight = cgi['food_weight']
 frct_mode = cgi['frct_mode']
 food_no = cgi['food_no']
 sub_fg = cgi['sub_fg']
-if $DEBUG
+if @debug
 	puts "order_mode: #{order_mode}<br>"
 	puts "food_weight: #{food_weight}<br>"
 	puts "frct_mode: #{frct_mode}<br>"
@@ -97,7 +97,7 @@ end
 
 #### 食品重量の決定
 food_weight = BigDecimal( food_weight_check( food_weight ).first )
-puts "food_weight: #{food_weight}<br>" if $DEBUG
+puts "food_weight: #{food_weight}<br>" if @debug
 
 
 #### 端数処理の設定
@@ -106,7 +106,7 @@ frct_mode, frct_select = frct_check( frct_mode )
 
 #### 履歴の取得
 history = get_histry( uname, sub_fg, order_mode )
-puts "history: #{history}<br>" if $DEBUG
+puts "history: #{history}<br>" if @debug
 
 
 #### 各食品ラインの生成
