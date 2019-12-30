@@ -9,6 +9,7 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
+require 'cgi'
 require 'mysql2'
 require 'bigdecimal'
 
@@ -43,6 +44,8 @@ $MYSQL_TB_MEMORY = 'memory'
 $MYSQL_TB_KOYOMI = 'koyomi'
 $MYSQL_TB_KOYOMIEX = 'koyomiex'
 $MYSQL_TB_FCS = 'fcs'
+$MYSQL_TB_FCZ = 'fcz'
+$MYSQL_TB_BIO = 'bio'
 
 $DEBUG = false
 
@@ -91,7 +94,10 @@ $ACCOUNT = ['退会','一般','ギルメン','guest', 'ギルメン・萌','ギ�
 $KEX_ITEM = ['未設定', '独自→', '身長', '体重', 'BMI', '体脂肪率', '腹囲', '首回り', '骨盤上部周囲']
 $KEX_UNIT = ['',       ''   , 'cm',   'kg',  '',     '%',       'cm',  'cm',    'cm']
 
-$DATETIME = Time.now.strftime("%Y-%m-%d %H:%M:%S")
+$SOMETHING = {'?--'=>'何か食べた（微盛）', '?-'=>'何か食べた（小盛）', '?='=>'何か食べた（並盛）', '?+'=>'何か食べた（大盛）', '?++'=>'何か食べた（特盛）'}
+
+$TIME_NOW = Time.now
+$DATETIME = $TIME_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
 $HISTORY_LIMIT = 200
 
@@ -160,24 +166,23 @@ def html_head( interrupt, status, sub_title )
   <script type='text/javascript' src='#{$JS_PATH}/config.js'></script>
   #{js_guild}
   #{js_master}
+</head>
 
 <!-- Matomo -->
-  <script type="text/javascript">
-    var _paq = window._paq || [];
-    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-    _paq.push(['trackPageView']);
-    _paq.push(['enableLinkTracking']);
-    (function() {
-      var u="//bacura.jp/piwik/";
-      _paq.push(['setTrackerUrl', u+'matomo.php']);
-      _paq.push(['setSiteId', '5']);
-      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-    })();
-  </script>
-  <!-- End Matomo Code -->
-
-</head>
+<script type="text/javascript">
+  var _paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//bacura.jp/piwik/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '5']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
 
 <body class="body">
   <span class="world_frame" id="world_frame">
@@ -268,32 +273,7 @@ def get_data()
 end
 
 
-#### データベース処理(廃止予定)
-def db_process( query, db_err, html_opt )
-  begin
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    t = query.chop
-    if /\;/ =~ t
-        puts "<div class=\"container\">データベース処理エラー(#{db_err})が発生しました。処理を中止します。魂</div>"
-        exit( 9 )
-    end
-
-    res = db.query( query )
-    db.close
-  rescue
-    if html_opt
-      html_init( nil )
-      html_head( nil )
-      html_top( nil )
-    end
-    puts "<div class=\"container\">データベース処理エラー(#{db_err})が発生しました。処理を中止します。</div>"
-  end
-
-  return res
-end
-
-
-#### データベース処理
+#### 旧データベース処理
 def mariadb( query, html_opt )
   begin
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -318,12 +298,38 @@ def mariadb( query, html_opt )
 end
 
 
+#### 新データベース処理
+def mdb( query, html_opt, debug )
+  begin
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    t = query.chop
+    query_ = ''
+    query_ = query if debug
+    if /\;/ =~ t
+        puts "データベース処理エラーが発生しました。処理を中止します。<br>#{query_}<br>"
+        exit( 9 )
+    end
+
+    res = db.query( query )
+    db.close
+  rescue
+    if html_opt
+      html_init( nil )
+      html_head( nil )
+      html_top( nil )
+    end
+    puts "データベース処理エラーが発生しました。処理を中止します。<br>#{query_}<br>"
+  end
+  return res
+end
+
+
 #### ログインチェック
 def login_check( cgi )
 	cookie_name = cgi.cookies['NAME'].first
  	cookie_uid = cgi.cookies['UID'].first
 
-  r = mariadb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true )
+  r = mdb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true, $DEBUG )
 
   if r.first
     return cookie_name, cookie_uid, r.first['status'].to_i, r.first['aliasu'], $DEFAULT_LP
@@ -336,7 +342,6 @@ end
 #### 食品成分値の処理
 def num_opt( num, weight, mode, limit )
   # リミットがない→数値ではない場合はそのまま返す
-
   return num if limit == nil
 
   kakko = false
@@ -346,6 +351,7 @@ def num_opt( num, weight, mode, limit )
     kakko = true
   end
   ans = BigDecimal( 0 )
+
 
   if num == '-'
     return '-'
@@ -390,17 +396,17 @@ end
 
 #### 履歴追加
 def add_his( user, fn )
-  r = mariadb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user}';", true )
+  r = mdb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user}';", true, $DEBUG )
   if r.first
     current_his = r.first['his'].split( "\t" )
   else
     # 新規追加
-    mariadb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user}', his='';", true )
+    mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user}', his='';", true, $DEBUG )
     current_his = []
   end
 
   #
-  r = mariadb( "SELECT his_max FROM #{$MYSQL_TB_CFG} WHERE user='#{user}';", false )
+  r = mdb( "SELECT his_max FROM #{$MYSQL_TB_CFG} WHERE user='#{user}';", false, $DEBUG )
   his_max = r.first['his_max'].to_i  if r.first
   his_max = 200 if his_max < 200 || his_max > 500
 
@@ -411,7 +417,7 @@ def add_his( user, fn )
   new_his.chop!
 
   # 履歴の更新
-  mariadb( "UPDATE #{$MYSQL_TB_HIS} SET his='#{new_his}' WHERE user='#{user}';", true )
+  mdb( "UPDATE #{$MYSQL_TB_HIS} SET his='#{new_his}' WHERE user='#{user}';", true, $DEBUG )
 end
 
 
@@ -428,7 +434,7 @@ def insert_recipe( uname, food_no, food_weight )
   else
       sum = ''
   end
-  mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false )
+  mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false, $DEBUG )
 
   return code
 end

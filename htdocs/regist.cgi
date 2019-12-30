@@ -168,7 +168,7 @@ when 'finish'
   mariadb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{post_data['id']}', meal='';", false )
 
   #コンフィグテーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{post_data['id']}', recipel='1:0:99:99:99:99:99';", false )
+  mariadb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{post_data['id']}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false )
 
   html_regist_finish( lp )
 

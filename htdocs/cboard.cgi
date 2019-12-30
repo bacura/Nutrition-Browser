@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -168,11 +167,12 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'cboard', language )
+
+html_init( nil )
+
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -652,10 +652,9 @@ html = <<-"HTML"
 	<hr>
 
 <div class='row cb_header'>
-	<div class='col-1 cb_header'>#{lp[9]}</div>
-	<div class='col-1 cb_header'><input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[30]}</div>
-	<div class='col-1 cb_header'>#{lp[10]}</div>
-	<div class='col-3 cb_header'>#{lp[11]}</div>
+	<div class='col-2'>#{lp[9]}</div>
+	<div class='col-1'><input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[10]}</div>
+	<div class='col-3'>#{lp[11]}</div>
 	<div class='col-3'>
   		<div class='row'>
 			<div class='col-6'>#{lp[12]}</div>
@@ -745,6 +744,7 @@ food_list.each do |e|
 		html << "<div class='col-3 text-secondary cb_food_label'>#{e.init}</div>"
 		html << "<div class='col-7'><hr></div>"
   	else
+
 	  	html << "	<div class='col-1 fct_value'><input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB_BWL1( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>#{e.no}</div>"
   		html << "	<div class='col-3 fct_value' onclick=\"cb_summonBWL5( '#{food_key}', '#{e.weight}', '#{e.no}' )\">#{food_tag[c]}</div>"
   		html << "	<div class='col-3'>"

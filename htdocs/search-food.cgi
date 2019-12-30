@@ -11,8 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
-require 'date'
 require '/var/www/nb-soul.rb'
 
 
@@ -45,7 +43,7 @@ def shun_result( words )
 	words.tr!( "０-９", "0-9" ) if /[０-９]/ =~ words
 	a = words.scan( /\d+/ )
 	if a.size == 0
-		sm = $DATETIME.month
+		sm = $TIME_NOW.month
 	else
 		sm = a[0].to_i
 	end

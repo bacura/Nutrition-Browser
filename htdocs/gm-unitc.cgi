@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -29,11 +28,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-unitc', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -45,13 +45,13 @@ end
 
 
 #### GM check
-if status < 9
+if status < 8
 	puts "GM error."
 	exit
 end
 
 
-#### POSTデータの取得
+#### Getting POST
 command = cgi['command']
 code = cgi['code']
 code = '' if code == nil
@@ -100,17 +100,17 @@ when 'update'
 	unitc = "::#{unitc2}:#{unitc3}:#{unitc4}:#{unitc5}:#{unitc6}:#{unitc7}:#{unitc8}:#{unitc9}:#{unitc10}:#{unitc11}:#{unitc12}:#{unitc13}:#{unitc14}:"
 	fn = code.split( ',' )
 	fn.each do |e|
-		mariadb( "UPDATE #{$MYSQL_TB_EXT} SET unitc='#{unitc}', unitn='#{notice}' WHERE FN='#{e}';", false ) if /\d\d\d\d\d/ =~ e
+		mdb( "UPDATE #{$MYSQL_TB_EXT} SET unitc='#{unitc}', unitn='#{notice}' WHERE FN='#{e}';", false, @debug ) if /\d\d\d\d\d/ =~ e
 	end
 else
 end
 
 
 unless code == ''
-	r = mariadb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false )
+	r = mdb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false, @debug )
 	food_name = r.first['name']
 
-	r = mariadb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false )
+	r = mdb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, @debug )
 	if r.first
 		t = r.first['unitc']
 		t = '::0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:' if t == nil || t == ''

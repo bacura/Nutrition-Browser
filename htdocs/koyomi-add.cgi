@@ -11,8 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
-require 'date'
 require '/var/www/nb-soul.rb'
 
 
@@ -29,7 +27,7 @@ require '/var/www/nb-soul.rb'
 
 #### Getting start year & standard time
 def get_starty( uname )
-	start_year = $DATETIME.year
+	start_year = $TIME_NOW.year
 	breakfast_st = 0
 	lunch_st = 0
 	dinner_st = 0
@@ -128,8 +126,8 @@ new_solid = ''
 if command == 'move' && copy != 1
 	a = origin.split( ':' )
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )
-	if r.first[@tdiv_set[a[3].to_i]]
-		t = r.first[@tdiv_set[a[3].to_i]]
+	if r.first['koyomi']
+		t = r.first['koyomi']
 		aa = t.split( "\t" )
 		0.upto( aa.size ) do |c|
 			new_solid << "#{aa[c]}\t" unless c == a[4].to_i
@@ -153,7 +151,7 @@ if command == 'save' || command == 'move'
 		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
 	else
 		koyomi = "#{code}:#{ev}:#{eu}:#{hh}"
-		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false )
+		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false )
 		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:0" if command == 'move'
 	end
 end
@@ -202,11 +200,11 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 
 	0.upto( 3 ) do |cc|
 		koyomi_c = '-'
-		r = mariadb( "SELECT fix, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
+		r = mariadb( "SELECT freeze, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
 		onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
 		onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
 		if r.first
-			if r.first['fix'] != ''
+			if r.first['freeze'] == 1
 				date_html << "<td class='btn-secondary'></td>"
 			elsif r.first['koyomi'] == ''
 				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
@@ -302,11 +300,18 @@ rate_html << "	</div>"
 rate_html << "</div>"
 
 
+#### Return button
+return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn()\">#{lp[11]}</button>"
+if command == 'modify' || command == 'move'
+	return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[11]}</button>"
+end
+
+
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-11'><h5>#{food_name}</h5></div>
-		<div class='col-1'><button class='btn btn-success' type='button' onclick="koyomiReturn()">#{lp[11]}</button></div>
+		<div class='col-1'>#{return_button}</div>
 	</div>
 	<div class='row'>
 		<div class='col-5 form-inline'>

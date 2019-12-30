@@ -61,15 +61,39 @@ var memoryFC = function( code ){
 
 
 // Exchanging menu sets
-var changeMenu = function(){
+var changeMenu = function( user_status ){
 	switch( menu_status ){
 		case 0:
 			document.getElementById( "guild_menu" ).style.display = 'inline';
 			displayVideo( 'Guild menu');
-			menu_status = 1;
+			if( user_status >= 5 ){
+				menu_status = 1;
+
+			}else{
+				menu_status = 3;
+			}
 			break;
 		case 1:
 			document.getElementById( "guild_menu" ).style.display = 'none';
+			document.getElementById( "gs_menu" ).style.display = 'inline';
+			displayVideo( 'GS menu');
+			if( user_status >= 8 ){
+				menu_status = 2;
+
+			}else{
+				menu_status = 3;
+			}
+			break;
+		case 2:
+			document.getElementById( "gs_menu" ).style.display = 'none';
+			document.getElementById( "gm_menu" ).style.display = 'inline';
+			displayVideo( 'GM menu');
+			menu_status = 3;
+			break;
+		case 3:
+			document.getElementById( "guild_menu" ).style.display = 'none';
+			document.getElementById( "gs_menu" ).style.display = 'none';
+			document.getElementById( "gm_menu" ).style.display = 'none';
 			displayVideo( 'Standard menu' );
 			menu_status = 0;
 			break;

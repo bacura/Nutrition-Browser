@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -29,11 +28,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-allergen', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -45,7 +45,7 @@ end
 
 
 #### GM check
-if status < 9
+if status < 8
 	puts "GM error."
 	exit
 end
@@ -70,34 +70,34 @@ when 'on'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /\d\d\d\d\d/ =~ e
-			mariadb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='#{allergen}' WHERE FN='#{code}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='#{allergen}' WHERE FN='#{code}';", false, @debug )
 		end
 	end
 when 'off'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /\d\d\d\d\d/ =~ e
-			mariadb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='0' WHERE FN='#{code}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='0' WHERE FN='#{code}';", false, @debug )
 		end
 	end
 end
 
 food_name = ''
 unless code == ''
-	r = mariadb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false )
+	r = mdb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false, @debug )
 	food_name = r.first['name']
 end
 
 list_html = ''
-r = mariadb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE allergen>='1';", false )
+r = mdb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE allergen>='1';", false, @debug )
 if r.size != 0
 	code_list = []
 	r.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false )
+		rr = mdb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false, @debug)
 		code_list << rr.first['FN']
 	end
 	code_list.reverse.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
+		rr = mdb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-1'><button class='btn btn-sm btn-outline-danger' type='button' onclick=\"offGYCV_BWL1( '#{e}' )\">x</button></div>"
 		list_html << "<div class='col-2'>#{e}</div>"

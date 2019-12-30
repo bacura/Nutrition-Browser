@@ -12,14 +12,12 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'gm-slogf.cgi'
 @debug = false
 
 
@@ -31,11 +29,12 @@ $SCRIPT = 'gm-slogf.cgi'
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-slogf', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -47,7 +46,7 @@ end
 
 
 #### GM check
-if status < 9
+if status < 8
 	puts "GM error."
 	exit
 end
@@ -62,12 +61,12 @@ end
 
 
 if command == 'edit'
-#	mariadb( "UPDATE #{$MYSQL_TB_USER} SET;", false )
+#	mdb( "UPDATE #{$MYSQL_TB_USER} SET;", false )
 end
 
 
 slogf_html = "<div class='row'>"
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_SLOGF};", false )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_SLOGF};", false, @debug )
 if r.first
 	slogf_html << "<table class='table-striped table-bordered'>"
 	slogf_html << "<thead>"

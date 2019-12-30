@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -61,11 +60,12 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'calc', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -85,7 +85,7 @@ frct_accu = cgi['frct_accu']
 palette = cgi['palette']
 
 if ew_mode == nil || ew_mode == ''
-	r = mariadb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", @debug )
 	if r.first && r.first['calcc'] != nil
 		a = r.first['calcc'].split( ':' )
 		ew_mode = a[0].to_i
@@ -115,7 +115,7 @@ end
 
 
 #### Extracting SUM data
-r = mariadb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false, @debug )
 recipe_name = r.first['name']
 code = r.first['code']
 dish_num = r.first['dish'].to_i
@@ -131,7 +131,7 @@ ew_check = ew_check( ew_mode )
 #### Setting palette
 palette_sets = []
 palette_name = []
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
@@ -370,4 +370,4 @@ HTML
 puts html
 
 #### Updating Calculation option
-mariadb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette}:#{ew_mode}:#{frct_mode}:#{frct_accu}' WHERE user='#{uname}';", false )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette}:#{ew_mode}:#{frct_mode}:#{frct_accu}' WHERE user='#{uname}';", false, @debug )

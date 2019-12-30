@@ -3,7 +3,7 @@
 
 #### displying palette
 def listing( uname )
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 
 	# 操作ボタン準備
 	list_body = ''
@@ -56,7 +56,7 @@ def config_module( cgi )
 	when 'new_palette', 'edit_palette'
 		checked = []
 		if step == 'edit_palette'
-			r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='#{cgi['palette_name']}';", false )
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='#{cgi['palette_name']}';", false, @debug )
 			palette = r.first['palette']
 			palette.size.times do |c|
 				if palette[c] == '1'
@@ -111,29 +111,29 @@ HTML
 		end
 
 		# パレット名チェック
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{uname}';", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{uname}';", false, @debug )
 
 		if r.first
 			# 更新
-			mariadb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', count='#{fct_count}' WHERE name='#{palette_name}' AND user='#{uname}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', count='#{fct_count}' WHERE name='#{palette_name}' AND user='#{uname}';", false, @debug )
 		else
 			# 追加
-			mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{uname}', palette='#{fct_bits}', count='#{fct_count}';", false )
+			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{uname}', palette='#{fct_bits}', count='#{fct_count}';", false, @debug )
 		end
 
 		html = listing( uname )
 
 	when 'delete_palette'
-		mariadb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{uname}';", false )
+		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{uname}';", false, @debug )
 
 		html = listing( uname )
 
 	when 'reset_palette'
-		mariadb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
- 		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
-		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='基本の5成分', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
-		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='基本の14成分', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false )
-		mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='全て', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false )
+		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+ 		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='基本の5成分', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='基本の14成分', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uname}', name='全て', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
 
 		html = listing( uname )
 	end

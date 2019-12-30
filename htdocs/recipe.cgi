@@ -155,15 +155,10 @@ when 'view'
 
   		unless r.first
   			# 新規コードの生成
-			require 'securerandom'
-			code = uname[0, 2]
-		  	code = "x" + uname[0, 1] if code == nil
-		  	code = "#{code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
-
+			code = generate_code( uname, 'r' )
 		  	# レシピデータベースに仮登録
 		  	mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, protect=0, draft=0, name='', dish=1, type=0, role=0, tech=0, time=0, cost=0, sum='', protocol='', fig1=0, fig2=0, fig3=0;", false )
   		end
-
   		# サムデータベースへ反映
 		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{code}' WHERE user='#{uname}';", false )
   	end
@@ -215,7 +210,13 @@ when 'save'
 		# 名前が一致しなければ、新規コードとメニューを生成。ただし、下書きの場合はコードの変更なし
 		unless rr.first || draft == 1
 			source_code = code
-			code = insert_recipe( uname, nil, nil )
+#			code = insert_recipe( uname, nil, nil )
+			code = generate_code( uname, 'r' )
+
+			sum = ''
+			sum = "#{food_no}::g::" if food_no
+  			mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false )
+
 			draft = 0
 			new_code_flag = true
 		end
@@ -235,7 +236,13 @@ when 'save'
 			recipe_name.sub!( /\((\d+)\)$/, '' )
 			recipe_name = "#{recipe_name}(#{sn})"
 			source_code = code
-			code = insert_recipe( uname, nil, nil )
+#			code = insert_recipe( uname, nil, nil )
+			code = generate_code( uname, 'r' )
+
+			sum = ''
+			sum = "#{food_no}::g::" if food_no
+  			mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false )
+
 			protect = 0
 			draft = 1
 			new_code_flag = true

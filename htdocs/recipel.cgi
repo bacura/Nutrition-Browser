@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -189,9 +188,9 @@ def referencing( words, uname )
 	# Recoding query & converting by DIC
 	true_query = []
 	query_word.each do |e|
-		mariadb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false, status )
 
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false, status )
 		if r.first
 			true_query << r.first['org_name']
 		else
@@ -207,7 +206,7 @@ def referencing( words, uname )
 	# Referencing recipe code
 	result_codes_hash = Hash.new
 	true_query.each do |e|
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPEIF} WHERE words='#{e}';", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEIF} WHERE words='#{e}';", false, status )
 		if r.first
 			a = r.first['codes'].split( ':' )
 			a.each do |ee|
@@ -218,11 +217,11 @@ def referencing( words, uname )
 				end
 			end
 			new_count = r.first['count'].to_i + 1
-			mariadb( "UPDATE #{$MYSQL_TB_RECIPEIF} SET count='#{new_count} 'WHERE words='#{e}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_RECIPEIF} SET count='#{new_count} 'WHERE words='#{e}';", false, status )
 		else
-			rr = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE words='#{e}';", false )
+			rr = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE words='#{e}';", false, status )
 			if rr.first
-				mariadb( "INSERT INTO #{$MYSQL_TB_RECIPEIF} SET words='#{rr.first['words']}', count='#{rr.first['count'].to_i + 1}', codes='#{rr.first['codes']}';", false )
+				mdb( "INSERT INTO #{$MYSQL_TB_RECIPEIF} SET words='#{rr.first['words']}', count='#{rr.first['count'].to_i + 1}', codes='#{rr.first['codes']}';", false, status )
 				a = rr.first['codes'].split( ':' )
 				a.each do |ee|
 					if result_codes_hash[ee]
@@ -246,11 +245,12 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'recipel', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -284,7 +284,7 @@ cost = 99
 recipe_code_list = []
 case command
 when 'init'
-	r = mariadb( "SELECT recipel FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT recipel FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, status )
 	if r.first
 		a = r.first['recipel'].split( ':' )
 		page = a[0].to_i
@@ -311,7 +311,7 @@ else
 	time = cgi['time'].to_i
 	cost = cgi['cost'].to_i
 
-	r = mariadb( "SELECT reciperr FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT reciperr FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, status )
 	if r.first['reciperr'] != '' && r.first['reciperr'] != nil
 		recipe_code_list = r.first['reciperr'].split( ':' )
 		words = recipe_code_list.shift
@@ -339,14 +339,14 @@ if command == 'delete'
 		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" )
 	end
 	#レシピデータベースのの更新（削除）
-	mariadb( "delete FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false )
+	mdb( "delete FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false, status )
 end
 
 
 #### レシピのインポート
 if command == 'import'
 	# インポート元の読み込み
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, status )
 
 	if r.first
 		#レシピデータベースのの更新(新規)
@@ -383,8 +383,8 @@ if command == 'import'
 			import_fig3 = 1
 		end
 
-		mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{uname}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{$DATETIME}';", false )
-		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{uname}';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{uname}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{$DATETIME}';", false, status )
+		mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{uname}';", false, status )
 	end
 
 end
@@ -436,13 +436,13 @@ html_cost = cost_html( cost )
 recipe_solid = []
 if recipe_code_list.size > 0
 	recipe_code_list.each do |e|
-		r = mariadb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false )
+		r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, status )
 		if r.first
 			recipe_solid << Hash['code' => e, 'user' => r.first['user'], 'protect' => r.first['protect'], 'name' => r.first['name'], 'fig1' => r.first['fig1']]
 		end
 	end
 else
-	r = mariadb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false )
+	r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, status )
 	recipe_solid = r
 end
 
@@ -583,4 +583,4 @@ puts html
 recipel = "#{page}:#{range}:#{type}:#{role}:#{tech}:#{time}:#{cost}"
 reciperr = ''
 reciperr = "#{words}:#{recipe_code_list.join( ':' )}" if recipe_code_list.size > 0
-mariadb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{uname}';", false )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{uname}';", false, status )

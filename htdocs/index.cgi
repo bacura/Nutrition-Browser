@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -27,37 +26,39 @@ require '/var/www/nb-soul.rb'
 
 #### HTML nav
 def html_nav( user_name, status, lp )
+  cb_num = ''
+  meal_num = ''
   # まな板カウンター
   if user_name
     r = mariadb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user_name}';", false )
     if r.first
       t = []
       t = r.first['sum'].split( "\t" ) if r.first['sum']
-      @cb_num = t.size
+      cb_num = t.size
     else
       mariadb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user_name}';", false )
-      @cb_num = 0
+      cb_num = 0
     end
     # 献立カウンター
     r = mariadb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user_name}';", false )
     if r.first
       t = []
       t = r.first['meal'].split( "\t" ) if r.first['meal']
-      @meal_num = t.size
+      meal_num = t.size
     else
       mariadb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user_name}';", false )
-      @meal_num = 0
+      meal_num = 0
     end
   else
-    @cb_num = '-'
-    @meal_num = '-'
+    cb_num = '-'
+    meal_num = '-'
   end
 
 
   # 履歴ボタンとまな板ボタンの設定
   if status >= 1
-    cb = "#{lp[1]} <span class=\"badge badge-pill badge-warning\" id=\"cb_num\">#{@cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge badge-pill badge-warning\" id=\"mb_num\">#{@meal_num}</span>"
+    cb = "#{lp[1]} <span class=\"badge badge-pill badge-warning\" id=\"cb_num\">#{cb_num}</span>"
+    mb = "#{lp[2]} <span class=\"badge badge-pill badge-warning\" id=\"mb_num\">#{meal_num}</span>"
     special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonBWL1( 0 )\">#{lp[3]}</button>"
     his_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
     sum_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initCB_BWL1( '' )\">#{cb}</button>"
@@ -66,8 +67,8 @@ def html_nav( user_name, status, lp )
     set_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"menuList_BWL1()\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
   else
-    cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{@cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"mb_num\">#{@meal_num}</span>"
+    cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{cb_num}</span>"
+    mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"mb_num\">#{meal_num}</span>"
     special_button = "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm nav_button\" onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[3]}</button>"
     his_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[4]}</button>"
     sum_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{cb}</button>"
@@ -77,11 +78,14 @@ def html_nav( user_name, status, lp )
     config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[7]}</button>"
   end
 
-if status >= 3
-    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu()\">G</button>"
-else
+  if status >= 3
+    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{status}' )\">G</button>"
+  else
     g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVideo( '#{lp[9]}' )\">G</button>"
-end
+  end
+
+  gm_account = ''
+  gm_account = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount_BWL1( 'init' )\">#{lp[34]}</button>" if status == 9
 
 	html = <<-"HTML"
       <nav class='container-fluid'>
@@ -114,32 +118,27 @@ end
           #{config_button}
       </nav>
       <nav class='container-fluid' id='guild_menu' style='display:none;'>
-          <button type="button" class="btn btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
-          <button type="button" class="btn btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
-			</nav>
-HTML
-  puts html
-
-
-  # Guild master menu
-  if status == 9
-    html = <<-"HTML"
-      <nav class='container-fluid'>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initUnitc_BWLF( 'init' )">#{lp[29]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initColor_BWLF( 'init' )">#{lp[30]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initAllergen_BWLF( 'init' )">#{lp[31]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initGYCV_BWLF( 'init' )">#{lp[35]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initShun_BWLF( 'init' )">#{lp[36]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initDic_BWL1( 'init' )">#{lp[32]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initSlogf_BWL1( 'init' )">#{lp[33]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initAccount_BWL1( 'init' )">#{lp[34]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initMemory_BWLF( 'init' )">#{lp[39]}</button>
-          <button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="initImport_BWL1( 'init' )">#{lp[38]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
+      </nav>
+      </nav>
+      <nav class='container-fluid' id='gs_menu' style='display:none;'>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
+      </nav>
+      <nav class='container-fluid' id='gm_menu' style='display:none;'>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnitc_BWLF( 'init' )">#{lp[29]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initColor_BWLF( 'init' )">#{lp[30]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAllergen_BWLF( 'init' )">#{lp[31]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGYCV_BWLF( 'init' )">#{lp[35]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initShun_BWLF( 'init' )">#{lp[36]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initDic_BWL1( 'init' )">#{lp[32]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSlogf_BWL1( 'init' )">#{lp[33]}</button>
+          #{gm_account}
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initMemory_BWLF( 'init' )">#{lp[39]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initImport_BWL1( 'init' )">#{lp[38]}</button>
       </nav>
 HTML
-    puts html
-  end
-
+  puts html
 end
 
 

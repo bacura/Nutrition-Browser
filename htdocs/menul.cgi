@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -50,9 +49,9 @@ end
 def label_html( uname, label, lp )
 	query = "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{uname}';"
 	db_err = 'MENU select'
-	res = db_process( query, db_err, false )
+	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{uname}';", false, @debug )
 	label_list = []
-	res.each do |e| label_list << e['label'] end
+	r.each do |e| label_list << e['label'] end
 	label_list.uniq!
 
 	html = '<select class="form-control form-control-sm" id="label">'
@@ -103,11 +102,12 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'menul', language )
+
+html_init( nil )
+
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -129,7 +129,7 @@ end
 
 
 if command == 'view'
-	r = mariadb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
 	if r.first[0]
 		a = r.first['menul'].split( ':' )
 		page = a[0].to_i
@@ -162,7 +162,7 @@ if command == 'delete'
 	File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}.jpg" )
 
 	#レシピデータベースのの更新（削除）
-	mariadb( "delete FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' and code='#{code}';", false )
+	mdb( "delete FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' and code='#{code}';", false, @debug )
 end
 
 
@@ -170,17 +170,12 @@ end
 #### 不完全
 if command == 'import'
 	# インポート元の読み込み
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false, @debug )
 
 	if r.first
 		#レシピデータベースのの更新(新規)
-		require 'securerandom'
-
-		new_code = uname[0, 2]
-		new_code = "x" + uname[0, 1] if new_code == nil
-		new_code = "#{new_code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
-
-		mariadb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{uname}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{$DATETIME}';", false )
+		new_code = generate_code( uname, 'm' )
+#		mariadb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{uname}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{$DATETIME}';", false )
 	end
 
 end

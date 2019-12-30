@@ -11,8 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
-require 'date'
 require '/var/www/nb-soul.rb'
 
 
@@ -56,7 +54,7 @@ end
 
 #### Getting start year
 def get_starty( uname )
-	start_year = $DATETIME.year
+	start_year = $TIME_NOW.year
 	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
@@ -122,14 +120,25 @@ end
 
 
 #### Loading config
+kex_select_set = []
 item_set = []
-item_set_no = []
+unit_set = []
 r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 if r.first
-	item_set = r.first['koyomiex'].split( ':' ) unless r.first['koyomiex'] == nil
-end
-0.upto( 9 ) do |c|
-	item_set_no << c unless item_set[c] == "" || item_set[c] == nil || item_set[c] == "\t"
+	a = r.first['koyomiex'].split( ':' )
+	0.upto( 9 ) do |c|
+		aa = a[c].split( "\t" )
+		if aa[0] == "0"
+		elsif aa[0] == "1"
+			kex_select_set << aa[0].to_i
+			item_set << aa[1]
+			unit_set << aa[2]
+		else
+			kex_select_set << aa[0].to_i
+			item_set << $KEX_ITEM[aa[0].to_i]
+			unit_set << $KEX_UNIT[aa[0].to_i]
+		end
+	end
 end
 
 
@@ -143,11 +152,12 @@ if command == 'update'
 	end
 end
 
+
 ####
 th_html = '<thead><tr>'
 th_html << "<th align='center'>日付</th>"
-item_set_no.each do |e|
-	th_html << "<th align='center'>#{item_set[e]}</th>"
+kex_select_set.size.times do |c|
+	th_html << "<th align='center'>#{item_set[c]} (#{unit_set[c]})</th>"
 end
 th_html << '</tr></thead>'
 
@@ -161,7 +171,6 @@ koyomir = []
 cells = []
 r.each do |e| koyomir[e['date'].day] = e end
 
-
 1.upto( last_day ) do |c|
 	date_html << "<tr>"
 	if week_count == 0
@@ -171,11 +180,11 @@ r.each do |e| koyomir[e['date'].day] = e end
 	end
 
 	if koyomir[c] == nil
-		item_set_no.each do |e|
+		kex_select_set.each do |e|
 			date_html << "<td><input type='text' id='id#{c}_#{e}' value='' onChange=\"updateKoyomiex( '#{c}', '#{e}', 'id#{c}_#{e}' )\"></td>"
 		end
 	else
-		item_set_no.each do |e|
+		kex_select_set.each do |e|
 			t = koyomir[c]["item#{e}"]
 			date_html << "<td><input type='text' id='id#{c}_#{e}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{e}', 'id#{c}_#{e}' )\"></td>"
 		end
@@ -223,7 +232,7 @@ html = <<-"HTML"
 			#{select_html}
 		</div>
 		<div class='col-2'>
-			<button class='btn btn-success' onclick="returnKoyomi_BW1( '#{yyyy}', '#{mm}' )">#{lp[12]}</button>
+			<button class='btn btn-sm btn-success' onclick="returnKoyomi_BW1( '#{yyyy}', '#{mm}' )">#{lp[12]}</button>
 		</div>
 	</div>
 	<div class='row'>

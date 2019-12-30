@@ -11,14 +11,13 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -27,11 +26,11 @@ require '/var/www/nb-soul.rb'
 
 # Getting start year & standard meal time
 def get_starty( uname )
-	start_year = $DATETIME.year
+	start_year = $TIME_NOW.year
 	breakfast_st = 0
 	lunch_st = 0
 	dinner_st = 0
-	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		start_year = a[0].to_i if a[0].to_i != 0
@@ -47,12 +46,13 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'koyomi-fix', language )
 start_year, st_set = get_starty( uname )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -74,7 +74,6 @@ tdiv = cgi['tdiv'].to_i
 hh = cgi['hh'].to_i
 hh = 99 if command == 'init'
 order = cgi['order'].to_i
-some = cgi['some']
 palette = cgi['palette'].to_i
 modifyf = cgi['modifyf'].to_i
 food_name = cgi['food_name']
@@ -94,7 +93,6 @@ if @debug
 	puts "tdiv: #{tdiv}<br>\n"
 	puts "hh: #{hh}<br>\n"
 	puts "order: #{order}<br>\n"
-	puts "some: #{some}<br>\n"
 	puts "palette: #{palette}<br>\n"
 	puts "modifyf: #{modifyf}<br>\n"
 	puts "<hr>\n"
@@ -104,19 +102,6 @@ end
 #### 成分読み込み
 if command == 'init'
 	4.upto( 67 ) do |i| fix_opt[$FCT_ITEM[i]] = 0.0 end
-end
-
-
-#### Saving Something
-if command == 'some'
-	hh = st_set[tdiv] if hh == 99
-	koyomi = "#{some}:100:%:#{hh}"
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
-	if r.first
-		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
-	else
-		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false)
-	end
 end
 
 
@@ -137,11 +122,11 @@ if command == 'save'
 
 	#### modify
 	if  modifyf == 1
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		if r.first
 			a = r.first['koyomi'].split( "\t" )[order]
 			code = a.split( ":" )[0]
-			mariadb( "UPDATE #{$MYSQL_TB_FCS} SET name='#{food_name}', #{fix_set} WHERE user='#{uname}' AND code='#{code}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_FCS} SET name='#{food_name}', #{fix_set} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
 		end
 		koyomi_update = ''
 		r.each do |e|
@@ -156,20 +141,20 @@ if command == 'save'
 			end
 		end
 		koyomi_update.chop!
-		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	else
  		fix_code = generate_code( uname, 'f' )
-		mariadb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{uname}', #{fix_set};", false )
-
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
+		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{uname}', #{fix_set};", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		hh = st_set[tdiv] if hh == 99
+
 		if r.first
 			koyomi = r.first['koyomi']
 			koyomi << "\t#{fix_code}:100:%:#{hh}"
-			mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false)
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
 			koyomi = "#{fix_code}:100:%:#{hh}"
-			mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fix='', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false)
+			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		end
 	end
 end
@@ -181,12 +166,12 @@ end
 
 #### modify
 if command == 'modify' || modifyf == 1
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		t = r.first['koyomi'].split( "\t" )[order]
 		code = t.split( ":" )[0]
 
-		rr = mariadb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false )
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
 		if rr.first
 			food_name = rr.first['name']
 			5.upto( 65 ) do |i| fix_opt[$FCT_ITEM[i]] = rr.first[$FCT_ITEM[i]].to_f end
@@ -197,9 +182,9 @@ end
 
 
 #### palette
-palette_ps = $PALETTE
-palette_name = $PALETTE_NAME
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+palette_ps = []
+palette_name = []
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 r.each do |e|
 	a = e['palette'].split( '' )
 	a.map! do |x| x.to_i end
@@ -308,21 +293,13 @@ html = <<-"HTML"
 		<div class="col-4">
 			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
 		</div>
-		<div class="col-1">
+		<div class="col-2">
 		#{hh_html}
 		</div>
-		<div class="col-1">
+		<div class="col-4">
 		</div>
 		<div class="col-2">
 			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
-		</div>
-		<div class="col-4">
-			曖昧
-			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?--' )">#{lp[10]}</button>
-			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?-' )">#{lp[7]}</button>
-			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?=' )">#{lp[8]}</button>
-			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?+' )">#{lp[9]}</button>
-			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '?++' )">#{lp[11]}</button>
 		</div>
 	</div>
 	<br>

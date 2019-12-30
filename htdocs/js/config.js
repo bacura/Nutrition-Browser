@@ -24,6 +24,35 @@ var account_cfg = function( step ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
+// Bio information //////////////////////////////////////////////////////////////
+
+// Updating bio information
+var bio_cfg = function( step ){
+	var sex = '';
+	var yyyy = '';
+	var mm = '';
+	var dd = '';
+	var height = '';
+	var weight = '';
+	var auto = '';
+
+	if( step == 'change' ){
+		var sex = document.getElementById( "sex" ).value;
+		var yyyy = document.getElementById( "yyyy" ).value;
+		var mm = document.getElementById( "mm" ).value;
+		var dd = document.getElementById( "dd" ).value;
+		var height = document.getElementById( "height" ).value;
+		var weight = document.getElementById( "weight" ).value;
+		var auto = document.getElementById( "auto" ).value;
+	}
+	closeBroseWindows( 1 );
+
+	$.post( "config.cgi", { command:"bio", step:step, sex:sex, yyyy:yyyy, mm:mm, dd:dd, height:height, weight:weight, auto:auto }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
 // Food constituent paltte //////////////////////////////////////////////////////////////
 
 // Sending FC palette
@@ -228,6 +257,17 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var lunch_st = document.getElementById( "lunch_st" ).value;
 		var dinner_st = document.getElementById( "dinner_st" ).value;
 
+		var kex_select0 = document.getElementById( "kex_select0" ).value;
+		var kex_select1 = document.getElementById( "kex_select1" ).value;
+		var kex_select2 = document.getElementById( "kex_select2" ).value;
+		var kex_select3 = document.getElementById( "kex_select3" ).value;
+		var kex_select4 = document.getElementById( "kex_select4" ).value;
+		var kex_select5 = document.getElementById( "kex_select5" ).value;
+		var kex_select6 = document.getElementById( "kex_select6" ).value;
+		var kex_select7 = document.getElementById( "kex_select7" ).value;
+		var kex_select8 = document.getElementById( "kex_select8" ).value;
+		var kex_select9 = document.getElementById( "kex_select9" ).value;
+
 		var item0 = document.getElementById( "item0" ).value;
 		var item1 = document.getElementById( "item1" ).value;
 		var item2 = document.getElementById( "item2" ).value;
@@ -239,7 +279,23 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var item8 = document.getElementById( "item8" ).value;
 		var item9 = document.getElementById( "item9" ).value;
 
-		$.post( "config.cgi", { command:"koyomiex", step:step, item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st }, function( data ){ $( "#bw_level2" ).html( data );});
+		var unit0 = document.getElementById( "unit0" ).value;
+		var unit1 = document.getElementById( "unit1" ).value;
+		var unit2 = document.getElementById( "unit2" ).value;
+		var unit3 = document.getElementById( "unit3" ).value;
+		var unit4 = document.getElementById( "unit4" ).value;
+		var unit5 = document.getElementById( "unit5" ).value;
+		var unit6 = document.getElementById( "unit6" ).value;
+		var unit7 = document.getElementById( "unit7" ).value;
+		var unit8 = document.getElementById( "unit8" ).value;
+		var unit9 = document.getElementById( "unit9" ).value;
+
+		$.post( "config.cgi", {
+			command:"koyomiex", step:step, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st,
+			kex_select0:kex_select0, kex_select1:kex_select1, kex_select2:kex_select2, kex_select3:kex_select3, kex_select4:kex_select4, kex_select5:kex_select5, kex_select6:kex_select6, kex_select7:kex_select7, kex_select8:kex_select8, kex_select9:kex_select9,
+			item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9,
+			unit0:unit0, unit1:unit1, unit2:unit2, unit3:unit3, unit4:unit4, unit5:unit5, unit6:unit6, unit7:unit7, unit8:unit8, unit9:unit9,
+		}, function( data ){ $( "#bw_level2" ).html( data );});
 		displayVideo( 'Saved' );
 	}else if( step == 'delete' ){
 		if( document.getElementById( del_id ).checked ){

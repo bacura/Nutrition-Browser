@@ -98,7 +98,7 @@ end
 
 #### 成分読み込み
 if command == 'init' && code != ''
-	r = mariadb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND user='#{uname}';", false )
+	r = mariadb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false )
 	if r.first
 		4.upto( 67 ) do |i| fct_opt[$FCT_ITEM[i]] = r.first[$FCT_ITEM[i]] end
 	end
@@ -107,7 +107,7 @@ end
 
 #### クラス・タグ読み込み
 if command == 'init' && code != ''
-	r = mariadb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';", false )
+	r = mariadb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false )
 	if r.first
 		user = r.first['user']
 		class1 = r.first['class1']
@@ -269,14 +269,14 @@ if command == 'delete'
 end
 
 
-#### デバッグ用
+#### debug
 if @debug
 	puts "fct_opt: #{fct_opt}<br>\n"
 	puts "<hr>\n"
 end
 
 
-#### 食品群オプション html
+#### food froup html
 food_group_option = ''
 19.times do |c|
 	cc = c
@@ -289,47 +289,51 @@ food_group_option = ''
 end
 
 
+#### disable option
+disabled_option = ''
+disabled_option = 'disabled' if user != uname
+
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
-4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\"></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block1 << '</table>'
 
 html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-8.upto( 20 ) do |i| html_fct_block2 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\"></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+8.upto( 20 ) do |i| html_fct_block2 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block2 << '</table>'
 
 html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-21.upto( 34 ) do |i| html_fct_block3 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\"></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+21.upto( 34 ) do |i| html_fct_block3 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block3 << '</table>'
 
 html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-35.upto( 46 ) do |i| html_fct_block4 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\"></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+35.upto( 46 ) do |i| html_fct_block4 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block4 << '</table>'
 
 html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-47.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\"></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+47.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block5 << '</table>'
 
 html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-56.upto( 66 ) do |i| html_fct_block6 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\"></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+56.upto( 66 ) do |i| html_fct_block6 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block6 << '</table>'
 
 
-#### 保存ボタン
+#### save button
 save_button = ''
 if user == uname || code == ''
 	save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"pseudoSave_BWLF( '#{code}' )\">#{lp[1]}</button>"
 end
 
 
-#### 削除ボタン
+#### delete button
 delete_button = ''
 if code != '' && user == uname
 	delete_button = "<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"pseudoDelete_BWLF( '#{code}' )\">#{lp[2]}</button>"
 end
 
 
-#### html部分
+#### html part
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
@@ -386,7 +390,7 @@ html = <<-"HTML"
 
 			<div style='border: solid gray 1px; margin: 0.5em; padding: 0.5em;'>
 				備考：<br>
-				<textarea rows="6" cols="32" id="Notice">#{fct_opt['Notice']}</textarea>
+				<textarea rows="6" cols="32" id="Notice" #{disabled_option}>#{fct_opt['Notice']}</textarea>
 			</div>
 		</div>
 

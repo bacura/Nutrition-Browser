@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -29,11 +28,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'gm-dic', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -45,7 +45,7 @@ end
 
 
 #### GM check
-if status < 9
+if status < 8
 	puts "GM error."
 	exit
 end
@@ -67,7 +67,7 @@ list_html = ''
 case command
 when 'save'
 	# オリジナル以外の旧データを削除
-	mariadb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND tn='0';", false )
+	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND tn='0';", false, @debug )
 
 	# オリジナル以外の新データを登録
 	aliases.gsub!( '、', ',' )
@@ -76,15 +76,15 @@ when 'save'
 
 	a.each do |e|
 		unless e == org_name
-			mariadb( "INSERT INTO #{$MYSQL_TB_DIC} SET tn='0', org_name='#{org_name}', alias='#{e}', user='#{uname}';", false )
+			mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET tn='0', org_name='#{org_name}', alias='#{e}', user='#{uname}';", false, @debug )
 		end
 	end
 	list_html = 'ok'
 else
-	r = mariadb( "SELECT DISTINCT tn, org_name FROM #{$MYSQL_TB_DIC} WHERE tn !='0';", false )
+	r = mdb( "SELECT DISTINCT tn, org_name FROM #{$MYSQL_TB_DIC} WHERE tn !='0';", false, @debug )
 
 	r.each do |e|
-		rr = mariadb( "SELECT tn, alias from #{$MYSQL_TB_DIC} WHERE org_name='#{e['org_name']}';", false )
+		rr = mdb( "SELECT tn, alias from #{$MYSQL_TB_DIC} WHERE org_name='#{e['org_name']}';", false, @debug )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-2'>"
 		list_html << "#{e['org_name']}"

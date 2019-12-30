@@ -10,47 +10,61 @@ def config_module( cgi )
 	lunch_st = cgi['lunch_st'].to_i
 	dinner_st = cgi['dinner_st'].to_i
 	item_set = [cgi['item0'], cgi['item1'], cgi['item2'], cgi['item3'], cgi['item4'], cgi['item5'], cgi['item6'], cgi['item7'], cgi['item8'], cgi['item9']]
-	if $DEBUG
+	unit_set = [cgi['unit0'], cgi['unit1'], cgi['unit2'], cgi['unit3'], cgi['unit4'], cgi['unit5'], cgi['unit6'], cgi['unit7'], cgi['unit8'], cgi['unit9']]
+	kex_select_set = [cgi['kex_select0'].to_i, cgi['kex_select1'].to_i, cgi['kex_select2'].to_i, cgi['kex_select3'].to_i, cgi['kex_select4'].to_i, cgi['kex_select5'].to_i, cgi['kex_select6'].to_i, cgi['kex_select7'].to_i, cgi['kex_select8'].to_i, cgi['kex_select9'].to_i]
+	if @debug
 		puts "step: #{step}<br>"
 		puts "del_no: #{del_no}<br>"
 		puts "koyomiy: #{koyomiy}<br>"
 		puts "breakfast_st: #{breakfast_st}<br>"
 		puts "lunch_st: #{lunch_st}<br>"
 		puts "dinner_st: #{dinner_st}<br>"
-		puts "item_set: #{item_set[0]}<br>"
+		puts "item_set: #{item_set}<br>"
+		puts "unit_set: #{unit_set}<br>"
+		puts "kex_select_set: #{kex_select_set}<br>"
 		puts "<hr>"
 	end
 
 	case step
 	when 'update'
-		0.upto( 9 ) do |c|
-			item_set[c] == "\t" if cgi["item#{c}"] == ""
-		end
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{item_set.join( ':' )}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{uname}';", false )
-
+		koyomiex_new = ''
+		0.upto( 9 ) do |c| koyomiex_new << "#{kex_select_set[c]}\t#{item_set[c]}\t#{unit_set[c]}:" end
+		koyomiex_new.chop!
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{uname}';", false )
 	when 'delete'
 		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-		item_set = r.first['koyomiex'].split( ':' )
-		0.upto( 9 ) do |c|//
+		a = r.first['koyomiex'].split( ':' )
+		koyomiex_new = ''
+		0.upto( 9 ) do |c|
 			if del_no == c
-				item_set[c] = "\t"
-				mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{item_set.join( ':' )}' WHERE user='#{uname}';", false )
+				koyomiex_new << "0\t\t:"
 				mariadb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{uname}';", false )
-				item_set[c] = '' if item_set[c] == "\t"
+			else
+				koyomiex_new << "#{kex_select_set[c]}\t#{item_set[c]}\t#{unit_set[c]}:"
 			end
 		end
-
+		koyomiex_new.chop!
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{uname}';", false )
 	else
 		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
 		if r.first['koyomiex'] == '' || r.first['koyomiex'] == nil
-			mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='\t:\t:\t:\t:\t:\t:\t:\t:\t:\t' WHERE user='#{uname}';", false )
-		else
-			item_set = r.first['koyomiex'].split( ':' )
+			mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{uname}';", false )
 			0.upto( 9 ) do |c|
-				item_set[c] = '' if item_set[c] == "\t"
+				kex_select_set[c] = 0
+				item_set[c] = ''
+				unit_set[c] = ''
+			end
+		else
+			a = r.first['koyomiex'].split( ':' )
+			0.upto( 9 ) do |c|
+				aa = a[c].split( "\t" )
+				kex_select_set[c] = aa[0].to_i
+				item_set[c] = aa[1]
+				unit_set[c] = aa[2]
 			end
 		end
 	end
+
 
 ####
 	t = Time.new
@@ -141,7 +155,11 @@ def config_module( cgi )
   		html << "			</div>"
   		html << "			<select class='custom-select' id='kex_select#{c}' onChange=\"kexChangeselect( '#{c}' )\">"
 		$KEX_ITEM.size.times do |cc|
-    		html << "			<option value='#{cc}'>#{$KEX_ITEM[cc]}</option>"
+			if cc == kex_select_set[c]
+    			html << "<option value='#{cc}' SELECTED>#{$KEX_ITEM[cc]}</option>"
+    		else
+    			html << "<option value='#{cc}'>#{$KEX_ITEM[cc]}</option>"
+    		end
     	end
   		html << "			</select>"
 		html << "		</div>"
@@ -151,7 +169,11 @@ def config_module( cgi )
 		html << "			<div class='input-group-prepend'>"
 		html << "				<span class='input-group-text'>名称</span>"
 		html << "			</div>"
-		html << "			<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='#{item_set[c]}' disabled>"
+		if kex_select_set[c] == 1
+			html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='#{item_set[c]}'>"
+    	else
+			html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='' disabled>"
+    	end
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-2'>"
@@ -159,7 +181,11 @@ def config_module( cgi )
 		html << "			<div class='input-group-prepend'>"
 		html << "				<span class='input-group-text'>単位</span>"
 		html << "			</div>"
-		html << "			<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='#{item_set[c]}' disabled>"
+		if kex_select_set[c] == 1
+			html << "			<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='#{item_set[c]}'>"
+    	else
+			html << "			<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='' disabled>"
+    	end
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-1'></div>"
