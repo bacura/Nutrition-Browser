@@ -86,7 +86,6 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv!='4';", false, @debug )
 	if r.first
-		weight_set = []
 		fzcode = r.first['fzcode']
 		r.each do |e|
 			menu_set = []
@@ -117,6 +116,16 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 					rate = BigDecimal( rate_set[c] )
 					unit = unit_set[c]
 
+#### temporary ####
+					if unit == 'g'
+						unit = 0
+					elsif unit == '%'
+						unit == 99
+					else
+						unit = unit.to_i
+					end
+#### temporary ####
+
 					if /\?/ =~ code
 						some_set << "+#{$SOMETHING[code]}&nbsp;"
 					elsif /\-f\-/ =~ code
@@ -129,6 +138,7 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 					else
 						recipe_set = []
 						fn_set = []
+						weight_set = []
 						if /\-m\-/ =~ code
 							rr = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
 							a = rr.first['meal'].split( "\t" )
@@ -146,19 +156,20 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 								rr = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{recipe_set[cc]}';", false, @debug )
 								a = rr.first['sum'].split( "\t" )
 								a.each do |eee|
-									( sum_no, z, z, z, z, z, z, sum_ew ) = eee.split( ':' )
+									( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = eee.split( ':' )
 
 									if sum_no != '+' && sum_no != '-'
 										fn_set << sum_no
+										sum_ew = sum_weight if sum_ew == nil
 										weight_set << ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
 										recipe_total_weight += ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
 									end
 								end
 
-								if unit == 'g'
-									weight_set.map! do |x| x * rate / recipe_total_weight end
-								else
+								if unit == 99
 									weight_set.map! do |x| x * rate / 100 end
+								else
+									weight_set.map! do |x| x * rate / recipe_total_weight end
 								end
 							end
 						end
@@ -168,6 +179,14 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 							fn_set << code
 							weight_set << rate
 						end
+
+						#
+						if unit != 0 && unit != 99
+							fn_set.size.times do |cc|
+								weight_set[cc] = unit_weight( weight_set[cc], unit, fn_set[cc] )
+							end
+						end
+
 						fn_set.size.times do |cc|
 							query = ''
 							if /^P/ =~ fn_set[cc]
@@ -214,6 +233,20 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 
 	fc_items.each do |e| results << "#{$FCT_NAME[e]}[#{fct_total[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;" end
 	results << "#{some_set}&nbsp;&nbsp;&nbsp;&nbsp;" unless some_set == ''
+
+	if fct_total['PROT'] == 0
+		pfc_p = 0
+	else
+		pfc_p = ( fct_total['PROT'] * 4 / fct_total['ENERC_KCAL'] * 100 ).round( 1 )
+	end
+	if fct_total['PROT'] == 0
+		pfc_f = 0
+	else
+		pfc_f = ( fct_total['FAT'] * 4 / fct_total['ENERC_KCAL'] * 100 ).round( 1 )
+	end
+	pfc_c = 100 - pfc_p - pfc_f
+	results << "<span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = <span style='color:crimson'>#{pfc_p.to_f}</span> : <span style='color:green'>#{pfc_f.to_f}</span> : <span style='color:blue'>#{pfc_c.to_f}</span>"
+
 
 	return results
 end
@@ -270,9 +303,8 @@ html = <<-"MENU"
 	<div class='row'>
 		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">#{lp[23]}</button></div>
 		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">#{lp[24]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">#{lp[25]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">#{lp[26]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="">#{lp[27]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[25]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[26]}</button></div>
 		<div class='col-2'></div>
 	</div>
 </div>
@@ -369,7 +401,6 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( last_day ) do |c|
 	freeze_flag = false
 	koyomi_tmp = []
-	onclick = ''
 	freeze_checked = ''
 
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false, @debug )
@@ -382,17 +413,16 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		5.times do koyomi_tmp << '' end
 	end
 
-	if freeze_flag
-		freeze_checked = 'CHECKED'
-	else
-		onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\""
-	end
+	freeze_checked = 'CHECKED' if freeze_flag
+	onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\""
 
 	date_html << "<tr>"
 	if week_count == 0
-		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
+#		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
+		date_html << "<td style='color:red;'><a id='day#{c}'>#{c} (#{weeks[week_count]})</a></td>"
 	else
-		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
+#		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
+		date_html << "<td><a id='day#{c}'>#{c} (#{weeks[week_count]})</a></td>"
 	end
 
 	4.times do |cc|
@@ -460,7 +490,7 @@ select_html << "</div>"
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5>#{lp[8]}:</h5></div>
+		<div class='col-2'><h5><a href='#day{dd}'>#{lp[8]}:</a></h5></div>
 		<div class='col-5 form-inline'>
 			#{select_html}
 		</div>

@@ -85,7 +85,7 @@ frct_accu = cgi['frct_accu']
 palette = cgi['palette']
 
 if ew_mode == nil || ew_mode == ''
-	r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", @debug )
+	r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';",false, @debug )
 	if r.first && r.first['calcc'] != nil
 		a = r.first['calcc'].split( ':' )
 		ew_mode = a[0].to_i

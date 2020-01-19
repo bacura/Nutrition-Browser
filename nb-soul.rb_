@@ -45,7 +45,6 @@ $MYSQL_TB_KOYOMI = 'koyomi'
 $MYSQL_TB_KOYOMIEX = 'koyomiex'
 $MYSQL_TB_FCS = 'fcs'
 $MYSQL_TB_FCZ = 'fcz'
-$MYSQL_TB_BIO = 'bio'
 
 $DEBUG = false
 
@@ -589,4 +588,14 @@ def frct_check( frct_mode )
   end
 
   return frct_mode, fs
+end
+
+
+#### from unit volume to weight
+def unit_weight( vol, uc, fn )
+  r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
+  a = r.first['unitc'].split( ':' )
+  w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )
+
+  return w
 end

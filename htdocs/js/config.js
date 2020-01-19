@@ -29,25 +29,37 @@ var account_cfg = function( step ){
 // Updating bio information
 var bio_cfg = function( step ){
 	var sex = '';
-	var yyyy = '';
-	var mm = '';
-	var dd = '';
+	var age = '';
 	var height = '';
 	var weight = '';
-	var auto = '';
 
 	if( step == 'change' ){
-		var sex = document.getElementById( "sex" ).value;
-		var yyyy = document.getElementById( "yyyy" ).value;
-		var mm = document.getElementById( "mm" ).value;
-		var dd = document.getElementById( "dd" ).value;
+		if( document.getElementById( "male" ).checked ){
+			sex = 0;
+		}else{
+			sex = 1;
+		}
+		var age = document.getElementById( "age" ).value;
 		var height = document.getElementById( "height" ).value;
 		var weight = document.getElementById( "weight" ).value;
-		var auto = document.getElementById( "auto" ).value;
 	}
 	closeBroseWindows( 1 );
 
-	$.post( "config.cgi", { command:"bio", step:step, sex:sex, yyyy:yyyy, mm:mm, dd:dd, height:height, weight:weight, auto:auto }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "config.cgi", { command:"bio", step:step, sex:sex, age:age, height:height, weight:weight }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Display config //////////////////////////////////////////////////////////////
+
+// Updating bio information
+var display_cfg = function( step ){
+	var icache = '';
+
+	closeBroseWindows( 1 );
+
+	$.post( "config.cgi", { command:"display", step:step, icache:icache }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
 };
 

@@ -44,6 +44,53 @@ def get_starty( uname )
 	return start_year, st_set
 end
 
+
+#### unit select
+def unit_select_html( code, selectu )
+	# 単位の生成と選択
+	unit_select_html = ''
+	unit_set = []
+	unit_select = []
+	r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, false )
+	if r.first['unitc'] != nil && r.first['unitc'] != ''
+		t = r.first['unitc'].split( ':' )
+
+#### Temporary
+		if t.size == 14
+			t << '0.0'
+			t << ''
+		end
+#### Temporary
+
+		t.size.times do |c|
+			unless t[c] == '0.0'
+				unit_set << c
+				if c == selectu.to_i
+					unit_select << 'SELECTED'
+				else
+					unit_select << ''
+				end
+			end
+		end
+	else
+		unit_set = [ 0, 1, 15 ]
+		if selectu == 15
+			unit_select = [ '', '', 'SELECTED' ]
+		elsif selectu == 1
+			unit_select = [ '', 'SELECTED', '' ]
+		else
+			unit_select = [ 'SELECTED', '', '' ]
+		end
+	end
+
+	unit_set.size.times do |c|
+		unit_select_html << "<option value='#{unit_set[c]}' #{unit_select[c]}>#{$UNIT[unit_set[c]]}</option>"
+	end
+
+	return unit_select_html
+end
+
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -72,7 +119,7 @@ mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
 code = cgi['code']
 ev = cgi['ev'].to_i
-eu = cgi['eu'].to_s
+eu = cgi['eu'].to_i
 tdiv = cgi['tdiv'].to_i
 hh = cgi['hh']
 order = cgi['order'].to_i
@@ -141,6 +188,8 @@ end
 #### Save food
 if command == 'save' || command == 'move'
 	hh = st_set[tdiv] if hh == 99
+	hh = $TIME_NOW.hour if hh == nil || hh == ''
+
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 	if r.first
 		koyomi = r.first['koyomi']
@@ -160,6 +209,7 @@ copy_html = ''
 save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomi_BWF( '#{code}', '#{origin}' )\">#{lp[12]}</button>"
 
 
+####
 if command == 'modify' || command == 'move'
 	copy_html << "<div class='form-group form-check'>"
     copy_html << "<input type='checkbox' class='form-check-input' id='copy'>"
@@ -290,11 +340,15 @@ rate_html << "<div class='input-group input-group-sm'>"
 rate_html << "	<div class='input-group-prepend'>"
 rate_html << "		<span class='input-group-text' id='basic-addon1'>#{lp[22]}</span>"
 rate_html << "	</div>"
-rate_html << "	<input type='number' id='ev' value='#{ev}' class='form-control'>"
+rate_html << "	<input type='number' setp='0.1' id='ev' value='#{ev}' class='form-control'>"
 rate_html << "  <div class='input-group-append'>"
 rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
-rate_html << "			<option value='%'>%</option>"
-rate_html << "			<option value='g' #{rate_selected}>g</option>"
+if /^[UP]?\d{5}/ =~ code
+	rate_html << unit_select_html( code, eu )
+else
+	rate_html << "			<option value='99'>%</option>"
+	rate_html << "			<option value='0' #{rate_selected}>g</option>"
+end
 rate_html << "		</select>"
 rate_html << "	</div>"
 rate_html << "</div>"

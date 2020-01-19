@@ -11,7 +11,6 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -28,16 +27,16 @@ require '/var/www/nb-soul.rb'
 def get_history_name( uname, fg )
 	name_his = []
 	if uname
-		r = mariadb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{uname}';", false )
+		r = mdb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{uname}';", false, @debug )
 		if r.first
 			his = r.first['his'].split( "\t" )
 ########## 応急処置
 			his.each do |e|
 				unless e == ''
-				if ( /P|U/ =~ e && e[1..2].to_i == fg.to_i ) || e[0..1].to_i == fg.to_i
-					rr = mariadb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
-					name_his << rr.first['name']
-				end
+					if ( /P|U/ =~ e && e[1..2].to_i == fg.to_i ) || e[0..1].to_i == fg.to_i
+						rr = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
+						name_his << rr.first['name']
+					end
 				end
 ########## 応急処置
 			end
@@ -75,12 +74,13 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 status = 0 if status == nil
 lp = lp_init( 'square', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -112,6 +112,7 @@ if @debug
 	puts "<hr>"
 end
 
+
 #### 食品グループ番号の桁補完
 if category > 9
 	@fg = category.to_s
@@ -137,6 +138,7 @@ name_his = get_history_name( uname, @fg )
 #### 食品キーチェーン
 food_key = '' if food_key == nil
 fg_key, class1, class2, class3, food_name = food_key.split( ':' )
+
 class_name = ''
 class_no = 0
 unless class1 == nil || class1 == ''
@@ -180,7 +182,7 @@ case channel
 #### 第１層閲覧選択ページ
 when 'fctb'
 	# 正規食品
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9';", false, @debug )
 	r.each do |e|
 		if e['class1'] != ''
 			class1_group << e['class1']
@@ -199,6 +201,7 @@ when 'fctb'
 	class2_group.uniq!
 	class3_group.uniq!
 
+
 	# Classグループの作成
 	tag_button = "<button type='button' class='btn btn-info btn-sm nav_button'"
 	class1_group.each do |e| class_html << "#{tag_button} onclick=\"summonBWL2( '#{@fg}:#{e}:::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
@@ -210,7 +213,7 @@ when 'fctb'
 
 	# 擬似食品
 	unless status == 0
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{uname}' AND public!='2' ) OR public='1' );", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{uname}' AND public!='2' ) OR public='1' );", false, @debug )
 		r.each do |e|
 			if e['class1'] != ''
 				class1_group_p << e['class1']
@@ -235,6 +238,7 @@ when 'fctb'
 		class2_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonBWL2( '#{@fg}::#{e}::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
 		class3_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonBWL2( '#{@fg}:::#{e}:' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
 
+
 		# ダイレクトグループの作成
 		direct_html << make_direct_group( direct_group_p, name_his, @fg, '', '', '', 1, 1 )
 	end
@@ -252,7 +256,7 @@ HTML
 #### 第２層閲覧選択ページ
 when 'fctb_l2'
 	# 正規食品
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false , @debug)
 	r.each do |e|
 		if e['class1'] != '' && e['class2'] != ''
 			class2_group << e['class2']
@@ -270,6 +274,7 @@ when 'fctb_l2'
 	class2_group.uniq!
 	class3_group.uniq!
 
+
 	# Classグループの作成
 	tag_button = "<button type='button' class='btn btn-info btn-sm nav_button'"
 	class2_group.each do |e| class_html << "#{tag_button} onclick=\"summonBWL3( '#{fg_key}:#{class1}:#{e}:#{class3}:#{food_name}', 3 )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
@@ -278,9 +283,10 @@ when 'fctb_l2'
 	# ダイレクトグループの作成
 	direct_html = make_direct_group( direct_group, name_his, fg_key, class1, class2, class3, 2, 0 )
 
+
 	# 擬似食品
 	unless status == 0
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
 		r.each do |e|
 			if e['class1'] != '' && e['class2'] != ''
 				class2_group_p << e['class2']
@@ -320,7 +326,7 @@ HTML
 #### 第３層閲覧選択ページ
 when 'fctb_l3'
 	# 正規食品
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false, @debug )
 	r.each do |e|
 		if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 			class3_group << e['class3']
@@ -340,7 +346,7 @@ when 'fctb_l3'
 
 	# 擬似食品
 	unless status == 0
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1' );", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1' );", false, @debug )
 		r.each do |e|
 			if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 				class3_group_p << e['class3']
@@ -373,7 +379,7 @@ HTML
 #### 第４層閲覧選択ページ
 when 'fctb_l4'
 	# 正規食品
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false, @debug )
 	r.each do |e| direct_group << e['name'] end
 
 	# ダイレクトグループの作成
@@ -381,7 +387,7 @@ when 'fctb_l4'
 
 	# 擬似食品
 	unless status == 0
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
 		r.each do |e| direct_group_p << e['name'] end
 
 		# ダイレクトグループの作成
@@ -419,9 +425,9 @@ when 'fctb_l5'
 
 	# 正規食品
 	if class_no.to_i == 0
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false, @debug )
 	else
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false, @debug )
 	end
 	if r.first
 		r.each do |e|
@@ -437,9 +443,9 @@ when 'fctb_l5'
 
 	# 擬似食品
 	if class_no.to_i == 0
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
 	else
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
 	end
 	if r.first
 		r.each do |e|
@@ -456,7 +462,7 @@ when 'fctb_l5'
  	# 簡易表示の項目
  	fc_items = []
 	fc_items_html = ''
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='簡易表示用';", false  )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='簡易表示用';", false, @debug )
 	if r.first
 		palette = r.first['palette']
 		palette.size.times do |c|
@@ -484,7 +490,9 @@ when 'fctb_l5'
 			query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no_list[c]}';"
 		end
 		p query if @debug
+
 		res = db.query( query )
+
 		sub_components = ''
 		fc_items.each do |e|
 			t = num_opt( res.first[e], food_weight, frct_mode, $FCT_FRCT[e] )

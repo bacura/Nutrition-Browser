@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -61,11 +60,12 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'menu-calc', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -84,7 +84,7 @@ palette = cgi['palette']
 
 
 if ew_mode == nil || ew_mode == ''
-	r = mariadb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
 	if r.first && r.first['calcc'] != nil
 		a = r.first['calcc'].split( ':' )
 		ew_mode = a[0].to_i
@@ -96,6 +96,7 @@ if ew_mode == nil || ew_mode == ''
 		frct_accu = 0
 	end
 end
+
 
 ew_mode = ew_mode.to_i
 frct_mode = frct_mode.to_i
@@ -119,17 +120,19 @@ accu_check = accu_check( frct_accu )
 ew_check = ew_check( ew_mode )
 
 
-#### パレット
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+#### Setting palette
+palette_sets = []
+palette_name = []
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
 		a.map! do |x| x.to_i end
-		$PALETTE << a
-		$PALETTE_NAME << e['name']
+		palette_sets << a
+		palette_name << e['name']
 	end
 end
-palette_set = $PALETTE[palette]
+palette_set = palette_sets[palette]
 
 
 # 成分項目の抽出
@@ -141,17 +144,17 @@ end
 
 # HTMLパレットの生成
 palette_html = ''
-$PALETTE.size.times do |c|
+palette_sets.size.times do |c|
 	if palette == c
-		palette_html << "<option value='#{c}' SELECTED>#{$PALETTE_NAME[c]}</option>"
+		palette_html << "<option value='#{c}' SELECTED>#{palette_name[c]}</option>"
 	else
-		palette_html << "<option value='#{c}'>#{$PALETTE_NAME[c]}</option>"
+		palette_html << "<option value='#{c}'>#{palette_name[c]}</option>"
 	end
 end
 
 
 #### mealからデータを抽出
-r = mariadb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false, @debug )
 meal_name = r.first['name']
 code = r.first['code']
 meal = r.first['meal'].split( "\t" )
@@ -169,7 +172,7 @@ total_total_weight = 0
 
 recipe_code.each do |e|
 	# RECIPEからデータを抽出
-	r = mariadb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
+	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
 	recipe_name[rc] = r.first['name']
 	dish_num = r.first['dish'].to_i
 	dish_num = 1 if dish_num == 0
@@ -474,4 +477,4 @@ fct_html.each do |e| puts e end
 puts "<div align='right' class='code'>#{code}</div>"
 
 #### Updating Calculation option
-mariadb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette}:#{ew_mode}:#{frct_mode}:#{frct_accu}' WHERE user='#{uname}';", false )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette}:#{ew_mode}:#{frct_mode}:#{frct_accu}' WHERE user='#{uname}';", false, @debug )

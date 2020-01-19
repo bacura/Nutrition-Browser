@@ -90,7 +90,7 @@ def html_nav( user_name, status, lp )
 	html = <<-"HTML"
       <nav class='container-fluid'>
           #{g_button}
-          <button id=''type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonBWL1( 1 )">#{lp[10]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonBWL1( 1 )">#{lp[10]}</button>
           <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summonBWL1( 2 )">#{lp[11]}</button>
           <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summonBWL1( 3 )">#{lp[12]}</button>
           <button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="summonBWL1( 4 )">#{lp[13]}</button>
@@ -120,6 +120,12 @@ def html_nav( user_name, status, lp )
       <nav class='container-fluid' id='guild_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[41]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[42]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[43]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[44]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[45]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[46]}</button>
       </nav>
       </nav>
       <nav class='container-fluid' id='gs_menu' style='display:none;'>

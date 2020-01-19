@@ -17,7 +17,8 @@ window.onload = function(){
 		document.getElementById( "bw_level5" ).innerHTML = "";
 		document.getElementById( "bw_levelF" ).innerHTML = "";
 
-		bookOpen( 'books/information.html', 1 );
+		bookOpen( 'books/about.html', 1 );
+		bookOpen( 'books/information.html', 2 );
 	}
 };
 

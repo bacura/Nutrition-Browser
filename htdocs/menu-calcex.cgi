@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -77,10 +76,7 @@ palette = get['palette']
 lp = lp_init( 'menu-calcex', language )
 if @debug
 	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
 	puts "<hr>"
-	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "ew_mode: #{ew_mode}<br>"
 	puts "frct_mode: #{frct_mode}<br>"
@@ -105,17 +101,19 @@ accu_check = accu_check( frct_accu, lp )
 ew_check = ew_check( ew_mode, lp )
 
 
-#### パレット
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+#### Setting palette
+palette_sets = []
+palette_name = []
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
 		a.map! do |x| x.to_i end
-		$PALETTE << a
-		$PALETTE_NAME << e['name']
+		palette_sets << a
+		palette_name << e['name']
 	end
 end
-palette_set = $PALETTE[palette]
+palette_set = palette_sets[palette]
 
 
 # 成分項目の抽出
@@ -127,17 +125,17 @@ end
 
 # HTMLパレットの生成
 palette_html = ''
-$PALETTE.size.times do |c|
+palette_sets.size.times do |c|
 	if palette == c
-		palette_html << "<option value='#{c}' SELECTED>#{$PALETTE_NAME[c]}</option>"
+		palette_html << "<option value='#{c}' SELECTED>#{palette_name[c]}</option>"
 	else
-		palette_html << "<option value='#{c}'>#{$PALETTE_NAME[c]}</option>"
+		palette_html << "<option value='#{c}'>#{palette_name[c]}</option>"
 	end
 end
 
 
 #### mealからデータを抽出
-r = mariadb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false, @debug )
 meal_name = r.first['name']
 code = r.first['code']
 meal = r.first['meal'].split( "\t" )
@@ -158,11 +156,11 @@ total_total_weight = 0
 recipe_code.each do |e|
 	query = "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';"
 	db_err = 'RECIPE select'
-	res = db_process( query, db_err, false )
-	recipe_name[rc] = res.first['name']
-	dish_num = res.first['dish'].to_i
+	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
+	recipe_name[rc] = r.first['name']
+	dish_num = r.first['dish'].to_i
 	dish_num = 1 if dish_num == 0
-	food_no, food_weight, total_weight = extract_sum( res.first['sum'], dish_num, ew_mode )
+	food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, ew_mode )
 	total_total_weight += total_weight
 
 

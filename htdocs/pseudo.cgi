@@ -11,7 +11,6 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -29,11 +28,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'pseudo', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -67,7 +67,7 @@ food_weight = 100 if food_weight == nil || food_weight == ''|| food_weight == '0
 food_weight = BigDecimal( food_weight )
 
 code = '' if code == nil
-code = '' unless /P|U\d\d\d\d\d/ =~ code
+code = '' unless /P|U\d{5}/ =~ code
 
 fg_key, class1_key, class2_key, class3_key, food_name_key = food_key.split( ':' ) if food_key unless nil
 food_group = fg_key unless fg_key == nil
@@ -98,7 +98,7 @@ end
 
 #### 成分読み込み
 if command == 'init' && code != ''
-	r = mariadb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false )
+	r = mdb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false, @debug )
 	if r.first
 		4.upto( 67 ) do |i| fct_opt[$FCT_ITEM[i]] = r.first[$FCT_ITEM[i]] end
 	end
@@ -107,7 +107,7 @@ end
 
 #### クラス・タグ読み込み
 if command == 'init' && code != ''
-	r = mariadb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false )
+	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false, @debug )
 	if r.first
 		user = r.first['user']
 		class1 = r.first['class1']
@@ -120,7 +120,7 @@ if command == 'init' && code != ''
 		tag5 = r.first['tag5']
 	end
 elsif command == 'save' && code != ''
-	r = mariadb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';", false )
+	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
 	user = r.first['user'] if r.first
 end
 
@@ -150,13 +150,13 @@ if command == 'save'
 	end
 
 	# 重量影響成分
-	fct_opt['ENERC_KCAL'] = BigDecimal( fct_opt['ENERC_KCAL'].to_s ) / ( food_weight / 100 )
-	fct_opt['ENERC'] = BigDecimal( fct_opt['ENERC'].to_s ) / ( food_weight / 100 )
+	fct_opt['ENERC_KCAL'] = ( BigDecimal( fct_opt['ENERC_KCAL'].to_s ) / ( food_weight / 100 )).round( $FCT_FRCT[$FCT_ITEM[5]] )
+	fct_opt['ENERC'] = ( BigDecimal( fct_opt['ENERC'].to_s ) / ( food_weight / 100 )).round( $FCT_FRCT[$FCT_ITEM[6]] )
 	7.upto( 65 ) do |i|
 		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil || cgi[$FCT_ITEM[i]] == '-'
 			fct_opt[$FCT_ITEM[i]] = '-'
 		else
-			fct_opt[$FCT_ITEM[i]] = BigDecimal( cgi[$FCT_ITEM[i]] ) / ( food_weight / 100 )
+			fct_opt[$FCT_ITEM[i]] = ( BigDecimal( cgi[$FCT_ITEM[i]] ) / ( food_weight / 100 )).round( $FCT_FRCT[$FCT_ITEM[i]] )
 		end
 	end
 
@@ -202,11 +202,11 @@ if command == 'save'
 
 	# 新規食品番号の合成
 	over_max_flag = false
-	r = mariadb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{uname}' AND public='2';", false )
+	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{uname}' AND public='2';", false, @debug )
 	if r.first
 		code = r.first['FN']
 	else
-		rr = mariadb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_FCTP} WHERE FG='#{food_group}' AND user='#{uname}');", false )
+		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_FCTP} WHERE FG='#{food_group}' AND user='#{uname}');", false, @debug )
 		if rr.first
 			last_FN = rr.first['FN'][-3,3].to_i
 			if public_bit == 1
@@ -225,46 +225,40 @@ if command == 'save'
 
 	# 食品番号のチェック
 	unless code == ''
-		r = mariadb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{uname}' AND FN='#{code}';", false )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{uname}' AND FN='#{code}';", false, @debug )
 	else
 		r = []
 	end
 
 	if r.first
 		# 擬似食品テーブルの更新
-		mariadb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
 
 		# タグテーブルの更新
-		mariadb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
 
 		# 拡張タグテーブルに追加
-		mariadb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
 	else
 		# 擬似食品テーブルに追加
-		mariadb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{@new_FN}',user='#{uname}',Tagnames='#{tagnames_new}',#{fct_set};", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{@new_FN}',user='#{uname}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
 
 		# タグテーブルに追加
-		mariadb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{@new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{uname}',public='#{public_bit}';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{@new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{uname}',public='#{public_bit}';", false, @debug )
 
 		# 拡張タグテーブルに追加
-		mariadb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{@new_FN}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{@new_FN}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
 
 		code = @new_FN
 	end
+
+	food_weight = 100
 end
 
 
 #### 削除部分
 if command == 'delete'
-	# 擬似食品テーブルから削除
-#	mariadb( "DELETE UPDATE #{$MYSQL_TB_FCTP} WHERE user='#{uname}' AND FN='#{code}';", false )
-
-	# タグテーブルから削除
-	mariadb( "UPDATE #{$MYSQL_TB_TAG} SET public='2' WHERE user='#{uname}' AND FN='#{code}';", false )
-
-	# 拡張タグテーブルから削除
-#	mariadb( "DELETE FROM #{$MYSQL_TB_EXT} WHERE user='#{uname}' AND FN='#{code}';", false )
-
+	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='2' WHERE user='#{uname}' AND FN='#{code}';", false, @debug )
 	code = ''
 end
 
@@ -291,31 +285,31 @@ end
 
 #### disable option
 disabled_option = ''
-disabled_option = 'disabled' if user != uname
+disabled_option = 'disabled' if user != uname && user != nil
 
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
-4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" #{disabled_option}></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block1 << '</table>'
 
 html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-8.upto( 20 ) do |i| html_fct_block2 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+8.upto( 20 ) do |i| html_fct_block2 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" #{disabled_option}></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block2 << '</table>'
 
 html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-21.upto( 34 ) do |i| html_fct_block3 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+21.upto( 34 ) do |i| html_fct_block3 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" #{disabled_option}></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block3 << '</table>'
 
 html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-35.upto( 46 ) do |i| html_fct_block4 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+35.upto( 46 ) do |i| html_fct_block4 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" #{disabled_option}></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block4 << '</table>'
 
 html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-47.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+47.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" #{disabled_option}></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block5 << '</table>'
 
 html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-56.upto( 66 ) do |i| html_fct_block6 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" disabled='#{disabled_option}'></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
+56.upto( 66 ) do |i| html_fct_block6 << "<tr><td>#{$FCT_NAME[$FCT_ITEM[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{$FCT_ITEM[i]}' value=\"#{fct_opt[$FCT_ITEM[i]].to_f}\" #{disabled_option}></td><td>#{$FCT_UNIT[$FCT_ITEM[i]]}</td></tr>\n" end
 html_fct_block6 << '</table>'
 
 

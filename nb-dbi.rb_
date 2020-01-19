@@ -257,7 +257,7 @@ def tag_init( source_file )
 	puts '食品タグテーブルの作成'
 
 	# テーブル作成
-	query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID SMALLINT UNSIGNED, user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
+	query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(5), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
 	$db.query( query )
 
 	# タグテーブルから読み込んでタグテーブル更新
@@ -491,7 +491,7 @@ def cfg_init()
 	puts 'コンフィグテーブルの作成'
 
 	# テーブル作成
-	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(1000), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8)), koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1);'
+	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(1000), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8)), koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
 	$db.query( query )
 end
 
@@ -590,35 +590,35 @@ end
 
 
 #### 基準BMIテーブルの作成
-def standard_init()
-	puts '基準BMIテーブルの作成'
+#def standard_init()
+#	puts '基準BMIテーブルの作成'
 
-	standard_solid = []
-	f = open( 'standard.txt', 'r')
-	f.each_line do |e| standard_solid << e.chomp end
+#	standard_solid = []
+#	f = open( 'standard.txt', 'r')
+#	f.each_line do |e| standard_solid << e.chomp end
 
 	# カラム追加
-	column_names = standard_solid.shift.split( "\t" )
-	column_type = standard_solid.shift.split( "\t" )
-	column_names.size.times do |c|
-		query = "ALTER TABLE standard add #{column_names[c]} #{column_type[c]};"
-		$db.query( query )
-	end
+#	column_names = standard_solid.shift.split( "\t" )
+#	column_type = standard_solid.shift.split( "\t" )
+#	column_names.size.times do |c|
+#		query = "ALTER TABLE standard add #{column_names[c]} #{column_type[c]};"
+#		$db.query( query )
+#	end
 
 	# データのセット
-	standard_solid.each do |e|
-		query = 'INSERT INTO standard SET '
-		a = e.split( "\t" )
-		c = 0
-		e.each do |ee|
-			query << "#{column_names[c]}='#{ee}',"
-			c += 1
-		end
-		query.chop
-		query << ';'
-		$db.query( query )
-	end
-end
+#	standard_solid.each do |e|
+#		query = 'INSERT INTO standard SET '
+#		a = e.split( "\t" )
+#		c = 0
+#		e.each do |ee|
+#			query << "#{column_names[c]}='#{ee}',"
+#			c += 1
+#		end
+#		query.chop
+#		query << ';'
+#		$db.query( query )
+#	end
+#end
 
 
 #### 記憶テーブルの作成
@@ -627,7 +627,6 @@ def memory_init()
 
 	query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, date DATETIME );'
 	$db.query( query )
-	end
 end
 
 
@@ -637,7 +636,6 @@ def koyomi_init()
 
 	query = 'CREATE TABLE koyomi (user VARCHAR(32), freeze TINYINT(1), fzcode VARCHAR(16), tdiv TINYINT(1), koyomi VARCHAR(256), date DATE );'
 	$db.query( query )
-	end
 end
 
 
@@ -647,7 +645,6 @@ def koyomiex_init()
 
 	query = 'CREATE TABLE koyomiex (user VARCHAR(32), item0 VARCHAR(16), item1 VARCHAR(16), item2 VARCHAR(16), item3 VARCHAR(16), item4 VARCHAR(16), item5 VARCHAR(16), item6 VARCHAR(16), item7 VARCHAR(16), item8 VARCHAR(16), item9 VARCHAR(16), date DATE );'
 	$db.query( query )
-	end
 end
 
 
@@ -664,7 +661,7 @@ end
 def fcz_init()
 	puts '栄養成分安定テーブルの作成'
 	# テーブル作成
-	query = 'CREATE TABLE fcz (code VARCHAR(32), user VARCHAR(32), ENERC_KCAL SMALLINT UNSIGNED,ENERC SMALLINT UNSIGNED,WATER VARCHAR(8),PROT VARCHAR(8),PROTCAA VARCHAR(8),FAT VARCHAR(8),FATNLEA VARCHAR(8),FASAT VARCHAR(8),FAMS VARCHAR(8),FAPU VARCHAR(8),CHOLE VARCHAR(8),CHO VARCHAR(8),CHOAVLM VARCHAR(8),FIBSOL VARCHAR(8),FIBINS VARCHAR(8),FIBTG VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),NACL_EQ VARCHAR(8),ALC VARCHAR(8),NITRA VARCHAR(8),THEBRN VARCHAR(8),CAFFN VARCHAR(8),TAN VARCHAR(8),POLYPHENT VARCHAR(8),ACEAC VARCHAR(8),COIL VARCHAR(8),OA VARCHAR(8), someb VARCHAR(3), somel VARCHAR(3), somed VARCHAR(3), somes VARCHAR(3));'
+	query = 'CREATE TABLE fcz (code VARCHAR(32), user VARCHAR(32), ENERC_KCAL SMALLINT UNSIGNED,ENERC SMALLINT UNSIGNED,WATER VARCHAR(8),PROT VARCHAR(8),PROTCAA VARCHAR(8),FAT VARCHAR(8),FATNLEA VARCHAR(8),FASAT VARCHAR(8),FAMS VARCHAR(8),FAPU VARCHAR(8),CHOLE VARCHAR(8),CHO VARCHAR(8),CHOAVLM VARCHAR(8),FIBSOL VARCHAR(8),FIBINS VARCHAR(8),FIBTG VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(9),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),NACL_EQ VARCHAR(8),ALC VARCHAR(8),NITRA VARCHAR(8),THEBRN VARCHAR(8),CAFFN VARCHAR(8),TAN VARCHAR(8),POLYPHENT VARCHAR(8),ACEAC VARCHAR(8),COIL VARCHAR(8),OA VARCHAR(8), someb VARCHAR(3), somel VARCHAR(3), somed VARCHAR(3), somes VARCHAR(3));'
 	$db.query( query )
 end
 
@@ -673,9 +670,36 @@ end
 def bio_init()
 	puts '栄養成分安定テーブルの作成'
 	# テーブル作成
-	query = 'CREATE TABLE bio (user VARCHAR(32), auto TINYINT(1), sex TINYINT(1), bd DATE, height UNSIGNED TINYINT, weight UNSIGNED TINYINT);'
+	query = 'CREATE TABLE bio (user VARCHAR(32), auto TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height TINYINT UNSIGNED, weight TINYINT UNSIGNED);'
 	$db.query( query )
 end
+
+
+#### METs標準テーブルの作成
+def metst_init()
+	puts 'METs基準テーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE metst (code VARCHAR(5), mets VARCHAR(4), heading VARCHAR(32), sub_heading VARCHAR(32), active VARCHAR(100));'
+	$db.query( query )
+
+	f = open( "mets_utf8.txt", 'r' )
+	f.each_line do |l|
+		t = l.chomp
+		a = t.split( "\t" )
+		query = "INSERT INTO metst set code='#{a[0]}', mets='#{a[1]}', heading='#{a[2]}', sub_heading='#{a[3]}', active='#{a[4]}';"
+		$db.query( query )
+	end
+	f.close
+end
+
+#### METsテーブルの作成
+def mets_init()
+	puts 'METsテーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE mets (user VARCHAR(32), name VARCHAR(64), mets VARCHAR(1000), metsv VARCHAR(6));'
+	$db.query( query )
+end
+
 #==============================================================================
 puts "fctb2015_db_init.rb"
 #==============================================================================
@@ -706,6 +730,7 @@ $db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}
 #fcs_init()
 #fcz_init()
 #bio_init()
-
+#metst_init()
+#mets_init()
 
 $db.close

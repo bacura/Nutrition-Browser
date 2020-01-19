@@ -34,6 +34,10 @@ var freezeKoyomiAll = function( yyyy, mm ){
 	$.post( "koyomi.cgi", { command:'freeze_all', yyyy:yyyy, mm:mm,  freeze_check_all:freeze_check_all }, function( data ){ $( "#bw_level2" ).html( data );});
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi Edit//////////////////////////////////////////////////////////////
+
 // Koyomi edit
 var editKoyomi_BW2 = function( com, dd ){
 	var yyyy = document.getElementById( "yyyy" ).value;
@@ -56,7 +60,8 @@ var memoKoyomi = function( yyyy, mm, dd ){
 };
 
 // Koyomi Save Something
-var koyomiSaveSome = function( yyyy, mm, dd, tdiv, some ){
+var koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
+	var some = document.getElementById( id ).value;
 	$.post( "koyomi-edit.cgi", { command:'some', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99, some:some }, function( data ){ $( "#bw_level3" ).html( data );});
 	displayVideo( 'Something saved' );
 };
@@ -67,6 +72,27 @@ var editKoyomiR_BW1 = function( yyyy, mm ){
 	document.getElementById( "bw_level2" ).style.display = 'block';
 	document.getElementById( "bw_level3" ).style.display = 'none';
 	document.getElementById( "bw_level4" ).style.display = 'none';
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi calc //////////////////////////////////////////////////////////////
+
+// Koyomi calc
+var calcKoyomi = function( yyyy, mm, dd, palette ){
+	if( palette ){
+		var palette = document.getElementById( "palette" ).value;
+	}
+
+	document.getElementById( "bw_level2" ).style.display = 'none';
+	$.post( "koyomi-calc.cgi", { command:"init", yyyy:yyyy, mm:mm, dd:dd, palette:palette }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+// Koyomi calc return
+var calcKoyomiR = function( yyyy, mm ){
+	document.getElementById( "bw_level2" ).style.display = 'block';
+	document.getElementById( "bw_level3" ).style.display = 'none';
 };
 
 
@@ -313,6 +339,31 @@ var koyomiReturn2KE = function( yyyy, mm, dd ){
 
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi menu copy / move //////////////////////////////////////////////////////////////
+
+var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
+	closeBroseWindows( 0 );
+	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){ $( "#bw_levelF" ).html( data );});
+	document.getElementById( "bw_levelF" ).style.display = 'block';
+};
+
+var cmmSaveKoyomi = function( cm_mode, yyyy, mm, dd, tdiv, origin ){
+	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
+	document.getElementById( "bw_levelF" ).style.display = 'block';
+};
+
+var cmmSaveKoyomi2 = function( cm_mode, origin ){
+	var yyyy = document.getElementById( "yyyy" ).value;
+	var mm = document.getElementById( "mm" ).value;
+	var dd = document.getElementById( "dd" ).value;
+	var tdiv = document.getElementById( "tdiv" ).value;
+	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
+	document.getElementById( "bw_levelF" ).style.display = 'block';
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi EX //////////////////////////////////////////////////////////////
 
@@ -367,6 +418,11 @@ var ginmiBMIres = function(){
 	document.getElementById( "bw_level3" ).style.display = 'block';
 };
 
+var ginmiBMIkex = function(){
+	$.post( "ginmi.cgi", { mod:"bmi", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // Ginmi kaup //////////////////////////////////////////////////////////////
 
@@ -378,13 +434,76 @@ var ginmiKaupres = function(){
 	document.getElementById( "bw_level3" ).style.display = 'block';
 };
 
+var ginmiKaupkex = function(){
+	$.post( "ginmi.cgi", { mod:"kaupi", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // Ginmi laurel //////////////////////////////////////////////////////////////
 
 var ginmiLaurelres = function(){
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	$.post( "ginmi.cgi", { mod:"laureli", command:'result', height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+var ginmiLaurelkex = function(){
+	$.post( "ginmi.cgi", { mod:"laureli", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi enegry Ref //////////////////////////////////////////////////////////////
+
+var ginmiEnergyRefres = function(){
+	var sex = document.getElementById( "sex" ).value;
+	var age = document.getElementById( "age" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	var pal = document.getElementById( "pal" ).value;
+	var pregnancy = document.getElementById( "pregnancy" ).value;
+	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+var ginmiEnergyRefkex = function(){
+	$.post( "ginmi.cgi", { mod:"energy-ref", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi enegry HN //////////////////////////////////////////////////////////////
+
+var ginmiEnergyHNres = function(){
+	var sex = document.getElementById( "sex" ).value;
 	var age = document.getElementById( "age" ).value;
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"laureli", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
+	var pal = document.getElementById( "pal" ).value;
+	$.post( "ginmi.cgi", { mod:"energy-hn", command:'result', age:age, sex:sex, height:height, weight:weight, pal:pal }, function( data ){ $( "#bw_level3" ).html( data );});
 	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+var ginmiEnergyHNkex = function(){
+	$.post( "ginmi.cgi", { mod:"energy-hn", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ginmi enegry HB //////////////////////////////////////////////////////////////
+
+var ginmiEnergyHBres = function(){
+	var sex = document.getElementById( "sex" ).value;
+	var age = document.getElementById( "age" ).value;
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	var active = document.getElementById( "active" ).value;
+	var stress = document.getElementById( "stress" ).value;
+	var btm = document.getElementById( "btm" ).value;
+	$.post( "ginmi.cgi", { mod:"energy-hb", command:'result', sex:sex, age:age, height:height, weight:weight, active:active, stress:stress, btm:btm }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+var ginmiEnergyHBkex = function(){
+	$.post( "ginmi.cgi", { mod:"energy-hb", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
 };

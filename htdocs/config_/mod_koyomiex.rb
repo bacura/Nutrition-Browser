@@ -25,6 +25,7 @@ def config_module( cgi )
 		puts "<hr>"
 	end
 
+
 	case step
 	when 'update'
 		koyomiex_new = ''
@@ -33,35 +34,35 @@ def config_module( cgi )
 		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{uname}';", false )
 	when 'delete'
 		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-		a = r.first['koyomiex'].split( ':' )
+		kex_select_set = r.first['koyomiex'].split( ':' )
 		koyomiex_new = ''
-		0.upto( 9 ) do |c|
+		kex_select_set.size.times do |c|
 			if del_no == c
 				koyomiex_new << "0\t\t:"
 				mariadb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{uname}';", false )
 			else
-				koyomiex_new << "#{kex_select_set[c]}\t#{item_set[c]}\t#{unit_set[c]}:"
+				koyomiex_new << "#{kex_select_set[c]}:"
 			end
 		end
 		koyomiex_new.chop!
 		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{uname}';", false )
+	end
+
+	r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	if r.first['koyomiex'] == '' || r.first['koyomiex'] == nil
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{uname}';", false )
+		0.upto( 9 ) do |c|
+			kex_select_set[c] = 0
+			item_set[c] = ''
+			unit_set[c] = ''
+		end
 	else
-		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
-		if r.first['koyomiex'] == '' || r.first['koyomiex'] == nil
-			mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{uname}';", false )
-			0.upto( 9 ) do |c|
-				kex_select_set[c] = 0
-				item_set[c] = ''
-				unit_set[c] = ''
-			end
-		else
-			a = r.first['koyomiex'].split( ':' )
-			0.upto( 9 ) do |c|
-				aa = a[c].split( "\t" )
-				kex_select_set[c] = aa[0].to_i
-				item_set[c] = aa[1]
-				unit_set[c] = aa[2]
-			end
+		a = r.first['koyomiex'].split( ':' )
+		0.upto( 9 ) do |c|
+			aa = a[c].split( "\t" )
+			kex_select_set[c] = aa[0].to_i
+			item_set[c] = aa[1]
+			unit_set[c] = aa[2]
 		end
 	end
 

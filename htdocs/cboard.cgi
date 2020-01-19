@@ -95,7 +95,7 @@ def energy_calc( food_list, uname, dish_num )
 		unless e.no == '-' || e.no == '+'
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCT} WHERE FN='#{e.no}';"
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.no}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.no
-			r = mariadb( q, false )
+			r = mdb( q, false, @debug )
 			t = convert_zero( r.first['ENERC_KCAL'] )
 			energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
 			energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
@@ -168,11 +168,11 @@ end
 # Main
 #==============================================================================
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'cboard', language )
 
 html_init( nil )
-
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -210,7 +210,7 @@ end
 #### CBの読み込み
 q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{uname}';"
 q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';" if command == 'load'
-r = mariadb( q, false )
+r = mdb( q, false, @debug )
 
 code = r.first['code']
 recipe_name = r.first['name']
@@ -289,19 +289,19 @@ when 'weight'
 	food_list[order_no].unitv = food_weight
 
 	# 食品ごとの単位読み込み
-	r = mariadb( "SELECT unitc from #{$MYSQL_TB_EXT} WHERE FN='#{food_list[order_no].no}';", false )
+	r = mdb( "SELECT unitc from #{$MYSQL_TB_EXT} WHERE FN='#{food_list[order_no].no}';", false, @debug )
 	uk = BigDecimal( '1' )
 	if food_list[order_no].unit.to_i == 1
 		# カロリー換算
 		puts 'カロリー' if @debug
-		rr = mariadb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false )
+		rr = mdb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false, @debug )
 		if rr.first['ENERC_KCAL']
 			uk = BigDecimal( '100' ) / rr.first['ENERC_KCAL']
 		end
 	elsif food_list[order_no].unit.to_i == 15
 		# 廃棄前g
 		puts '廃棄前g' if @debug
-		rr = mariadb( "SELECT REFUSE FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false )
+		rr = mdb( "SELECT REFUSE FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].no}';", false, @debug )
 		if rr.first['REFUSE']
 			uk = BigDecimal(( 100 - rr.first['REFUSE'].to_i ).to_s ) / 100
 		end
@@ -355,10 +355,10 @@ when 'add'
 	if add_food_no == nil
 		food_list << Food.new( '-', '-', '-', '-', 0, '-', '-', '-' )
 	elsif /\d{5}/ =~ add_food_no
-		r = mariadb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}';", false )
+		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}';", false, @debug )
 		food_list << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
 	elsif /[PU]?\d{5}/ =~ add_food_no
-		r = mariadb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{uname}' AND public!='#{2}' ) OR public='1' );", false )
+		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{uname}' AND public!='#{2}' ) OR public='1' );", false, @debug )
 		food_list << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
 	else
 		food_list << Food.new( '+', '-', '-', '-', '0', add_food_no, '-', '-' )
@@ -393,7 +393,7 @@ when 'dish'
 
 #### レシピデータのクイック保存
 when 'quick_save'
-	 mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{$DATETIME}', dish='#{dish_num}' WHERE user='#{uname}' and code='#{code}';", false )
+	 mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{$DATETIME}', dish='#{dish_num}' WHERE user='#{uname}' and code='#{code}';", false, @debug )
 
 
 #### GN変換
@@ -430,7 +430,7 @@ when 'seasoning'
 	target_weight = total_weight if target_weight == 0
 	seasoning_rate = target_weight / 100
 
-	r = mariadb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{seasoning}';", false )
+	r = mdb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{seasoning}';", false, @debug )
 	if r.first
 		 r.first['sum'].split( "\t" ).each do |e|
 			t = Food.new( nil, nil, nil, nil, nil, nil, nil, nil )
@@ -543,7 +543,7 @@ db.close
 
 #### 調味％セット
 seasoning_html = ''
-r = mariadb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and role='100';", false )
+r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and role='100';", false, @debug )
 seasoning_html << "<div class='input-group input-group-sm'>"
 seasoning_html << "<div class='input-group-prepend'>"
 seasoning_html << "<label class='input-group-text' for='seasoning'>#{lp[6]}</label>"
@@ -688,7 +688,7 @@ food_list.each do |e|
   	unless e.no == '-' || e.no == '+'
 		unit_set = []
 		unit_select = []
-		r = mariadb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.no}';", false )
+		r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.no}';", false, @debug )
 		unless r.first['unitc'] == nil
 			t = r.first['unitc'].split( ':' )
 #### Temporary
@@ -724,7 +724,7 @@ food_list.each do |e|
   	unless e.no == '-' || e.no == '+'
   		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e.no}';"
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{uname}';" if /^U\d{5}/ =~ e.no
-		r = mariadb( q, false )
+		r = mdb( q, false, @debug )
 
 		if r.first
 			food_key = "#{r.first['FG']}:#{r.first['class1']}:#{r.first['class2']}:#{r.first['class3']}:#{r.first['name']}"
@@ -809,4 +809,4 @@ sum_new = ''
 food_list.each do |e| sum_new << "#{e.no}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.check}:#{e.init}:#{e.rr}:#{e.ew}\t" end
 sum_new.chop!
 
-mariadb( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{uname}';", false )
+mdb( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{uname}';", false, @debug )

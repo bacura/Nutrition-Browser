@@ -1,4 +1,4 @@
-# Config module for NB bio 0.00
+# Config module for NB display 0.00
 #encoding: utf-8
 
 def config_module( cgi )
@@ -6,33 +6,23 @@ def config_module( cgi )
 	step = cgi['step']
 
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, false )
-	sex = r.first['sex'].to_i
-	age = r.first['age'].to_i
-	height = r.first['height'].to_f
-	weight = r.first['weight'].to_f
+	icache = r.first['icache'].to_i
 
 	if step ==  'change'
-		sex = cgi['sex'].to_i
-		age = cgi['age'].to_i
-		height = cgi['height'].to_f
-		weight = cgi['weight'].to_f
+		icache = cgi['icache'].to_i
 
 		# アカウント内容変更の保存
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET sex='#{sex}', age='#{age}', height='#{height}', weight='#{weight}' WHERE user='#{uname}';", false, false )
+#		mdb( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}' WHERE user='#{uname}';", false, false )
 	end
 
-	male_check = ''
-	female_check = ''
-	if sex == 0
-		male_check = 'CHECKED'
-	else
-		female_check = 'CHECKED'
-	end
+	icache_check = ''
+	icache_check = 'CHECKED' if icache == 1
+
 
 	html = <<-"HTML"
     <div class="container">
     	<div class='row'>
-	    	<div class='col-2'>代謝的性別</div>
+	    	<div class='col-2'>画像キャッシュ</div>
 			<div class='col-3'>
 				<div class='form-check form-check-inline'>
 					<input class='form-check-input' type='radio' name='sex' id='male' value='0' #{male_check}>

@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require 'date'
 require '/var/www/nb-soul.rb'
 
@@ -32,14 +31,14 @@ def init( lp, status )
 	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'bmi' )">BMI</button>
 	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'kaupi' )">カウプ指数</button>
 	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'laureli' )">ローレル指数</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">肥満度</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">エネルギー・参照</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">エネルギー・BEE</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">推定身長</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">推定骨格筋量</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">MNA</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">MNA-SF</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="">SGA</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ref' )">E・参照</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hn' )">E・国立健栄</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hb' )">E・ハリベネ</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">推定身長</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">推定骨格筋量</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">MNA</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">MNA-SF</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">SGA</button>
 HTML
 
 	return html
@@ -49,11 +48,12 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliaseu, language = login_check( cgi )
 lp = lp_init( 'koyomi', language )
+
+html_init( nil )
 if @debug
 	puts "uname:#{uname}<br>\n"
 	puts "status:#{status}<br>\n"

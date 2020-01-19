@@ -33,11 +33,12 @@ $WM_FONT = 'さざなみゴシック'
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
-
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 lp = lp_init( 'photo', language )
+
+html_init( nil )
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "uid: #{uid}<br>"
@@ -65,7 +66,7 @@ end
 #### レシピのfigフラグ読み込み
 # 通常
 if code == ''
-	r = mariadb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false, @debug )
 	code = r.first['code']
 end
 
@@ -79,7 +80,7 @@ when 'form'
 		end
 	end
 
-	r = mariadb( "SELECT fig1, fig2, fig3 FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false )
+	r = mdb( "SELECT fig1, fig2, fig3 FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
 	if r.first
 		fig1 = r.first['fig1']
 		fig2 = r.first['fig2']
@@ -223,7 +224,7 @@ when 'upload'
 		File.unlink "#{$PHOTO_PATH_TMP}/#{photo_name}"
 
 		# レシピデータベースの更新
-		mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET fig#{slot_no}='1' WHERE code='#{code}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET fig#{slot_no}='1' WHERE code='#{code}';", false, @debug )
 	end
 
 #### 写真を削除
@@ -235,7 +236,7 @@ when 'delete'
 		File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg"
 
 		# レシピデータベースの更新
-		mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET fig#{slot_no}='' WHERE code='#{code}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET fig#{slot_no}='' WHERE code='#{code}';", false, @debug )
 	end
 else
 end
