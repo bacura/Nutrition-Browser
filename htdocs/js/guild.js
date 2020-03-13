@@ -345,12 +345,13 @@ var koyomiReturn2KE = function( yyyy, mm, dd ){
 
 var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
 	closeBroseWindows( 0 );
-	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){ $( "#bw_levelF" ).html( data );});
+	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99 }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
 var cmmSaveKoyomi = function( cm_mode, yyyy, mm, dd, tdiv, origin ){
-	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
+	var hh = document.getElementById( "hh" ).value;
+	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
@@ -359,7 +360,8 @@ var cmmSaveKoyomi2 = function( cm_mode, origin ){
 	var mm = document.getElementById( "mm" ).value;
 	var dd = document.getElementById( "dd" ).value;
 	var tdiv = document.getElementById( "tdiv" ).value;
-	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
+	var hh = document.getElementById( "hh" ).value;
+	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 

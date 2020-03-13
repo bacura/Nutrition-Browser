@@ -166,24 +166,24 @@ db.close
 
 #### 絞り込みボタン生成
 html_sub = <<-"HTML_SUB"
-<button type="button" class="btn btn-outline-warning btn-sm nav_button" id="category1" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '1' )">#{lp[7]}</button>
-<button type="button" class="btn btn-outline-primary btn-sm nav_button" id="category2" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '2' )">#{lp[8]}</button>
-<button type="button" class="btn btn-outline-info btn-sm nav_button" id="category3" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '3' )">#{lp[9]}</button>
-<button type="button" class="btn btn-outline-primary btn-sm nav_button" id="category4" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '4' )">#{lp[10]}</button>
-<button type="button" class="btn btn-outline-primary btn-sm nav_button" id="category5" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '5' )">#{lp[11]}</button>
-<button type="button" class="btn btn-outline-success btn-sm nav_button" id="category6" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '6' )">#{lp[12]}</button>
-<button type="button" class="btn btn-outline-success btn-sm nav_button" id="category7" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '7' )">#{lp[13]}</button>
-<button type="button" class="btn btn-outline-success btn-sm nav_button" id="category8" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '8' )">#{lp[14]}</button>
-<button type="button" class="btn btn-outline-success btn-sm nav_button" id="category9" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '9' )">#{lp[15]}</button>
-<button type="button" class="btn btn-outline-danger btn-sm nav_button" id="category10" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '10' )">#{lp[16]}</button>
-<button type="button" class="btn btn-outline-danger btn-sm nav_button" id="category11" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '11' )">#{lp[17]}</button>
-<button type="button" class="btn btn-outline-danger btn-sm nav_button" id="category12" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '12' )">#{lp[18]}</button>
-<button type="button" class="btn btn-outline-danger btn-sm nav_button" id="category13" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '13' )">#{lp[19]}</button>
-<button type="button" class="btn btn-outline-info btn-sm nav_button" id="category14" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '14' )">#{lp[20]}</button>
-<button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category15" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '15' )">#{lp[21]}</button>
-<button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category16" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '16' )">#{lp[22]}</button>
-<button type="button" class="btn btn-outline-info btn-sm nav_button" id="category17" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '17' )">#{lp[23]}</button>
-<button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category18" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '18' )">#{lp[24]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '1' )">#{lp[7]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '2' )">#{lp[8]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '3' )">#{lp[9]}</button>
+<button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '4' )">#{lp[10]}</button>
+<button type="button" class="btn btn-warning btn-sm nav_button" id="category5" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '5' )">#{lp[11]}</button>
+<button type="button" class="btn btn-success btn-sm nav_button" id="category6" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '6' )">#{lp[12]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" id="category7" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '7' )">#{lp[13]}</button>
+<button type="button" class="btn btn-success btn-sm nav_button" id="category8" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '8' )">#{lp[14]}</button>
+<button type="button" class="btn btn-success btn-sm nav_button" id="category9" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '9' )">#{lp[15]}</button>
+<button type="button" class="btn btn-danger btn-sm nav_button" id="category10" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '10' )">#{lp[16]}</button>
+<button type="button" class="btn btn-danger btn-sm nav_button" id="category11" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '11' )">#{lp[17]}</button>
+<button type="button" class="btn btn-danger btn-sm nav_button" id="category12" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '12' )">#{lp[18]}</button>
+<button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '13' )">#{lp[19]}</button>
+<button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '14' )">#{lp[20]}</button>
+<button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '15' )">#{lp[21]}</button>
+<button type="button" class="btn btn-secondary btn-sm nav_button" id="category16" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '16' )">#{lp[22]}</button>
+<button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '17' )">#{lp[23]}</button>
+<button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '18' )">#{lp[24]}</button>
 <button type="button" class="btn btn-outline-dark btn-sm nav_button" id="category0" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', '00' )">#{lp[25]}</button>
 <button type="button" class="btn btn-dark btn-sm nav_button" id="category1" onclick="historyBWL1( '#{order_mode}', '#{food_weight}', '#{frct_mode}', 'all' )">#{lp[26]}</button>
 HTML_SUB

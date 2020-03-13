@@ -123,6 +123,133 @@ def meals( e, lp, uname, freeze_flag )
 end
 
 
+#### Multi calc_subset
+def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items )
+	results = ''
+	fct_total = Hash.new
+	fct_total.default = BigDecimal( 0 )
+
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+	if r.first
+  		r.each do |e|
+			menu_set = []
+			code_set = []
+			rate_set = []
+			unit_set = []
+
+			a = e['koyomi'].split( "\t" )
+			a.each do |ee|
+				( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( ':' )
+				code_set << koyomi_code
+				rate_set << koyomi_rate
+				unit_set << koyomi_unit
+			end
+
+			code_set.size.times do |c|
+				code = code_set[c]
+				rate = BigDecimal( rate_set[c] )
+				unit = unit_set[c]
+
+#### temporary ####
+				if unit == 'g'
+					unit = 0
+				elsif unit == '%'
+					unit = 99
+				else
+					unit = unit.to_i
+				end
+#### temporary ####
+
+				if /\?/ =~ code
+				elsif /\-f\-/ =~ code
+					rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
+					if rr.first
+						5.upto( 65) do |cc|
+							fct_total[$FCT_ITEM[cc]] += BigDecimal( num_opt( rr.first[$FCT_ITEM[cc]], 100, 1, $FCT_FRCT[$FCT_ITEM[cc]] + 3 ))
+						end
+					end
+				else
+					recipe_set = []
+					fn_set = []
+					weight_set = []
+					if /\-m\-/ =~ code
+						rr = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
+						a = rr.first['meal'].split( "\t" )
+						a.each do |e| recipe_set << e end
+					end
+
+					if recipe_set.size == 0
+						recipe_set << code
+					end
+					recipe_set.size.times do |cc|
+						recipe_total_weight = BigDecimal( 0 )
+
+						if /\-r\-/ =~ recipe_set[cc] || /\w+\-\h{4}\-\h{4}/ =~ recipe_set[cc]
+#							p 'recipe'
+							rr = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{recipe_set[cc]}';", false, @debug )
+							a = rr.first['sum'].split( "\t" )
+							a.each do |eee|
+								( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = eee.split( ':' )
+
+								if sum_no != '+' && sum_no != '-'
+									fn_set << sum_no
+									sum_ew = sum_weight if sum_ew == nil
+									weight_set << ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
+									recipe_total_weight += ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
+								end
+							end
+
+							if unit == 99
+								weight_set.map! do |x| x * rate / 100 end
+							else
+								weight_set.map! do |x| x * rate / recipe_total_weight end
+							end
+						end
+					end
+
+					# food
+					if fn_set.size == 0
+						fn_set << code
+						weight_set << rate
+					end
+
+					#
+					if unit != 0 && unit != 99
+						fn_set.size.times do |cc|
+							weight_set[cc] = unit_weight( weight_set[cc], unit, fn_set[cc] )
+						end
+					end
+
+					fn_set.size.times do |cc|
+						query = ''
+						if /^P/ =~ fn_set[cc]
+							query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[cc]}';"
+						elsif /^U/ =~ fn_set[cc]
+							query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[cc]}' AND user='#{uname}';"
+						else
+							query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{fn_set[cc]}';"
+						end
+
+						rr = mdb( query, false, @debug )
+						if rr.first
+							5.upto( 65) do |ccc|
+								t = convert_zero( rr.first[$FCT_ITEM[ccc]] )
+								fct_total[$FCT_ITEM[ccc]] += BigDecimal( num_opt( t, weight_set[cc], 1, $FCT_FRCT[$FCT_ITEM[ccc]] + 3 ))
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	fct_total.each do |k, v| fct_total[k] = v.round( $FCT_FRCT[k] ) end
+	fc_items.each do |e| results << "#{$FCT_NAME[e]}[#{fct_total[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;" end
+
+	return results
+end
+
+
 # Getting start year & standard meal time
 def get_starty( uname )
 	start_year = $TIME_NOW.year
@@ -198,7 +325,7 @@ if command == 'delete'
 	new_meal.chop!
 
 	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_meal}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-	mdb( "DELETE FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug ) 	if /\-f\-/ =~ code
+#	mdb( "DELETE FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug ) 	if /\-f\-/ =~ code
 end
 
 
@@ -233,16 +360,32 @@ mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND freeze=0 AND ( k
 ####
 freeze_flag = 0
 koyomi_html = []
+fc_items = []
+r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='簡易表示用';", false, @debug )
+if r.first
+	palette = r.first['palette']
+	palette.size.times do |c|
+		fc_items << $FCT_ITEM[c] if palette[c] == '1'
+	end
+else
+ 	fc_items = ['ENERC_KCAL', 'PROT', 'FAT', 'CHO', 'NACL_EQ']
+end
+
 r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
 freeze_flag = r.first['freeze'].to_i if r.first
-
 r.each do |e|
 	if e['tdiv'] == 4
 		koyomi_html[e['tdiv']] = e['koyomi']
 	else
 		koyomi_html[e['tdiv']] = meals( e, lp, uname, freeze_flag )
+		koyomi_html[e['tdiv']] << multi_calc_sub(  uname, yyyy, mm, dd, e['tdiv'], fc_items )
 	end
 end
+
+
+
+
+
 
 
 ####
@@ -264,16 +407,18 @@ end
 
 ####
 cmm_html = [ '', '', '', '' ]
-if freeze_flag == 0
-	0.upto( 3 ) do |c|
-			cmm_html[c]	<< "<button class='btn btn-sm btn-dark' onclick=\"fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', '#{c}' )\">#{lp[17]}</button>&nbsp;"
-		if koyomi_html[c] == nil
-			cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{lp[18]}</button>&nbsp;"
-			cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{lp[19]}</button>&nbsp;"
-		else
-			cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'copy', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{lp[18]}</button>&nbsp;"
-			cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'move', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{lp[19]}</button>&nbsp;"
-		end
+0.upto( 3 ) do |c|
+	unless freeze_flag == 1
+		cmm_html[c]	<< "<button class='btn btn-sm btn-dark' onclick=\"fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', '#{c}' )\">#{lp[17]}</button>&nbsp;"
+	else
+		cmm_html[c]	<< "<button class='btn btn-sm btn-secondary'>#{lp[17]}</button>&nbsp;"
+	end
+	if koyomi_html[c] == nil
+		cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{lp[18]}</button>&nbsp;"
+		cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{lp[19]}</button>&nbsp;"
+	else
+		cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'copy', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{lp[18]}</button>&nbsp;"
+		cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'move', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{lp[19]}</button>&nbsp;" unless freeze_flag == 1
 	end
 end
 
@@ -331,6 +476,7 @@ html = <<-"HTML"
 		<div class='col-6'>
 			<h5>#{lp[1]}</h5>
 			#{koyomi_html[0]}
+			<br><br>
 			<div class="form-inline">
 				#{cmm_html[0]}
 				#{some_html[0]}
@@ -341,6 +487,7 @@ html = <<-"HTML"
 		<div class='col-6'>
 			<h5>#{lp[2]}</h5>
 			#{koyomi_html[1]}
+			<br><br>
 			<div class="form-inline">
 				#{cmm_html[1]}
 				#{some_html[1]}
@@ -352,6 +499,7 @@ html = <<-"HTML"
 		<div class='col-6'>
 			<h5>#{lp[3]}</h5>
 			#{koyomi_html[2]}
+			<br><br>
 			<div class="form-inline">
 				#{cmm_html[2]}
 				#{some_html[2]}
@@ -360,6 +508,7 @@ html = <<-"HTML"
 		<div class='col-6'>
 			<h5>#{lp[4]}</h5>
 			#{koyomi_html[3]}
+			<br><br>
 			<div class="form-inline">
 				#{cmm_html[3]}
 				#{some_html[3]}

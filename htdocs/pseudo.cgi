@@ -17,7 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -206,7 +206,7 @@ if command == 'save'
 	if r.first
 		code = r.first['FN']
 	else
-		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_FCTP} WHERE FG='#{food_group}' AND user='#{uname}');", false, @debug )
+		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{uname}');", false, @debug )
 		if rr.first
 			last_FN = rr.first['FN'][-3,3].to_i
 			if public_bit == 1

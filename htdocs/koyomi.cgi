@@ -88,6 +88,7 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 	if r.first
 		fzcode = r.first['fzcode']
 		r.each do |e|
+
 			menu_set = []
 			code_set = []
 			rate_set = []
@@ -120,7 +121,7 @@ def multi_calc( uname, yyyy, mm, dd, fc_items )
 					if unit == 'g'
 						unit = 0
 					elsif unit == '%'
-						unit == 99
+						unit = 99
 					else
 						unit = unit.to_i
 					end
@@ -277,7 +278,7 @@ if @debug
 end
 
 
-#### POSTデータの取得
+#### Getting POST
 command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
@@ -416,13 +417,11 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	freeze_checked = 'CHECKED' if freeze_flag
 	onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\""
 
-	date_html << "<tr>"
+	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
-#		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
-		date_html << "<td style='color:red;'><a id='day#{c}'>#{c} (#{weeks[week_count]})</a></td>"
+		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
 	else
-#		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
-		date_html << "<td><a id='day#{c}'>#{c} (#{weeks[week_count]})</a></td>"
+		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
 
 	4.times do |cc|
@@ -490,8 +489,14 @@ select_html << "</div>"
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5><a href='#day{dd}'>#{lp[8]}:</a></h5></div>
-		<div class='col-5 form-inline'>
+		<div class='col-2'><h5>#{lp[8]}:食事</h5></div>
+		<div class='col-2'>
+			<a href='#day#{date.day}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
+			<button class='btn btn-sm btn-outline-light' onclick="">←</button>
+			<button class='btn btn-sm btn-outline-light' onclick="">今日</button>
+			<button class='btn btn-sm btn-outline-light' onclick="">→</button>
+		</div>
+		<div class='col-3 form-inline'>
 			#{select_html}
 		</div>
 		<div class='col-3'>

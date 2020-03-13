@@ -111,7 +111,7 @@ if command == 'save'
 		if cgi[$FCT_ITEM[i]] == '' || cgi[$FCT_ITEM[i]] == nil || cgi[$FCT_ITEM[i]] == '-'
 			fix_opt[$FCT_ITEM[i]] = '-'
 		else
-			fix_opt[$FCT_ITEM[i]] =  BigDecimal( cgi[$FCT_ITEM[i]] ) / 100 * food_weight * food_number
+			fix_opt[$FCT_ITEM[i]] = ( BigDecimal( cgi[$FCT_ITEM[i]] ) / 100 * food_weight * food_number ).round( $FCT_FRCT[$FCT_ITEM[i]] )
 		end
 	end
 
@@ -143,6 +143,8 @@ if command == 'save'
 		koyomi_update.chop!
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	else
+p 'xxx'
+
  		fix_code = generate_code( uname, 'f' )
 		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{uname}', #{fix_set};", false, @debug )
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
@@ -157,6 +159,7 @@ if command == 'save'
 			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		end
 	end
+p 'zz'
 end
 if @debug
 	puts "fix_opt: #{fix_opt}<br>\n"

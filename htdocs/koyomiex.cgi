@@ -172,7 +172,7 @@ cells = []
 r.each do |e| koyomir[e['date'].day] = e end
 
 1.upto( last_day ) do |c|
-	date_html << "<tr>"
+	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
 		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
 	else
@@ -227,9 +227,19 @@ select_html << "</div>"
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5>#{lp[8]}</h5></div>
-		<div class='col-8 form-inline'>
+		<div class='col-2'>
+			<h5><a href='#day#{date.day}'>#{lp[8]}</a></h5>
+		</div>
+		<div class='col-2'>
+			<a href='#day#{date.day}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
+			<button class='btn btn-sm btn-outline-light' onclick="">←</button>
+			<button class='btn btn-sm btn-outline-light' onclick="">今日</button>
+			<button class='btn btn-sm btn-outline-light' onclick="">→</button>
+		</div>
+		<div class='col-3 form-inline'>
 			#{select_html}
+		</div>
+		<div class='col-3'>
 		</div>
 		<div class='col-2'>
 			<button class='btn btn-sm btn-success' onclick="returnKoyomi_BW1( '#{yyyy}', '#{mm}' )">#{lp[12]}</button>

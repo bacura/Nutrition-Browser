@@ -31,7 +31,7 @@ def get_starty( uname )
 	breakfast_st = 0
 	lunch_st = 0
 	dinner_st = 0
-	r = mariadb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		start_year = a[0].to_i if a[0].to_i != 0
@@ -168,20 +168,20 @@ if @debug
 end
 
 
-#### Move food
+#### Move food (deleting origin )
 new_solid = ''
 if command == 'move' && copy != 1
 	a = origin.split( ':' )
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug  )
 	if r.first['koyomi']
 		t = r.first['koyomi']
 		aa = t.split( "\t" )
-		0.upto( aa.size ) do |c|
+		0.upto( aa.size - 1 ) do |c|
 			new_solid << "#{aa[c]}\t" unless c == a[4].to_i
 		end
 		new_solid.chop! unless new_solid == ''
 	end
-	mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )
+	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug )
 end
 
 
@@ -190,17 +190,17 @@ if command == 'save' || command == 'move'
 	hh = st_set[tdiv] if hh == 99
 	hh = $TIME_NOW.hour if hh == nil || hh == ''
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		koyomi = r.first['koyomi']
 		delimiter = ''
 		delimiter = "\t" if koyomi != ''
 		koyomi << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
-		mariadb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
 	else
 		koyomi = "#{code}:#{ev}:#{eu}:#{hh}"
-		mariadb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:0" if command == 'move'
 	end
 end
@@ -223,15 +223,15 @@ end
 ####
 food_name = code
 if /\-m\-/ =~ code
-	r = mariadb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false )
+	r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false, @debug )
 	food_name = r.first['name']
 elsif /\-/ =~ code
-	r = mariadb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+	r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 	food_name = r.first['name']
 else
 	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';"
 	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';" if /^U\d{5}/ =~ code
-	r = mariadb( q, false )
+	r = mdb( q, false, @debug )
 	food_name = r.first['name']
 end
 
@@ -248,23 +248,26 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
 
-	0.upto( 3 ) do |cc|
-		koyomi_c = '-'
-		r = mariadb( "SELECT freeze, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false)
-		onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
-		onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
-		if r.first
-			if r.first['freeze'] == 1
-				date_html << "<td class='btn-secondary'></td>"
-			elsif r.first['koyomi'] == ''
-				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false, @debug )
+	unless r.first
+		0.upto( 3 ) do |cc|
+			koyomi_c = '-'
+			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
+			onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
+			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
+			if rr.first
+				if rr.first['koyomi'] == ''
+					date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+				else
+					koyomi_c = rr.first['koyomi'].split( "\t" ).size
+					date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+				end
 			else
-				koyomi_c = r.first['koyomi'].split( "\t" ).size
-				date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
-		else
-			date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
 		end
+	else
+		4.times do date_html << "<td class='btn-secondary'></td>" end
 	end
 
 	date_html << "</tr>"
@@ -340,7 +343,7 @@ rate_html << "<div class='input-group input-group-sm'>"
 rate_html << "	<div class='input-group-prepend'>"
 rate_html << "		<span class='input-group-text' id='basic-addon1'>#{lp[22]}</span>"
 rate_html << "	</div>"
-rate_html << "	<input type='number' setp='0.1' id='ev' value='#{ev}' class='form-control'>"
+rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
 rate_html << "  <div class='input-group-append'>"
 rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
 if /^[UP]?\d{5}/ =~ code

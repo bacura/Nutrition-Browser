@@ -71,6 +71,7 @@ yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
 tdiv = cgi['tdiv'].to_i
+hh = cgi['hh'].to_i
 cm_mode = cgi['cm_mode']
 origin = cgi['origin']
 origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}" if origin == ''
@@ -80,6 +81,7 @@ if @debug
 	puts "mm:#{mm}<br>\n"
 	puts "dd:#{dd}<br>\n"
 	puts "tdiv:#{tdiv}<br>\n"
+	puts "hh:#{hh}<br>\n"
 	puts "cm_mode:#{cm_mode}<br>\n"
 	puts "origin:#{origin}<br>\n"
 	puts "<hr>\n"
@@ -106,11 +108,18 @@ end
 
 #### Save food
 if command == 'save'
+	hh = st_set[tdiv] if hh == 99
 	( yyyy_, mm_, dd_, tdiv_ ) = origin.split( ':' )
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
 	if r.first
 		koyomi_ = r.first['koyomi']
-
+		t = ''
+		a = koyomi_.split( "\t" )
+		a.each do |e|
+			aa = e.split( ':' )
+			t << "#{aa[0]}:#{aa[1]}:#{aa[2]}:#{hh}\t"
+		end
+		koyomi_ = t.chop
 
 		rr = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		if rr.first
@@ -155,27 +164,29 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
 
-	0.upto( 3 ) do |cc|
-		koyomi_c = '-'
-		r = mdb( "SELECT freeze, koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
-		onclick = "onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
-
-		if r.first
-			if r.first['freeze'] == 1
-				date_html << "<td class='btn-secondary'></td>"
-			elsif r.first['koyomi'] == ''
-				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
-			else
-				koyomi_c = r.first['koyomi'].split( "\t" ).size
-				if dd == c and tdiv == cc
-					date_html << "<td class='btn-warning' align='center' #{onclick}>#{koyomi_c}</td>"
+	r = mariadb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false )
+	unless r.first
+		0.upto( 3 ) do |cc|
+			koyomi_c = '-'
+			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
+			onclick = "onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
+			if rr.first
+				if rr.first['koyomi'] == ''
+					date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
 				else
-					date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+					koyomi_c = rr.first['koyomi'].split( "\t" ).size
+					if dd == c and tdiv == cc
+						date_html << "<td class='btn-warning' align='center' #{onclick}>#{koyomi_c}</td>"
+					else
+						date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+					end
 				end
+			else
+				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
-		else
-			date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
 		end
+	else
+		4.times do date_html << "<td class='btn-secondary'></td>" end
 	end
 
 	date_html << "</tr>"
@@ -228,13 +239,23 @@ select_html << "<select id='tdiv' class='custom-select custom-select-sm'>"
 		select_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
 	end
 end
-select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
+select_html << "</select>&nbsp;&nbsp;&nbsp;"
 
+select_html << "<select id='hh' class='custom-select custom-select-sm'>"
+select_html << "<option value='99'>時刻</option>"
+0.upto( 23 ) do |c|
+	if c == hh
+		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
+	else
+		select_html << "<option value='#{c}'>#{c}</option>"
+	end
+end
+select_html << "</select>"
 
 
 #### Return button
 return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn()\">#{lp[11]}</button>"
-if command == 'modify' || command == 'move'
+if command == 'save' || cm_mode == 'move'
 	return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[11]}</button>"
 end
 
