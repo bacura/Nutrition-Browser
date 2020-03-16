@@ -167,9 +167,9 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-
 #### Getting Cookie
 cgi = CGI.new
+
 uname, uid, status, aliasu, language = login_check( cgi )
 status = 0 unless uname
 lp = lp_init( 'index', language )

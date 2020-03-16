@@ -188,56 +188,38 @@ def referencing( words, uname )
 	# Recoding query & converting by DIC
 	true_query = []
 	query_word.each do |e|
-		mdb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false, status )
-
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false, status )
+		mdb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false, @debug )
 		if r.first
-			true_query << r.first['org_name']
+			rr = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class1='#{r.first['org_name']}' OR class2='#{r.first['org_name']}' OR class3='#{r.first['org_name']}';", false, @debug )
+			if rr.first
+				rr.each do |ee|
+					true_query << ee['name']
+				end
+			else
+				true_query << r.first['org_name']
+			end
 		else
 			true_query << e
 		end
 	end
 	if @debug
-		puts "query_word: #{query_word}<br>"
-		puts "true_query: #{true_query}<br>"
+		puts "query_word:"
+		puts query_word
+		puts "true_query:"
+		puts true_query
 		puts "<hr>"
 	end
 
 	# Referencing recipe code
-	result_codes_hash = Hash.new
+	recipe_code_list = []
 	true_query.each do |e|
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEIF} WHERE words='#{e}';", false, status )
-		if r.first
-			a = r.first['codes'].split( ':' )
-			a.each do |ee|
-				if result_codes_hash[ee]
-					result_codes_hash[ee] += 1
-				else
-					result_codes_hash[ee] = 1
-				end
-			end
-			new_count = r.first['count'].to_i + 1
-			mdb( "UPDATE #{$MYSQL_TB_RECIPEIF} SET count='#{new_count} 'WHERE words='#{e}';", false, status )
-		else
-			rr = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE words='#{e}';", false, status )
-			if rr.first
-				mdb( "INSERT INTO #{$MYSQL_TB_RECIPEIF} SET words='#{rr.first['words']}', count='#{rr.first['count'].to_i + 1}', codes='#{rr.first['codes']}';", false, status )
-				a = rr.first['codes'].split( ':' )
-				a.each do |ee|
-					if result_codes_hash[ee]
-						result_codes_hash[ee] += 1
-					else
-						result_codes_hash[ee] = 1
-					end
-				end
-			end
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e}' AND ( user='#{uname}' OR public='1' );", false, @debug )
+		r.each do |ee|
+			recipe_code_list << ee['code']
 		end
 	end
-
-	# Sorting recipe codes
-	result_codes_sort = result_codes_hash.sort_by{|k, v| -v }
-	recipe_code_list = []
-	result_codes_sort.each do |e| recipe_code_list << e[0] end
+	recipe_code_list.uniq!
 
 	return recipe_code_list
 end
@@ -313,8 +295,8 @@ else
 
 	r = mdb( "SELECT reciperr FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, status )
 	if r.first['reciperr'] != '' && r.first['reciperr'] != nil
-		recipe_code_list = r.first['reciperr'].split( ':' )
-		words = recipe_code_list.shift
+		recipe_code_list = referencing( r.first['reciperr'], uname )
+		words = r.first['reciperr']
 	end
 end
 if @debug
@@ -511,13 +493,17 @@ recipe_solid.each do |e|
 
 		recipe_html << "</td>"
 		recipe_html << "<td>"
-		recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
-		if status >= 2
+		if status >= 2 && e['user'] == uname
+			recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
+		end
+		if status >= 2 && e['user'] == uname
 			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[21]}</button>"
 		end
 		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect_BWL2( '#{e['code']}' )\">#{lp[9]}</button>"
 		recipe_html << "	<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[19]}</button>"
-		recipe_html << "	<button class='btn btn-primary btn-sm' type='button' onclick=\"\">#{lp[20]}</button>&nbsp;"
+		if status >= 2 && e['user'] == uname
+			recipe_html << "	<button class='btn btn-primary btn-sm' type='button' onclick=\"\">#{lp[20]}</button>&nbsp;"
+		end
 		recipe_html << "</td>"
 
 		if e['user'] == uname
@@ -582,5 +568,5 @@ puts html
 #### 検索設定の保存
 recipel = "#{page}:#{range}:#{type}:#{role}:#{tech}:#{time}:#{cost}"
 reciperr = ''
-reciperr = "#{words}:#{recipe_code_list.join( ':' )}" if recipe_code_list.size > 0
+reciperr = "#{words}" if recipe_code_list.size > 0
 mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{uname}';", false, status )

@@ -169,18 +169,11 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'cboard', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( 'cboard' )
 
 
 #### POSTデータの取得
@@ -208,9 +201,10 @@ end
 
 
 #### CBの読み込み
-q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{uname}';"
+q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';" if command == 'load'
 r = mdb( q, false, @debug )
+
 
 code = r.first['code']
 recipe_name = r.first['name']
@@ -358,7 +352,7 @@ when 'add'
 		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}';", false, @debug )
 		food_list << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
 	elsif /[PU]?\d{5}/ =~ add_food_no
-		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{uname}' AND public!='#{2}' ) OR public='1' );", false, @debug )
+		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{user.name}' AND public!='#{2}' ) OR public='1' );", false, @debug )
 		food_list << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
 	else
 		food_list << Food.new( '+', '-', '-', '-', '0', add_food_no, '-', '-' )
@@ -393,7 +387,7 @@ when 'dish'
 
 #### レシピデータのクイック保存
 when 'quick_save'
-	 mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{$DATETIME}', dish='#{dish_num}' WHERE user='#{uname}' and code='#{code}';", false, @debug )
+	 mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{$DATETIME}', dish='#{dish_num}' WHERE user='#{user.name}' and code='#{code}';", false, @debug )
 
 
 #### GN変換
@@ -430,7 +424,7 @@ when 'seasoning'
 	target_weight = total_weight if target_weight == 0
 	seasoning_rate = target_weight / 100
 
-	r = mdb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{seasoning}';", false, @debug )
+	r = mdb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{seasoning}';", false, @debug )
 	if r.first
 		 r.first['sum'].split( "\t" ).each do |e|
 			t = Food.new( nil, nil, nil, nil, nil, nil, nil, nil )
@@ -467,7 +461,7 @@ when 'eadj'
 	energy_adj = cgi['energy_adj'].to_i
 	puts "energy_adj:#{energy_adj}<br>" if @debug
 
-	energy_ctrl, energy_checked, check_all = energy_calc( food_list, uname, dish_num )
+	energy_ctrl, energy_checked, check_all = energy_calc( food_list, user.name, dish_num )
 #	break if ( energy_ctrl - energy_checked ) < 10
 	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
 	food_list.size.times do |c|
@@ -512,7 +506,7 @@ end
 
 #### Getting food weight & food energy
 weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
-energy_ctrl, energy_checked = energy_calc( food_list, uname, dish_num )
+energy_ctrl, energy_checked = energy_calc( food_list, user.name, dish_num )
 weitht_adj = weight_ctrl if weitht_adj == 0
 energy_adj = energy_ctrl if energy_adj == 0
 
@@ -532,7 +526,7 @@ if false
 else
 	food_list.each do |e|
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}';"
-		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{uname}';" if /^U\d{5}/ =~ e.no
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{user.name}';" if /^U\d{5}/ =~ e.no
 		r = db.query( q )
 		food_tag << bind_tags( r ) if r.first
 		food_tag << '' if e.no == '-' || e.no == '+'
@@ -543,7 +537,7 @@ db.close
 
 #### 調味％セット
 seasoning_html = ''
-r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and role='100';", false, @debug )
+r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100';", false, @debug )
 seasoning_html << "<div class='input-group input-group-sm'>"
 seasoning_html << "<div class='input-group-prepend'>"
 seasoning_html << "<label class='input-group-text' for='seasoning'>#{lp[6]}</label>"
@@ -561,7 +555,7 @@ seasoning_html << "</div>"
 
 #### Sasshi button
 html_sasshi = ''
-html_sasshi = "<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[28]}</button>" if status >= 3
+html_sasshi = "<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[28]}</button>" if user.status >= 3
 
 
 #### 新しいまな板表示
@@ -723,7 +717,7 @@ food_list.each do |e|
 	food_key = ''
   	unless e.no == '-' || e.no == '+'
   		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e.no}';"
-		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{uname}';" if /^U\d{5}/ =~ e.no
+		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.no}' AND user='#{user.name}';" if /^U\d{5}/ =~ e.no
 		r = mdb( q, false, @debug )
 
 		if r.first
@@ -809,4 +803,4 @@ sum_new = ''
 food_list.each do |e| sum_new << "#{e.no}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.check}:#{e.init}:#{e.rr}:#{e.ew}\t" end
 sum_new.chop!
 
-mdb( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{uname}';", false, @debug )
+mdb( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{user.name}';", false, @debug )

@@ -24,8 +24,28 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #DEFINITION
 #==============================================================================
-def meals( meal, uname )
 
+####
+def sub_menu( lp )
+	html = <<-"MENU"
+<div class='container-fluid'>
+	<div class='row'>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">#{lp[23]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">#{lp[24]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[25]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[26]}</button></div>
+		<div class='col-2'></div>
+	</div>
+</div>
+
+MENU
+	puts html
+	exit()
+end
+
+
+####
+def meals( meal, uname )
 	mb_html = '<ul>'
 	a = meal.split( "\t" )
 	a.each do |e|
@@ -45,7 +65,11 @@ def meals( meal, uname )
 			mb_html << "<li>#{r.first['name']}</li>"
 		elsif /\-f\-/ =~ aa[0]
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
-			mb_html << "<li style='list-style-type: circle'>#{r.first['name']}</li>"
+			if r.first
+				mb_html << "<li style='list-style-type: circle'>#{r.first['name']}</li>"
+			else
+				mb_html << "<li>Error: #{aa[0]}</li>"
+			end
 		elsif /\-/ =~ aa[0]
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
 			mb_html << "<li>#{r.first['name']}</li>"
@@ -63,218 +87,135 @@ end
 
 
 ####
-def get_starty( uname )
-	start_year = $TIME_NOW.year
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
+class Nutrition_calc
+	attr_reader :results, :fn_set, :weight_set
+
+	def initialize( uname, fn_set, weight_set )
+		@uname = uname
+		@fn_set = fn_set
+		@weight_set = weight_set
+		@results = Hash.new
+		@results.default = BigDecimal( 0 )
 	end
 
-	return start_year
-end
+	def load_freeze( fzcode )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}';", false, false )
+		if r.first
+			5.upto( 65 ) do |c|
+				@results[$FCT_ITEM[c]] = BigDecimal( r.first[$FCT_ITEM[c]] )
+			end
 
+			return true
+		end
 
-#### Multi calc
-def multi_calc( uname, yyyy, mm, dd, fc_items )
-	results = ''
-	some_set = ''
-	fct_total = Hash.new
-	fct_total.default = BigDecimal( 0 )
-	fzcode = ''
-	freeze_flag = false
+		return false
+	end
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv!='4';", false, @debug )
-	if r.first
-		fzcode = r.first['fzcode']
-		r.each do |e|
+	def load_fix( code )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{@uname}' AND code='#{code}';", false, false )
+		if r.first
+			5.upto( 65 ) do |c|
+				@results[$FCT_ITEM[c]] += BigDecimal( num_opt( r.first[$FCT_ITEM[c]], 100, 1, $FCT_FRCT[$FCT_ITEM[c]] + 3 ))
+			end
+		end
+	end
 
-			menu_set = []
-			code_set = []
-			rate_set = []
-			unit_set = []
+	def expand_menu( code )
+		code_set = []
+		r = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{@uname}' AND code='#{code}';", false, false )
+		a = r.first['meal'].split( "\t" )
+		a.each do |e| code_set << e end
 
-			break if freeze_flag
-			if e['freeze'] == 1
-				rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}';", false, @debug )
-				if rr.first
-					5.upto( 65) do |c|
-						fct_total[$FCT_ITEM[c]] = BigDecimal( rr.first[$FCT_ITEM[c]] )
-					end
-					freeze_flag = true
-				end
+		return code_set
+	end
+
+	def expand_recipe( code, rate, unit )
+		weight_set_ = []
+		recipe_total_weight = BigDecimal( 0 )
+
+		r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@uname}' AND code='#{code}';", false, false )
+		a = r.first['sum'].split( "\t" )
+		a.each do |e|
+			( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = e.split( ':' )
+
+			if sum_no != '+' && sum_no != '-'
+				@fn_set << sum_no
+				sum_ew = sum_weight if sum_ew == nil
+				weight_set_ << ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
+				recipe_total_weight += ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
+			end
+		end
+
+		if unit == 99
+			weight_set_.map! do |x| x * rate / 100 end
+		else
+			weight_set_.map! do |x| x * rate / recipe_total_weight end
+		end
+		@weight_set.concat( weight_set_ )
+	end
+
+	def calculate( fn_set, weight_set )
+		fn_set.size.times do |c|
+			query = ''
+			if /^P/ =~ fn_set[c]
+				query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[c]}';"
+			elsif /^U/ =~ fn_set[c]
+				query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[c]}' AND user='#{@uname}';"
 			else
-				a = e['koyomi'].split( "\t" )
-				a.each do |ee|
-					( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( ':' )
-					code_set << koyomi_code
-					rate_set << koyomi_rate
-					unit_set << koyomi_unit
-				end
+				query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{fn_set[c]}';"
+			end
 
-				code_set.size.times do |c|
-					code = code_set[c]
-					rate = BigDecimal( rate_set[c] )
-					unit = unit_set[c]
-
-#### temporary ####
-					if unit == 'g'
-						unit = 0
-					elsif unit == '%'
-						unit = 99
-					else
-						unit = unit.to_i
-					end
-#### temporary ####
-
-					if /\?/ =~ code
-						some_set << "+#{$SOMETHING[code]}&nbsp;"
-					elsif /\-f\-/ =~ code
-						rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
-						if rr.first
-							5.upto( 65) do |cc|
-								fct_total[$FCT_ITEM[cc]] += BigDecimal( num_opt( rr.first[$FCT_ITEM[cc]], 100, 1, $FCT_FRCT[$FCT_ITEM[cc]] + 3 ))
-							end
-						end
-					else
-						recipe_set = []
-						fn_set = []
-						weight_set = []
-						if /\-m\-/ =~ code
-							rr = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
-							a = rr.first['meal'].split( "\t" )
-							a.each do |e| recipe_set << e end
-						end
-
-						if recipe_set.size == 0
-							recipe_set << code
-						end
-						recipe_set.size.times do |cc|
-							recipe_total_weight = BigDecimal( 0 )
-
-							if /\-r\-/ =~ recipe_set[cc] || /\w+\-\h{4}\-\h{4}/ =~ recipe_set[cc]
-#								p 'recipe'
-								rr = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{recipe_set[cc]}';", false, @debug )
-								a = rr.first['sum'].split( "\t" )
-								a.each do |eee|
-									( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = eee.split( ':' )
-
-									if sum_no != '+' && sum_no != '-'
-										fn_set << sum_no
-										sum_ew = sum_weight if sum_ew == nil
-										weight_set << ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
-										recipe_total_weight += ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
-									end
-								end
-
-								if unit == 99
-									weight_set.map! do |x| x * rate / 100 end
-								else
-									weight_set.map! do |x| x * rate / recipe_total_weight end
-								end
-							end
-						end
-
-						# food
-						if fn_set.size == 0
-							fn_set << code
-							weight_set << rate
-						end
-
-						#
-						if unit != 0 && unit != 99
-							fn_set.size.times do |cc|
-								weight_set[cc] = unit_weight( weight_set[cc], unit, fn_set[cc] )
-							end
-						end
-
-						fn_set.size.times do |cc|
-							query = ''
-							if /^P/ =~ fn_set[cc]
-								query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[cc]}';"
-							elsif /^U/ =~ fn_set[cc]
-								query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[cc]}' AND user='#{uname}';"
-							else
-								query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{fn_set[cc]}';"
-							end
-
-							rr = mdb( query, false, @debug )
-							if rr.first
-								5.upto( 65) do |ccc|
-									t = convert_zero( rr.first[$FCT_ITEM[ccc]] )
-									fct_total[$FCT_ITEM[ccc]] += BigDecimal( num_opt( t, weight_set[cc], 1, $FCT_FRCT[$FCT_ITEM[ccc]] + 3 ))
-								end
-							end
-						end
-					end
+			r = mdb( query, false, false )
+			if r.first
+				5.upto( 65 ) do |cc|
+					t = convert_zero( r.first[$FCT_ITEM[cc]] )
+					@results[$FCT_ITEM[cc]] += BigDecimal( num_opt( t, weight_set[c], 1, $FCT_FRCT[$FCT_ITEM[cc]] + 3 ))
 				end
 			end
 		end
 	end
 
-	unless freeze_flag
-		sub_query = ''
-		fct_total.each do |k, v|
-			t = v.round( $FCT_FRCT[k] )
-			fct_total[k] = t
-			sub_query << " #{k}='#{t}',"
+	def total_html( fc_items )
+		html = ''
+		fc_items.each do |e|
+			if e == 'ENERC_KCAL'
+				html << "#{$FCT_NAME[e]}[#{@results[e].to_i}]&nbsp;&nbsp;&nbsp;&nbsp;"
+			else
+				html << "#{$FCT_NAME[e]}[#{@results[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;"
+			end
 		end
-		sub_query.chop!
 
-		r = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}';", false, @debug )
-		if r.first && fzcode != ''
-			mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{uname}' AND code='#{fzcode}';", false, @debug )
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}}';", false, @debug )
-		else
-			new_fzcode = generate_code( uname, 'z' )
-			mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET user='#{uname}', code='#{new_fzcode}', #{sub_query};", false, @debug )
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{new_fzcode}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
-		end
+		return html
 	end
 
-	fc_items.each do |e| results << "#{$FCT_NAME[e]}[#{fct_total[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;" end
-	results << "#{some_set}&nbsp;&nbsp;&nbsp;&nbsp;" unless some_set == ''
+	def pfc_html()
+		html = ''
+		pfc_p = ( @results['PROT'] * 4 / @results['ENERC_KCAL'] * 100 ).round( 1 )
+		pfc_f = ( @results['FAT'] * 4 / @results['ENERC_KCAL'] * 100 ).round( 1 )
+		pfc_c = 100 - pfc_p - pfc_f
+		pfc_c = 0 if pfc_c == 100
+		html << "<span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = <span style='color:crimson'>#{pfc_p.to_f}</span> : <span style='color:green'>#{pfc_f.to_f}</span> : <span style='color:blue'>#{pfc_c.to_f}</span>"
 
-	if fct_total['PROT'] == 0
-		pfc_p = 0
-	else
-		pfc_p = ( fct_total['PROT'] * 4 / fct_total['ENERC_KCAL'] * 100 ).round( 1 )
+		return html
 	end
-	if fct_total['PROT'] == 0
-		pfc_f = 0
-	else
-		pfc_f = ( fct_total['FAT'] * 4 / fct_total['ENERC_KCAL'] * 100 ).round( 1 )
-	end
-	pfc_c = 100 - pfc_p - pfc_f
-	results << "<span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = <span style='color:crimson'>#{pfc_p.to_f}</span> : <span style='color:green'>#{pfc_f.to_f}</span> : <span style='color:blue'>#{pfc_c.to_f}</span>"
-
-
-	return results
 end
+
 
 #==============================================================================
 # Main
 #==============================================================================
 cgi = CGI.new
-uname, uid, status, aliaseu, language = login_check( cgi )
 
 html_init( nil )
 
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( 'koyomi' )
+
 #### Guild member check
-if status < 3
+if user.status < 3
 	puts "Guild member error."
 	exit
-end
-
-
-lp = lp_init( 'koyomi', language )
-start_year = get_starty( uname )
-if @debug
-	puts "uname:#{uname}<br>\n"
-	puts "status:#{status}<br>\n"
-	puts "aliaseu:#{aliaseu}<br>\n"
-	puts "language:#{language}<br>\n"
-	puts "<hr>\n"
 end
 
 
@@ -297,41 +238,15 @@ if @debug
 end
 
 
-#### General menu
-if command == 'menu'
-html = <<-"MENU"
-<div class='container-fluid'>
-	<div class='row'>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">#{lp[23]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">#{lp[24]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[25]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[26]}</button></div>
-		<div class='col-2'></div>
-	</div>
-</div>
-
-MENU
-	puts html
-	exit()
-end
+#### Sub menu
+sub_menu ( lp ) if command == 'menu'
 
 
-#### Getting date
-date = Date.today
-date = Date.new( yyyy, mm, dd ) unless yyyy == 0
-date_first = Date.new( date.year, date.month, 1 )
-first_week = date_first.wday
-last_day = Date.new( date.year, date.month, -1 ).day
-if yyyy == 0
- 	yyyy = date.year
-	mm = date.month
-	dd = date.day
-end
-if @debug
-	puts "date:#{date.to_time}<br>\n"
-	puts "first_week:#{first_week}<br>\n"
-	puts "last_day:#{last_day}<br>\n"
-end
+#### Date & calendar config
+calendar = Calendar.new( user.name, yyyy, mm, dd )
+calendar.debug if @debug
+sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
+sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
 
 ####
@@ -339,33 +254,33 @@ freeze_all_checked = ''
 case command
 when 'freeze'
 	if freeze_check == 'true'
-		r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
+		r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
 		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
 		else
-	   		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', freeze='1', date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
+	   		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', freeze='1', date='#{sql_ymd}';", false, @debug )
 		end
 	elsif freeze_check == 'false'
-		r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
+		r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
 		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
 		end
 	end
 when 'freeze_all'
 	if freeze_check_all == 'true'
-		1.upto( last_day ) do |c|
-			r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false, @debug )
+		1.upto( calendar.ddl ) do |c|
+			r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 			if r.first
 				if r.first['freeze'] != 1
-					mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false, @debug )
+					mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 				end
 			else
-	   			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', freeze='1', date='#{yyyy}-#{mm}-#{c}';", false, @debug )
+	   			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', freeze='1', date='#{sql_ym}-#{c}';", false, @debug )
 			end
 		end
 		freeze_all_checked = 'CHECKED'
 	elsif freeze_check_all == 'false'
-		 mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{uname}' AND ( date BETWEEN '#{yyyy}-#{mm}-1' AND '#{yyyy}-#{mm}-#{last_day}' );", false, @debug )
+		 mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", false, @debug )
 	end
 end
 
@@ -374,7 +289,7 @@ end
 calc_html_set = ['']
 fc_items = []
 fc_names = []
-r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='簡易表示用';", false, @debug )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
 if r.first
 	palette = r.first['palette']
 	palette.size.times do |c|
@@ -385,10 +300,108 @@ else
 end
 fc_items.each do |e| fc_names << $FCT_NAME[e] end
 
-1.upto( last_day ) do |c|
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false, @debug )
+1.upto( calendar.ddl ) do |c|
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	if r.first
-		calc_html_set << multi_calc( uname, yyyy, mm, c, fc_items )
+		calc = Nutrition_calc.new( user.name, [], [] )
+		some_set = ''
+		fzcode = r.first['fzcode']
+		freeze_flag = false
+		r.each do |e|
+			break if freeze_flag
+
+			if e['tdiv'] != 4
+				code_set = []
+				rate_set = []
+				unit_set = []
+				if e['freeze'] == 1
+					freeze_flag = calc.load_freeze( fzcode )
+				else
+					a = e['koyomi'].split( "\t" )
+					a.each do |ee|
+						( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( ':' )
+						code_set << koyomi_code
+						rate_set << koyomi_rate
+						unit_set << koyomi_unit
+					end
+					code_set.size.times do |cc|
+						code = code_set[cc]
+						rate = BigDecimal( rate_set[cc] )
+						unit = unit_set[cc]
+
+	#### temporary ####
+						if unit == 'g'
+							unit = 0
+						elsif unit == '%'
+							unit = 99
+						else
+							unit = unit.to_i
+						end
+	#### temporary ####
+						if /\?/ =~ code
+							some_set << "+#{$SOMETHING[code]}&nbsp;"
+						elsif /\-f\-/ =~ code
+							rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
+							calc.load_fix( code )
+						else
+							recipe_set = []
+							fn_set = []
+							weight_set = []
+							if /\-m\-/ =~ code
+								recipe_set = calc.expand_menu( code )
+							end
+
+							recipe_set << code if recipe_set.size == 0
+							recipe_set.size.times do |ccc|
+								if /\-r\-/ =~ recipe_set[ccc] || /\w+\-\h{4}\-\h{4}/ =~ recipe_set[ccc]
+									calc.expand_recipe( recipe_set[ccc], rate, unit )
+									fn_set = calc.fn_set
+									weight_set = calc.weight_set
+								end
+							end
+
+							# food
+							if fn_set.size == 0
+								fn_set << code
+								weight_set << rate
+							end
+							if unit != 0 && unit != 99
+								fn_set.size.times do |ccc|
+									weight_set[ccc] = unit_weight( weight_set[ccc], unit, fn_set[ccc] )
+								end
+							end
+
+							calc.calculate( fn_set, weight_set )
+						end
+					end
+				end
+			end
+		end
+
+		unless freeze_flag
+			sub_query = ''
+			calc.results.each do |k, v|
+				t = v.round( $FCT_FRCT[k] )
+				calc.results[k] = t
+				sub_query << " #{k}='#{t}',"
+			end
+			sub_query.chop!
+
+			rr = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
+			if rr.first && fzcode != ''
+				mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
+				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
+			else
+				new_fzcode = generate_code( user.name, 'z' )
+				mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET user='#{user.name}', code='#{new_fzcode}', #{sub_query};", false, @debug )
+				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{new_fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
+			end
+		end
+		calc_html = ''
+		calc_html << calc.total_html( fc_items )
+		calc_html << "#{some_set}&nbsp;&nbsp;&nbsp;&nbsp;" unless some_set == ''
+		calc_html << calc.pfc_html()
+		calc_html_set << calc_html
 	else
 		calc_html_set << ''
 	end
@@ -397,21 +410,21 @@ end
 
 ####
 date_html = ''
-week_count = first_week
+week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
-1.upto( last_day ) do |c|
+1.upto( calendar.ddl ) do |c|
 	freeze_flag = false
 	koyomi_tmp = []
 	freeze_checked = ''
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	if r.first
 		r.each do |e|
 			koyomi_tmp[e['tdiv']] = e['koyomi'] if e['tdiv'] != nil
 			freeze_flag = true if r.first['freeze'] == 1
 		end
 	else
-		5.times do koyomi_tmp << '' end
+		5.times do koyomi_tmp << nil end
 	end
 
 	freeze_checked = 'CHECKED' if freeze_flag
@@ -423,23 +436,22 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	else
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
-
 	4.times do |cc|
-		if koyomi_tmp[cc] == '' || koyomi_tmp[cc] == nil
+		if koyomi_tmp[cc] == nil
 			date_html << "<td #{onclick}>-</td>"
 		else
-			meal_block = meals( koyomi_tmp[cc], uname )
+			meal_block = meals( koyomi_tmp[cc], user.name )
+
 			date_html << "<td #{onclick}>#{meal_block}</td>"
 		end
 	end
-
-	if koyomi_tmp[4] == '' || koyomi_tmp[4] == nil
+	if koyomi_tmp[4] == nil
 		date_html << "<td #{onclick}>-</td>"
 	else
 		date_html << "<td #{onclick}>#{koyomi_tmp[4]}</td>"
 	end
 
-	date_html << "<td><input type='checkbox' id='freeze_check#{c}' onChange=\"freezeKoyomi( '#{yyyy}', '#{mm}', '#{c}' )\" #{freeze_checked}></td>"
+	date_html << "<td><input type='checkbox' id='freeze_check#{c}' onChange=\"freezeKoyomi( '#{calendar.yyyy}', '#{calendar.mm}', '#{c}' )\" #{freeze_checked}></td>"
 	date_html << "</tr>"
 
 	if calc_html_set[c] == '' || calc_html_set[c] == nil
@@ -447,7 +459,6 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	else
 		date_html << "<tr id='nutrition#{c}' class='table-borderless'>"
 	end
-
 	date_html << "<td></td>"
 	date_html << "<td colspan='5'>#{calc_html_set[c]}</td>"
 	date_html << "<td></td>"
@@ -461,8 +472,8 @@ end
 select_html = ''
 select_html << "<div class='input-group input-group-sm'>"
 select_html << "<select id='yyyy' class='custom-select' onChange=\"changeKoyomi_BW1()\">"
-start_year.upto( date.year + 1 ) do |c|
-	if c == yyyy
+calendar.yyyyf.upto( calendar.yyyyt + 1 ) do |c|
+	if c == calendar.yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
 		select_html << "<option value='#{c}'>#{c}</option>"
@@ -475,7 +486,7 @@ select_html << "</div>"
 select_html << "<div class='input-group input-group-sm'>"
 select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomi_BW1()\">"
 1.upto( 12 ) do |c|
-	if c == mm
+	if c == calendar.mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
 		select_html << "<option value='#{c}'>#{c}</option>"
@@ -491,7 +502,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-2'><h5>#{lp[8]}:食事</h5></div>
 		<div class='col-2'>
-			<a href='#day#{date.day}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
+			<a href='#day#{calendar.ddt}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
 			<button class='btn btn-sm btn-outline-light' onclick="">←</button>
 			<button class='btn btn-sm btn-outline-light' onclick="">今日</button>
 			<button class='btn btn-sm btn-outline-light' onclick="">→</button>
@@ -502,7 +513,7 @@ html = <<-"HTML"
 		<div class='col-3'>
 		</div>
 		<div class='col-2'>
-			<button class='btn btn-sm btn-success' onclick="initKoyomiex_BW1( '#{yyyy}', '#{mm}' )">#{lp[22]}</button>
+			<button class='btn btn-sm btn-success' onclick="initKoyomiex_BW1( '#{calendar.yyyy}', '#{calendar.mm}' )">#{lp[22]}</button>
 		</div>
 	</div>
 	<div class='row'>
@@ -519,7 +530,7 @@ html = <<-"HTML"
      		<th align='center'>#{lp[14]}</th>
      		<th align='center'>#{lp[15]}</th>
      		<th align='center'>#{lp[16]}</th>
-     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll( '#{yyyy}', '#{mm}' )" #{freeze_all_checked}>&nbsp;#{lp[17]}</th>
+     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll( '#{calendar.yyyy}', '#{calendar.mm}' )" #{freeze_all_checked}>&nbsp;#{lp[17]}</th>
     	</tr>
   	</thead>
 	#{date_html}

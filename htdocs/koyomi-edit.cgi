@@ -77,8 +77,13 @@ def meals( e, lp, uname, freeze_flag )
 			onclick = ""
 		elsif /\-f\-/ =~ aa[0]
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
-			item_name = rr.first['name']
-			onclick = " onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\"" if freeze_flag == 0
+			if rr.first
+				item_name = rr.first['name']
+				onclick = " onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\"" if freeze_flag == 0
+			else
+				item_name = "Error: #{aa[0]}"
+				onclick = ''
+			end
 		elsif /\-/ =~ aa[0]
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
 			item_name = rr.first['name']
@@ -381,11 +386,6 @@ r.each do |e|
 		koyomi_html[e['tdiv']] << multi_calc_sub(  uname, yyyy, mm, dd, e['tdiv'], fc_items )
 	end
 end
-
-
-
-
-
 
 
 ####

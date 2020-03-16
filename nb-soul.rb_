@@ -70,7 +70,7 @@ $FCT_FRCT = {'FG'=>nil,     'FN'=>nil,        'SID'=>nil,       'Tagnames'=>nil,
 
 $RECIPE_TYPE = ['未設定','和食','洋食','中華','イタリアン','フレンチ','エスニック']
 $RECIPE_ROLE = ['未設定','主食','主菜','副菜','汁物','デザート・おやつ','飲み物','調味料']
-$RECIPE_TECH = ['未設定','煮る・茹でる','焼く・炙る','炒める・ソテー','蒸す','揚げる','和える','生・非加熱','冷蔵・冷凍','オーブン・グリル','電子レンジ']
+$RECIPE_TECH = ['未設定','茹でる・煮る・炊く','直火・炙る','炒める・ソテー','蒸す','揚げる','和える','生・非加熱','冷蔵・冷凍','オーブン・グリル','電子レンジ']
 $RECIPE_TIME = ['未設定','～5','～10','～15','～20','～30','～45','～60','～120']
 $RECIPE_COST = ['未設定','50円未満','100円未満','150円未満','200円未満','300円未満','400円未満','500円未満','600円未満','800円未満','1000円未満', '1000円以上']
 
@@ -327,9 +327,7 @@ end
 def login_check( cgi )
 	cookie_name = cgi.cookies['NAME'].first
  	cookie_uid = cgi.cookies['UID'].first
-
-  r = mdb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true, $DEBUG )
-
+  r = mdb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true, true )
   if r.first
     return cookie_name, cookie_uid, r.first['status'].to_i, r.first['aliasu'], $DEFAULT_LP
   else
@@ -426,7 +424,7 @@ def insert_recipe( uname, food_no, food_weight )
 
   code = uname[0, 2]
   code = "x" + uname[0, 1] if code == nil
-  code = "#{code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
+  code = "#{code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
   sum = ''
   if food_no
       sum = "#{food_no}:#{food_weight}:g:#{food_weight}:"
@@ -445,7 +443,7 @@ def generate_code( uname, c )
 
   code = uname[0, 2]
   code = "x" + uname[0, 1] if code == nil
-  code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
+  code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
 
   return code
 end
@@ -594,8 +592,206 @@ end
 #### from unit volume to weight
 def unit_weight( vol, uc, fn )
   r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
-  a = r.first['unitc'].split( ':' )
-  w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )
+  if r.first
+    if r.first['unitc']
+      a = r.first['unitc'].split( ':' )
+      if  a[uc.to_i] == ''
+        return 0
+      else
+        w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )
+        return w
+      end
+    end
+  end
 
-  return w
+  return 0
+end
+
+
+#==============================================================================
+# CLASS
+#==============================================================================
+
+class User
+  attr_reader :name, :uid, :status, :alias, :language
+
+  def initialize( cgi )
+    @name = cgi.cookies['NAME'].first
+    @uid = cgi.cookies['UID'].first
+
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{@name}' and cookie='#{@uid}' and status>0;" )
+    db.close
+    if res.first
+      @status = res.first['status'].to_i
+      @alias = res.first['aliasu']
+      @language = $DEFAULT_LP
+    else
+      @name = nil
+      @uid = nil
+      @status = nil
+      @alias = nil
+      @language = $DEFAULT_LP
+    end
+  end
+
+  def language( script )
+    lp = [nil]
+    f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{@language}", "r" )
+    f.each do |line| lp << line.chomp.force_encoding( 'UTF-8' ) end
+    f.close
+
+    return lp
+  end
+
+  def debug()
+    puts "name:#{@name}<br>"
+    puts "uid:#{@uid}<br>"
+    puts "status:#{@status}<br>"
+    puts "aliase:#{@aliase}<br>"
+    puts "language:#{@language}<br>"
+    puts "<hr>"
+  end
+end
+
+
+####
+class Calendar
+  attr_reader :yyyy, :yyyyt, :yyyyf, :mm, :dd, :ddt, :ddl, :wf
+
+  def initialize( uname, yyyy, mm, dd )
+    @yyyy = yyyy
+    @mm = mm
+    @dd = dd
+    d = Date.today
+    @yyyyt = d.year
+    @ddt = d.day
+    d = Date.new( @yyyy, @mm, @dd ) unless @yyyy == 0
+    @wf = Date.new( d.year, d.month, 1 ).wday
+    @ddl = Date.new( d.year, d.month, -1 ).day
+
+    if @yyyy == 0
+      @yyyy = d.year
+      @mm = d.month
+      @dd = d.day
+    end
+
+    @yyyyf = $TIME_NOW.year
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+
+    res = db.query( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';" )
+    if res.first['koyomiy']
+      a = res.first['koyomiy'].split( ':' )
+      @yyyyf = a[0].to_i if a[0].to_i != 0
+    end
+  end
+
+  def debug()
+    puts "calender.yyyy:#{@yyyy}<br>"
+    puts "calender.yyyyt:#{@yyyyt}<br>"
+    puts "calender.yyyyf:#{@yyyyf}<br>"
+    puts "calender.mm:#{@mm}<br>"
+    puts "calender.dd:#{@dd}<br>"
+    puts "calender.ddt:#{@ddt}<br>"
+    puts "calender.ddl:#{@ddl}<br>"
+    puts "calender.wf:#{@wf}<br>"
+  end
+end
+
+
+class Config
+  attr_reader :x
+
+  def initialize()
+  end
+end
+
+
+class Sum
+  attr_accessor :code, :name, :dish, :protect, :fn, :weight, :unit, :unitv, :check, :init, :rr, :ew
+
+  def initialize()
+    @code = nil
+    @name = nil
+    @dish = 1
+    @protect = 0
+    @fn = nil
+    @weight = 0
+    @unit = 0
+    @unitv = 0
+    @check = 0
+    @init = ''
+    @rr = 1.0
+    @ew = 0
+  end
+
+
+  def load_recipe( code )
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';" )
+    db.close
+
+    @code = res.first['code']
+    @name = res.first['name']
+    @dish = res.first['dish'].to_i if dish == nil
+    @protect = res.first['protect'].to_i
+    sum = res.first['sum']
+    sum.split( "\t" ).each do |e|
+      t = e.split( ':' )
+      @fn = t[0]
+      @weight = t[1]
+      @unit = t[2]
+      @unitv = t[3]
+      @check = t[4]
+      @init = t[5]
+      if t[6] == nil || t[6] == ''
+        @rr = 1.0
+      elsif t[6].to_f > 1
+        @rr = 1.0
+      elsif t[6].to_f < 0
+        @rr = 0.0
+      else
+        @rr = t[6]
+      end
+      @ew = t[7]
+    end
+  end
+
+  def debug()
+    puts "code:#{code}<br>"
+    puts "recipe_name:#{recipe_name}<br>"
+    puts "dish_num:#{dish_num}<br>"
+    puts "protect:#{protect}<br>"
+    puts "sum:#{sum}<br>"
+    puts "<hr>"
+  end
+
+end
+
+
+
+
+
+
+class Recipe
+  attr_reader :x
+
+  def initialize()
+  end
+end
+
+
+class Meal
+  attr_reader :x
+
+  def initialize()
+  end
+end
+
+
+class Memu
+  attr_reader :x
+
+  def initialize()
+  end
 end
