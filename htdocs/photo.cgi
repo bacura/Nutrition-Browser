@@ -17,6 +17,7 @@ require 'nkf'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'photo'
 $SIZE_MAX = 20000000
 $TN_SIZE = 400
 $TNS_SIZE = 40
@@ -35,16 +36,11 @@ $WM_FONT = 'さざなみゴシック'
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'photo', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -66,7 +62,7 @@ end
 #### レシピのfigフラグ読み込み
 # 通常
 if code == ''
-	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false, @debug )
+	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 	code = r.first['code']
 end
 
@@ -80,7 +76,7 @@ when 'form'
 		end
 	end
 
-	r = mdb( "SELECT fig1, fig2, fig3 FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
+	r = mdb( "SELECT fig1, fig2, fig3 FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
 	if r.first
 		fig1 = r.first['fig1']
 		fig2 = r.first['fig2']
@@ -205,8 +201,8 @@ when 'upload'
 		photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
 
 		# ウォーターマーク合成
-		wm_text = "BN2015 #{code} by #{uname}"
-#		wm_text = "食品成分表ブラウザ 2015\nPhoto by #{uname} in #{#DATETIME.year}"
+		wm_text = "BN2015 #{code} by #{user.name}"
+#		wm_text = "食品成分表ブラウザ 2015\nPhoto by #{user.name} in #{#DATETIME.year}"
 		wm_img = Magick::Image.new( photo.columns, photo.rows )
 		wm_drew = Magick::Draw.new
 		wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do
@@ -230,14 +226,12 @@ when 'upload'
 #### 写真を削除
 when 'delete'
 	#写真ファイルの削除
-	if File.exist?( "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}tns.jpg"
-		File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}tn.jpg"
-		File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg"
+	File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{slot_no}tns.jpg" )
+	File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{slot_no}tn.jpg" )
+	File.unlink "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{slot_no}.jpg" )
 
-		# レシピデータベースの更新
-		mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET fig#{slot_no}='' WHERE code='#{code}';", false, @debug )
-	end
+	# レシピデータベースの更新
+	mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET fig#{slot_no}=0 WHERE code='#{code}';", false, @debug )
 else
 end
 

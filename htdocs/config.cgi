@@ -17,6 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'config'
 @debug = false
 
 
@@ -24,16 +25,16 @@ require '/var/www/nb-soul.rb'
 #DEFINITION
 #==============================================================================
 #### 初期画面
-def config_init( lp, status )
+def init( lp )
 	html = <<-"HTML"
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="account_cfg()">#{lp[1]}</button>
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="bio_cfg()">#{lp[11]}</button>
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="display_cfg()">#{lp[10]}</button>
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="palette_cfg( 'list' )">#{lp[2]}</button>
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="history_cfg()">#{lp[6]}</button>
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="sum_cfg()">#{lp[7]}</button>
-<button type="button" class="btn btn-info btn-sm nav_button" onclick="koyomiex_cfg( 'init' )">#{lp[9]}</button>
-<button type="button" class="btn btn-danger btn-sm nav_button" onclick="release_cfg()">#{lp[8]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'account' )">#{lp[1]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'bio' )">#{lp[11]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'display' )">#{lp[10]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'palette' )">#{lp[2]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'history' )">#{lp[6]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'sum' )">#{lp[7]}</button>
+<button type="button" class="btn btn-info btn-sm nav_button" onclick="configForm( 'koyomiex' )">#{lp[9]}</button>
+<button type="button" class="btn btn-danger btn-sm nav_button" onclick="configForm( 'release' )">#{lp[8]}</button>
 HTML
 
 	return html
@@ -44,34 +45,28 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'config', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
-command = cgi['command']
+#### Getting POST
+mod = cgi['mod']
 if @debug
-	puts"command: #{command}"
+	puts"mod: #{mod}"
 	puts"<hr>"
 end
 
 
-#### モジュール選択
+####
 html = ''
-if command == 'init'
-	html = config_init( lp, status )
+if mod == ''
+	html = init( lp )
 else
-	require "#{$HTDOCS_PATH}/config_/mod_#{command}.rb"
-	html = config_module( cgi )
+	require "#{$HTDOCS_PATH}/config_/mod_#{mod}.rb"
+	html = config_module( cgi, user )
 end
 
 

@@ -17,6 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'cboard'
 @debug = false
 
 
@@ -173,7 +174,7 @@ html_init( nil )
 
 user = User.new( cgi )
 user.debug if @debug
-lp = user.language( 'cboard' )
+lp = user.language( script )
 
 
 #### POSTデータの取得

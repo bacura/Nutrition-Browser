@@ -1,23 +1,23 @@
 # Config module for FCTB history 0.00
 #encoding: utf-8
 
-def config_module( cgi )
-	uname, uid, status = login_check( cgi )
+def config_module( cgi, user )
+	module_js()
 
 	case cgi['step']
 	when 'max'
 		his_max = cgi['his_max'].to_i
 		his_max = 200 if his_max == nil || his_max == 0 || his_max > 500
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET his_max='#{his_max}' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET his_max='#{his_max}' WHERE user='#{user.name}';", false )
 	when 'clear'
-		mariadb( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{user.name}';", false )
 	end
 
 
 	####
 	checked_max2 = ''
 	checked_max5 = ''
-	r = mariadb( "SELECT his_max FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mariadb( "SELECT his_max FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 	if r.first
 		if r.first['his_max'].to_i == 200
 			checked_max2 = 'checked'
@@ -62,4 +62,29 @@ def config_module( cgi )
 	</div>
 HTML
 	return html
+end
+
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// History initialisation
+var history_cfg = function( step, his_max ){
+	closeBroseWindows( 2 );
+	$.post( "config.cgi", { mod:'history', step:step, his_max:his_max }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+
+	if( step == 'clear' ){
+		displayVideo( 'Initialized' );
+	}
+	if( step == 'max' ){
+		displayVideo( 'History max -> '+ his_max );
+	}
+};
+
+
+</script>
+JS
+	puts js
 end

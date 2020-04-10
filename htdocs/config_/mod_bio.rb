@@ -1,11 +1,12 @@
 # Config module for NB bio 0.00
 #encoding: utf-8
 
-def config_module( cgi )
-	uname, uid, status = login_check( cgi )
+def config_module( cgi, user )
+	module_js()
+
 	step = cgi['step']
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 	sex = r.first['sex'].to_i
 	age = r.first['age'].to_i
 	height = r.first['height'].to_f
@@ -18,7 +19,7 @@ def config_module( cgi )
 		weight = cgi['weight'].to_f
 
 		# アカウント内容変更の保存
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET sex='#{sex}', age='#{age}', height='#{height}', weight='#{weight}' WHERE user='#{uname}';", false, false )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET sex='#{sex}', age='#{age}', height='#{height}', weight='#{weight}' WHERE user='#{user.name}';", false, false )
 	end
 
 	male_check = ''
@@ -71,3 +72,35 @@ HTML
 	return html
 end
 
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// Updating bio information
+var bio_cfg = function( step ){
+	var sex = '';
+	var age = '';
+	var height = '';
+	var weight = '';
+
+	if( step == 'change' ){
+		if( document.getElementById( "male" ).checked ){
+			sex = 0;
+		}else{
+			sex = 1;
+		}
+		var age = document.getElementById( "age" ).value;
+		var height = document.getElementById( "height" ).value;
+		var weight = document.getElementById( "weight" ).value;
+	}
+	closeBroseWindows( 1 );
+
+	$.post( "config.cgi", { mod:'bio', step:step, sex:sex, age:age, height:height, weight:weight }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+</script>
+JS
+	puts js
+end

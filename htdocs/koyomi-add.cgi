@@ -17,8 +17,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'koyomi-add'
 @debug = false
-@tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
 
 #==============================================================================
@@ -94,22 +94,13 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliaseu, language = login_check( cgi )
-lp = lp_init( 'koyomi-add', language )
-start_year, st_set = get_starty( uname )
-if @debug
-	puts "uname:#{uname}<br>\n"
-	puts "status:#{status}<br>\n"
-	puts "aliaseu:#{aliaseu}<br>\n"
-	puts "language:#{language}<br>\n"
-	puts "<hr>\n"
-	puts "start_year:#{start_year}<br>\n"
-	puts "st_set:#{st_set}<br>\n"
-	puts "<hr>\n"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### Getting POST
@@ -127,7 +118,7 @@ copy = cgi['copy'].to_i
 origin = cgi['origin']
 dd = 1 if dd == 0
 ev = 100 if ev == 0
-if hh == ''
+if hh == '' || command == 'modify'
 	hh = 99
 else
 	hh = hh.to_i
@@ -150,29 +141,23 @@ if @debug
 end
 
 
-#### Getting date
-date = Date.today
-date = Date.new( yyyy, mm, dd ) unless yyyy == 0
-date_first = Date.new( date.year, date.month, 1 )
-first_week = date_first.wday
-last_day = Date.new( date.year, date.month, -1 ).day
-if yyyy == 0
- 	yyyy = date.year
-	mm = date.month
-	dd = date.day
-end
-if @debug
-	puts "date:#{date.to_time}<br>\n"
-	puts "first_week:#{first_week}<br>\n"
-	puts "last_day:#{last_day}<br>\n"
-end
+#### Date & calendar config
+calendar = Calendar.new( user.name, yyyy, mm, dd )
+calendar.debug if @debug
+sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
+sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
+org_ymd = "#{calendar.yyyy}:#{calendar.mm}:#{calendar.dd}"
+
+#### Temp
+( dummy, st_set ) = get_starty( user.name )
+#### Temp
 
 
 #### Move food (deleting origin )
 new_solid = ''
 if command == 'move' && copy != 1
 	a = origin.split( ':' )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug  )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug  )
 	if r.first['koyomi']
 		t = r.first['koyomi']
 		aa = t.split( "\t" )
@@ -181,7 +166,7 @@ if command == 'move' && copy != 1
 		end
 		new_solid.chop! unless new_solid == ''
 	end
-	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{uname}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug )
+	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug )
 end
 
 
@@ -190,18 +175,18 @@ if command == 'save' || command == 'move'
 	hh = st_set[tdiv] if hh == 99
 	hh = $TIME_NOW.hour if hh == nil || hh == ''
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		koyomi = r.first['koyomi']
 		delimiter = ''
 		delimiter = "\t" if koyomi != ''
 		koyomi << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
+		origin = "#{org_ymd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
 	else
 		koyomi = "#{code}:#{ev}:#{eu}:#{hh}"
-		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
-		origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:0" if command == 'move'
+		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{sql_ymd}', tdiv='#{tdiv}';", false, @debug )
+		origin = "#{org_ymd}:#{tdiv}:0" if command == 'move'
 	end
 end
 
@@ -230,7 +215,7 @@ elsif /\-/ =~ code
 	food_name = r.first['name']
 else
 	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';"
-	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';" if /^U\d{5}/ =~ code
+	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';" if /^U\d{5}/ =~ code
 	r = mdb( q, false, @debug )
 	food_name = r.first['name']
 end
@@ -238,9 +223,9 @@ end
 
 #### Date HTML
 date_html = ''
-week_count = first_week
+week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
-1.upto( last_day ) do |c|
+1.upto( calendar.ddl ) do |c|
 	date_html << "<tr>"
 	if week_count == 0
 		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
@@ -248,13 +233,13 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
 
-	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false, @debug )
+	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND freeze='1';", false, @debug )
 	unless r.first
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
-			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
-			onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{yyyy}','#{mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
+			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
+			onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
+			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
 			if rr.first
 				if rr.first['koyomi'] == ''
 					date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
@@ -281,10 +266,9 @@ select_html = ''
 onchange = "onChange=\"changeKoyomi_BWF( '#{code}', '#{origin}' )\""
 onchange = "onChange=\"modifychangeKoyomi( '#{code}', '#{origin}' )\"" if command == 'modify'
 
-
 select_html << "<select id='yyyy_add' class='custom-select custom-select-sm' #{onchange}>"
-start_year.upto( 2020 ) do |c|
-	if c == yyyy
+calendar.yyyyf.upto( 2020 ) do |c|
+	if c == calendar.yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
 		select_html << "<option value='#{c}'>#{c}</option>"
@@ -303,7 +287,7 @@ end
 select_html << "</select>&nbsp;/&nbsp;"
 
 select_html << "<select id='dd' class='custom-select custom-select-sm'>"
-1.upto( last_day ) do |c|
+1.upto( calendar.ddl ) do |c|
 	if c == dd
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
@@ -360,7 +344,7 @@ rate_html << "</div>"
 #### Return button
 return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn()\">#{lp[11]}</button>"
 if command == 'modify' || command == 'move'
-	return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[11]}</button>"
+	return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</button>"
 end
 
 
@@ -402,4 +386,4 @@ HTML
 puts html
 
 #### Adding history
-add_his( uname, code ) if /^[UP]?\d{5}/ =~ code
+add_his( user.name, code ) if /^[UP]?\d{5}/ =~ code

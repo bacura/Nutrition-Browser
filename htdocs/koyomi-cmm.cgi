@@ -17,6 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'koyomi-cmm'
 @debug = false
 
 
@@ -48,21 +49,12 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliaseu, language = login_check( cgi )
-lp = lp_init( 'koyomi-cmm', language )
-start_year, st_set = get_starty( uname )
-
 html_init( nil )
-if @debug
-	puts "uname:#{uname}<br>\n"
-	puts "status:#{status}<br>\n"
-	puts "aliaseu:#{aliaseu}<br>\n"
-	puts "language:#{language}<br>\n"
-	puts "<hr>\n"
-	puts "start_year:#{start_year}<br>\n"
-	puts "st_set:#{st_set}<br>\n"
-	puts "<hr>\n"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+start_year, st_set = get_starty( user.name )
 
 
 #### Getting POST
@@ -110,7 +102,7 @@ end
 if command == 'save'
 	hh = st_set[tdiv] if hh == 99
 	( yyyy_, mm_, dd_, tdiv_ ) = origin.split( ':' )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
 	if r.first
 		koyomi_ = r.first['koyomi']
 		t = ''
@@ -121,7 +113,7 @@ if command == 'save'
 		end
 		koyomi_ = t.chop
 
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		if rr.first
 			koyomi = rr.first['koyomi']
 			if koyomi == ''
@@ -130,13 +122,13 @@ if command == 'save'
 				koyomi << "\t#{koyomi_}"
 			end
 
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi_}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi_}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		end
 
 		if cm_mode == 'move' && ( yyyy != yyyy_.to_i || mm != mm_.to_i || dd != dd_.to_i || tdiv != tdiv_.to_i )
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='' WHERE user='#{uname}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='' WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
 		end
 		( yyyy, mm, dd, tdiv ) = yyyy_.to_i, mm_.to_i, dd_.to_i, tdiv_.to_i
 	end
@@ -164,11 +156,11 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
 
-	r = mariadb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false )
+	r = mariadb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false )
 	unless r.first
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
-			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
+			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
 			onclick = "onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			if rr.first
 				if rr.first['koyomi'] == ''

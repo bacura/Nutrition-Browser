@@ -1,8 +1,9 @@
 # Config module for FCTB release 0.00
 #encoding: utf-8
 
-def config_module( cgi )
-	uname, uid, status = login_check( cgi )
+def config_module( cgi, user )
+	module_js()
+
 	step = cgi['step']
 	password = cgi['password']
 	html =''
@@ -31,39 +32,61 @@ HTML
 HTML
 
 		# ユーザーステータスの変更
-		query = "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{uname}' AND cookie='#{uid}';"
+		query = "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{user.name}' AND cookie='#{uid}';"
 		db_err = 'SELECT user'
 		db_process( query, db_err, false )
 
 		# ヒストリーデータのの削除
-		query = "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{uname}';"
+		query = "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';"
 		db_err = 'SELECT his'
 		db_process( query, db_err, false )
 
 		# SUMデータのの削除
-		query = "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{uname}';"
+		query = "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 		db_err = 'SELECT sum'
 		db_process( query, db_err, false )
 
 		# コンフィグデータのの削除
-		query = "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';"
+		query = "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';"
 		db_err = 'SELECT cfg'
 		db_process( query, db_err, false )
 
 		# mealデータのの削除
-		query = "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{uname}';"
+		query = "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';"
 		db_err = 'SELECT meal'
 		db_process( query, db_err, false )
 
 		# マスター価格データの削除
-		query = "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{uname}';"
+		query = "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{user.name}';"
 		db_err = 'SELECT pricem'
 		db_process( query, db_err, false )
 
 		# パレットデータの削除
-		query = "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';"
+		query = "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';"
 		db_err = 'SELECT palette'
 		db_process( query, db_err, false )
 	end
 	return html
+end
+
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// パスワードボタンを押したときにL2閲覧ウインドウの内容を書き換える
+var release_cfg = function( step ){
+	var password = ''
+	closeBroseWindows( 2 );
+
+	$.post( "config.cgi", { mod:'release', step:step, password:password }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+	if( step == 'clear' ){
+		displayVideo( 'パスワードを変更' );
+	}
+};
+
+</script>
+JS
+	puts js
 end

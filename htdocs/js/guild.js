@@ -399,113 +399,11 @@ var updateKoyomiex = function( dd, item_no, cell_id ){
 // Ginmi init
 var initGinmi = function(){
 	closeBroseWindows( 1 );
-	$.post( "ginmi.cgi", { command:"menu" }, function( data ){ $( "#bw_level1" ).html( data );});
+	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
 };
 
 var ginmiForm = function( mod ){
 	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi BMI //////////////////////////////////////////////////////////////
-
-var ginmiBMIres = function(){
-	var age = document.getElementById( "age" ).value;
-	var height = document.getElementById( "height" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
-};
-
-var ginmiBMIkex = function(){
-	$.post( "ginmi.cgi", { mod:"bmi", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi kaup //////////////////////////////////////////////////////////////
-
-var ginmiKaupres = function(){
-	var age = document.getElementById( "age" ).value;
-	var height = document.getElementById( "height" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"kaupi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
-};
-
-var ginmiKaupkex = function(){
-	$.post( "ginmi.cgi", { mod:"kaupi", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi laurel //////////////////////////////////////////////////////////////
-
-var ginmiLaurelres = function(){
-	var height = document.getElementById( "height" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"laureli", command:'result', height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
-};
-
-var ginmiLaurelkex = function(){
-	$.post( "ginmi.cgi", { mod:"laureli", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi enegry Ref //////////////////////////////////////////////////////////////
-
-var ginmiEnergyRefres = function(){
-	var sex = document.getElementById( "sex" ).value;
-	var age = document.getElementById( "age" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	var pal = document.getElementById( "pal" ).value;
-	var pregnancy = document.getElementById( "pregnancy" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
-};
-
-var ginmiEnergyRefkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-ref", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
-};
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi enegry HN //////////////////////////////////////////////////////////////
-
-var ginmiEnergyHNres = function(){
-	var sex = document.getElementById( "sex" ).value;
-	var age = document.getElementById( "age" ).value;
-	var height = document.getElementById( "height" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	var pal = document.getElementById( "pal" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-hn", command:'result', age:age, sex:sex, height:height, weight:weight, pal:pal }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
-};
-
-var ginmiEnergyHNkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-hn", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi enegry HB //////////////////////////////////////////////////////////////
-
-var ginmiEnergyHBres = function(){
-	var sex = document.getElementById( "sex" ).value;
-	var age = document.getElementById( "age" ).value;
-	var height = document.getElementById( "height" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	var active = document.getElementById( "active" ).value;
-	var stress = document.getElementById( "stress" ).value;
-	var btm = document.getElementById( "btm" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-hb", command:'result', sex:sex, age:age, height:height, weight:weight, active:active, stress:stress, btm:btm }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
-};
-
-var ginmiEnergyHBkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-hb", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
 };

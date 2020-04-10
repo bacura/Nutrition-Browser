@@ -1,18 +1,19 @@
 # Config module for NB display 0.00
 #encoding: utf-8
 
-def config_module( cgi )
-	uname, uid, status = login_check( cgi )
+def config_module( cgi, user )
+	module_js()
+
 	step = cgi['step']
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 	icache = r.first['icache'].to_i
 
 	if step ==  'change'
 		icache = cgi['icache'].to_i
 
 		# アカウント内容変更の保存
-#		mdb( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}' WHERE user='#{uname}';", false, false )
+#		mdb( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}' WHERE user='#{user.name}';", false, false )
 	end
 
 	icache_check = ''
@@ -61,3 +62,22 @@ HTML
 	return html
 end
 
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// Updating bio information
+var display_cfg = function( step ){
+	var icache = '';
+
+	closeBroseWindows( 1 );
+
+	$.post( "config.cgi", { mod:'display', step:step, icache:icache }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+</script>
+JS
+	puts js
+end

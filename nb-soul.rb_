@@ -18,8 +18,8 @@ require 'bigdecimal'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = ''
-$MYSQL_PW = ''
+$MYSQL_USER = '****'
+$MYSQL_PW = '****'
 $MYSQL_DB = 'nutrition'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
@@ -32,7 +32,6 @@ $MYSQL_TB_SLOGR = 'slogr'
 $MYSQL_TB_USER = 'user'
 $MYSQL_TB_RECIPE = 'recipe'
 $MYSQL_TB_RECIPEI = 'recipei'
-$MYSQL_TB_RECIPEIF = 'recipeif'
 $MYSQL_TB_PRICE = 'price'
 $MYSQL_TB_PRICEM = 'pricem'
 $MYSQL_TB_SUM = 'sum'
@@ -45,13 +44,15 @@ $MYSQL_TB_KOYOMI = 'koyomi'
 $MYSQL_TB_KOYOMIEX = 'koyomiex'
 $MYSQL_TB_FCS = 'fcs'
 $MYSQL_TB_FCZ = 'fcz'
+$MYSQL_TB_METS = 'mets'
+$MYSQL_TB_METST = 'metst'
 
 $DEBUG = false
 
-$GM = ''
+$GM = '****'
 
 #### 注意！！
-$HTDOCS_PATH = ''
+$HTDOCS_PATH = '****'
 
 $PHOTO_PATH = "#{$HTDOCS_PATH}/photo"
 $PHOTO_PATH_TMP = "#{$HTDOCS_PATH}/photo_"
@@ -101,21 +102,22 @@ $DATETIME = $TIME_NOW.strftime("%Y-%m-%d %H:%M:%S")
 $HISTORY_LIMIT = 200
 
 $DEFAULT_LP = 'jp'
-$LP = [nil]
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
 #### Language init
+#### 将来的に廃止
 def lp_init( script, language_set )
   f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
   f.each do |line|
-    $LP << line.chomp.force_encoding( 'UTF-8' )
+    lp << line.chomp.force_encoding( 'UTF-8' )
   end
   f.close
 
-  return $LP
+  return lp
 end
 
 
@@ -162,7 +164,6 @@ def html_head( interrupt, status, sub_title )
   <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
   <script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
   <script type='text/javascript' src='#{$JS_PATH}/menu.js'></script>
-  <script type='text/javascript' src='#{$JS_PATH}/config.js'></script>
   #{js_guild}
   #{js_master}
 </head>
@@ -207,7 +208,6 @@ def html_top( user_name, status, aliasu )
   else
     login_color = "secondary"
   end
-
 
   user_name =  aliasu if aliasu != '' && aliasu != nil
   login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
@@ -273,6 +273,7 @@ end
 
 
 #### 旧データベース処理
+#### 将来的に廃止
 def mariadb( query, html_opt )
   begin
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -324,6 +325,7 @@ end
 
 
 #### ログインチェック
+#### 将来的に廃止
 def login_check( cgi )
 	cookie_name = cgi.cookies['NAME'].first
  	cookie_uid = cgi.cookies['UID'].first
@@ -418,32 +420,28 @@ def add_his( user, fn )
 end
 
 
-#### レシピの新規追加
-def insert_recipe( uname, food_no, food_weight )
-  require 'securerandom'
-
-  code = uname[0, 2]
-  code = "x" + uname[0, 1] if code == nil
-  code = "#{code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
-  sum = ''
-  if food_no
-      sum = "#{food_no}:#{food_weight}:g:#{food_weight}:"
-  else
-      sum = ''
-  end
-  mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false, $DEBUG )
-
-  return code
-end
-
-
 #### コードの生成
 def generate_code( uname, c )
   require 'securerandom'
 
   code = uname[0, 2]
   code = "x" + uname[0, 1] if code == nil
-  code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
+  10.times do
+    code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
+    query = ''
+    case c
+    when 'r'
+      query = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';"
+    when 'm'
+      query = "SELECT * FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';"
+    when 'f'
+      query = "SELECT * FROM #{$MYSQL_TB_FCS} WHERE code='#{code}';"
+    when 'z'
+      query = "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';"
+    end
+    r = mdb( query, false, false )
+    break unless r.first
+  end
 
   return code
 end
@@ -648,7 +646,7 @@ class User
     puts "name:#{@name}<br>"
     puts "uid:#{@uid}<br>"
     puts "status:#{@status}<br>"
-    puts "aliase:#{@aliase}<br>"
+    puts "alias:#{@alias}<br>"
     puts "language:#{@language}<br>"
     puts "<hr>"
   end
@@ -767,10 +765,6 @@ class Sum
   end
 
 end
-
-
-
-
 
 
 class Recipe

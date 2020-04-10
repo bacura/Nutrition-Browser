@@ -1,7 +1,7 @@
 # Ginmi module for BMI 0.00
 #encoding: utf-8
 
-def ginmi_module( cgi )
+def ginmi_module( cgi, user )
 	uname, uid, status = login_check( cgi )
 	command = cgi['command']
 

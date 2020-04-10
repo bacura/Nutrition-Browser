@@ -11,13 +11,13 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'date'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'ginmi'
 @debug = false
 
 
@@ -26,19 +26,22 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 
 #### 初期画面
-def init( lp, status )
+def init( lp )
 	html = <<-"HTML"
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'bmi' )">BMI</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'kaupi' )">カウプ指数</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'laureli' )">ローレル指数</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ref' )">E・参照</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hn' )">E・国立健栄</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hb' )">E・ハリベネ</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">推定身長</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">推定骨格筋量</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">MNA</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">MNA-SF</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">SGA</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'bmi' )">#{lp[1]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'laureli' )">#{lp[3]}</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="ginmiForm( 'obesity' )">#{lp[4]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ref' )">#{lp[5]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hn' )">#{lp[6]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[10]}</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[11]}</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[12]}</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[13]}</button>
+	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[14]}</button>
 HTML
 
 	return html
@@ -50,17 +53,11 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliaseu, language = login_check( cgi )
-lp = lp_init( 'koyomi', language )
-
 html_init( nil )
-if @debug
-	puts "uname:#{uname}<br>\n"
-	puts "status:#{status}<br>\n"
-	puts "aliaseu:#{aliaseu}<br>\n"
-	puts "language:#{language}<br>\n"
-	puts "<hr>\n"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### Getting POST
@@ -74,10 +71,10 @@ end
 ####
 html = "<div class='container-fluid'>"
 if mod == ''
-	html = init( lp, status )
+	html = init( lp )
 else
 	require "#{$HTDOCS_PATH}/ginmi_/mod_#{mod}.rb"
-	html = ginmi_module( cgi )
+	html = ginmi_module( cgi, user )
 end
 html << "</div>"
 

@@ -11,13 +11,13 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'meta'
 @debug = false
 
 
@@ -29,19 +29,13 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'meta', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -100,13 +94,25 @@ when 'food'
 HTML
 
 when 'user'
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER};", false )
+	cumulative_user_num = r.size
+
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=1;", false )
 	general_user_num = r.size
 
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=2;", false )
 	guild_member_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=3 OR status=9;", false )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=4;", false )
+	guild_moe_num = r.size
+
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=5;", false )
+	guild_shun_num = r.size
+
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=6;", false )
+	children_num = r.size
+
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=3 OR status=8 OR status=9;", false )
 	admin_user_num = r.size
 
 	html = <<-"HTML"
@@ -120,6 +126,10 @@ when 'user'
 	</thead>
 	<tbody>
 		<tr>
+			<td>#{lp[26]}</td>
+			<td>#{cumulative_user_num - 1}</td>
+		</tr>
+		<tr>
 			<td>#{lp[10]}</td>
 			<td>#{general_user_num - 1}</td>
 		</tr>
@@ -128,8 +138,20 @@ when 'user'
 			<td>#{guild_member_num}</td>
 		</tr>
 		<tr>
+			<td>#{lp[27]}</td>
+			<td>#{guild_moe_num}</td>
+		</tr>
+		<tr>
+			<td>#{lp[28]}</td>
+			<td>#{guild_shun_num}</td>
+		</tr>
+		<tr>
 			<td>#{lp[12]}</td>
 			<td>#{admin_user_num}</td>
+		</tr>
+		<tr>
+			<td>#{lp[29]}</td>
+			<td>#{children_num}</td>
 		</tr>
 	</tbody>
 </table>
@@ -139,13 +161,19 @@ when 'recipe'
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE};", false )
 	recipe_total_num = r.size
 
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE role!=100;", false )
+	recipe_real_num = r.size
+
 	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1;", false )
 	recipe_public_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}';", false )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1 AND role!=100;", false )
+	recipe_real_public_num = r.size
+
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}';", false )
 	recipe_user_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and public=1;", false )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and public=1;", false )
 	recipe_user_public_num = r.size
 
 	html = <<-"HTML"
@@ -163,15 +191,23 @@ when 'recipe'
 			<td>#{recipe_total_num}</td>
 		</tr>
 		<tr>
+			<td>#{lp[30]}</td>
+			<td>#{recipe_real_num}</td>
+		</tr>
+		<tr>
 			<td>#{lp[17]}</td>
 			<td>#{recipe_public_num}</td>
 		</tr>
 		<tr>
-			<td>#{uname}#{lp[18]}</td>
+			<td>#{lp[31]}</td>
+			<td>#{recipe_real_public_num}</td>
+		</tr>
+		<tr>
+			<td>#{user.name}#{lp[18]}</td>
 			<td>#{recipe_user_num}</td>
 		</tr>
 		<tr>
-			<td>#{uname}#{lp[19]}</td>
+			<td>#{user.name}#{lp[19]}</td>
 			<td>#{recipe_user_public_num}</td>
 		</tr>
 	</tbody>

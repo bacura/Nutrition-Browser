@@ -1,8 +1,9 @@
 # Config module for Nutorition browser koyomiex 0.00
 #encoding: utf-8
 
-def config_module( cgi )
-	uname, uid, status, aliasu, language = login_check( cgi )
+def config_module( cgi, user )
+	module_js()
+
 	step = cgi['step']
 	del_no = cgi['del_no'].to_i
 	koyomiy = cgi['koyomiy'].to_i
@@ -31,26 +32,26 @@ def config_module( cgi )
 		koyomiex_new = ''
 		0.upto( 9 ) do |c| koyomiex_new << "#{kex_select_set[c]}\t#{item_set[c]}\t#{unit_set[c]}:" end
 		koyomiex_new.chop!
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{user.name}';", false )
 	when 'delete'
-		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 		kex_select_set = r.first['koyomiex'].split( ':' )
 		koyomiex_new = ''
 		kex_select_set.size.times do |c|
 			if del_no == c
 				koyomiex_new << "0\t\t:"
-				mariadb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{uname}';", false )
+				mariadb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{user.name}';", false )
 			else
 				koyomiex_new << "#{kex_select_set[c]}:"
 			end
 		end
 		koyomiex_new.chop!
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{user.name}';", false )
 	end
 
-	r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 	if r.first['koyomiex'] == '' || r.first['koyomiex'] == nil
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{user.name}';", false )
 		0.upto( 9 ) do |c|
 			kex_select_set[c] = 0
 			item_set[c] = ''
@@ -73,7 +74,7 @@ def config_module( cgi )
 	breakfast_st = 7
 	lunch_st = 12
 	dinner_st = 19
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false )
+	r = mariadb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		koyomiy = a[0].to_i
@@ -201,4 +202,92 @@ def config_module( cgi )
 	html << "</div>"
 
 	return html
+end
+
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+//
+var koyomiex_cfg = function( step, del_id, del_no ){
+	closeBroseWindows( 2 );
+
+	if( step == 'update' ){
+		var koyomiy = document.getElementById( "koyomiy" ).value;
+
+		var breakfast_st = document.getElementById( "breakfast_st" ).value;
+		var lunch_st = document.getElementById( "lunch_st" ).value;
+		var dinner_st = document.getElementById( "dinner_st" ).value;
+
+		var kex_select0 = document.getElementById( "kex_select0" ).value;
+		var kex_select1 = document.getElementById( "kex_select1" ).value;
+		var kex_select2 = document.getElementById( "kex_select2" ).value;
+		var kex_select3 = document.getElementById( "kex_select3" ).value;
+		var kex_select4 = document.getElementById( "kex_select4" ).value;
+		var kex_select5 = document.getElementById( "kex_select5" ).value;
+		var kex_select6 = document.getElementById( "kex_select6" ).value;
+		var kex_select7 = document.getElementById( "kex_select7" ).value;
+		var kex_select8 = document.getElementById( "kex_select8" ).value;
+		var kex_select9 = document.getElementById( "kex_select9" ).value;
+
+		var item0 = document.getElementById( "item0" ).value;
+		var item1 = document.getElementById( "item1" ).value;
+		var item2 = document.getElementById( "item2" ).value;
+		var item3 = document.getElementById( "item3" ).value;
+		var item4 = document.getElementById( "item4" ).value;
+		var item5 = document.getElementById( "item5" ).value;
+		var item6 = document.getElementById( "item6" ).value;
+		var item7 = document.getElementById( "item7" ).value;
+		var item8 = document.getElementById( "item8" ).value;
+		var item9 = document.getElementById( "item9" ).value;
+
+		var unit0 = document.getElementById( "unit0" ).value;
+		var unit1 = document.getElementById( "unit1" ).value;
+		var unit2 = document.getElementById( "unit2" ).value;
+		var unit3 = document.getElementById( "unit3" ).value;
+		var unit4 = document.getElementById( "unit4" ).value;
+		var unit5 = document.getElementById( "unit5" ).value;
+		var unit6 = document.getElementById( "unit6" ).value;
+		var unit7 = document.getElementById( "unit7" ).value;
+		var unit8 = document.getElementById( "unit8" ).value;
+		var unit9 = document.getElementById( "unit9" ).value;
+
+		$.post( "config.cgi", {
+			mod:'koyomiex', step:step, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st,
+			kex_select0:kex_select0, kex_select1:kex_select1, kex_select2:kex_select2, kex_select3:kex_select3, kex_select4:kex_select4, kex_select5:kex_select5, kex_select6:kex_select6, kex_select7:kex_select7, kex_select8:kex_select8, kex_select9:kex_select9,
+			item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9,
+			unit0:unit0, unit1:unit1, unit2:unit2, unit3:unit3, unit4:unit4, unit5:unit5, unit6:unit6, unit7:unit7, unit8:unit8, unit9:unit9,
+		}, function( data ){ $( "#bw_level2" ).html( data );});
+		displayVideo( 'Saved' );
+	}else if( step == 'delete' ){
+		if( document.getElementById( del_id ).checked ){
+			$.post( "config.cgi", { mod:'koyomiex', step:step, del_no:del_no }, function( data ){ $( "#bw_level2" ).html( data );});
+			displayVideo( 'Deleted' );
+		}else{
+			displayVideo( 'Check!(>_<)' );
+		}
+	}else{
+		$.post( "config.cgi", { mod:'koyomiex', step:step,  }, function( data ){ $( "#bw_level2" ).html( data );});
+	}
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+var kexChangeselect = function( no ){
+	var select_id = 'kex_select' + no;
+	displayVideo( document.getElementById( select_id ).value );
+
+	if( document.getElementById( select_id ).value == 1 ){
+
+		document.getElementById('item' + no ).disabled = false;
+		document.getElementById('unit' + no ).disabled = false;
+	}else{
+		document.getElementById('item' + no ).disabled = true;
+		document.getElementById('unit' + no ).disabled = true;
+	}
+};
+
+</script>
+JS
+	puts js
 end

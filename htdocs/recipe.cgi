@@ -11,13 +11,13 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'recipe'
 @debug = false
 
 
@@ -25,299 +25,245 @@ require '/var/www/nb-soul.rb'
 #DEFINITION
 #==============================================================================
 
-def update_recipei( code, recipe_name, sum, protocol )
-	require 'natto'
-	mecab = Natto::MeCab.new( userdic: "/usr/local/share/mecab/dic/mecab-user-dict-seed.20190307.dic" )
-	words = Hash.new
-	target = []
+#### Fig copy method
+def copy_fig( slot, code, source_code )
+	FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-#{slot}tns.jpg", "#{$PHOTO_PATH}/#{code}-#{slot}tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-#{slot}tns.jpg" )
+	FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-#{slot}tn.jpg", "#{$PHOTO_PATH}/#{code}-#{slot}tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-#{slot}tn.jpg" )
+	FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-#{slot}.jpg", "#{$PHOTO_PATH}/#{code}-#{slot}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-#{slot}.jpg" )
+end
 
-	#recipe name
-	target << recipe_name
 
-	#foods
-	a = sum.split( "\t" )
-	sum_code = []
-	a.each do |ee| sum_code << ee.split( ':' ).first end
-	sum_code.each do |ee|
-		r = mariadb( "SELECT FG, name, class1, class2, class3 FROM #{$MYSQL_TB_TAG} WHERE FN='#{ee}' AND FG!='00' AND FG!='03' AND FG!='14' AND FG!='15' AND FG!='16' AND FG!='17' AND FG!='18';", false )
+#### Recipe class
+class Recipe
+	attr_accessor :code, :user, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sum, :protocol, :fig1, :fig2, :fig3, :date
+
+	def initialize( uname )
+		@code = ''
+		@user = uname
+		@branch = nil
+		@root = nil
+		@public = 0
+		@protect = 0
+		@draft = 1
+		@name = ''
+		@dish = 1
+		@type = 0
+		@role = 0
+		@tech = 0
+		@time = 0
+		@cost = 0
+		@sum = ''
+		@protocol = ''
+		@fig1 = 0
+		@fig2 = 0
+		@fig3 = 0
+		@date = $DATETIME
+	end
+
+	def load_cgi( cgi )
+		@code = cgi['code']
+		@public = cgi['public'].to_i
+		@protect = cgi['protect'].to_i
+		@draft = cgi['draft'].to_i
+		@name = cgi['recipe_name']
+		@type = cgi['type'].to_i
+		@role = cgi['role'].to_i
+		@tech = cgi['tech'].to_i
+		@time = cgi['time'].to_i
+		@cost = cgi['cost'].to_i
+		@protocol = cgi['protocol']
+	end
+
+	def load_db()
+		r = mdb( "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{@user}' and code='#{@code}';", false, false )
 		if r.first
-			target << r.first['name']
-			target << r.first['class1'] if r.first['class1'] != ''
-			target << r.first['class2'] if r.first['class2'] != ''
-			target << r.first['class3'] if r.first['class3'] != ''
+			@public = r.first['public'].to_i
+			@protect = r.first['protect'].to_i
+			@draft = r.first['draft'].to_i
+			@name = r.first['name'].to_i
+			@dish = r.first['dish'].to_i
+			@type = r.first['type'].to_i
+			@role = r.first['role'].to_i
+			@tech = r.first['tech'].to_i
+			@time = r.first['time'].to_i
+			@cost = r.first['cost'].to_i
+			@protocol = r.first['protocol']
+			@fig1 = r.first['fig1'].to_i
+			@fig2 = r.first['fig2'].to_i
+			@fig3 = r.first['fig3'].to_i
+			@date = r.first['date']
 		end
+
+
+		# Reset name
+		r = mdb( "SELECT name from #{$MYSQL_TB_SUM} WHERE user='#{@user}';", false, false )
+		@name = r.first['name']
 	end
 
-	#comment 1st line
-	a = protocol.split( "\n" )
-	unless a[0] == nil
-		target << a[0] if /^\#.+/ =~ a[0]
+	def insert_db()
+  		mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user}',draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', fig1=#{@fig1}, fig2=#{@fig2}, fig3=#{@fig3}, date='#{@date}';", false, false )
 	end
 
-	target_dic = []
-	target.each do  |e|
-		r = mariadb( "SELECT org_name FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false )
-		if r.first
-			target_dic << r.first['org_name']
-			target_dic << e
-		else
-			target_dic << e
-		end
+	def update_db()
+		mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish},type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, protect=#{@protect}, draft=#{@draft}, fig1=#{@fig1}, fig2=#{@fig2}, fig3=#{@fig3}, date='#{@date}' WHERE user='#{@user}' and code='#{@code}';", false, false )
 	end
 
-	target_u = []
-	target_dic.each do |e|
-		mecab.parse( e ) do |n|
-			a = n.feature.split( ',' )
-		 	if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '固有名詞' )
-		 		target_u << n.surface
-		 	end
-		end
-	end
-	target_u.uniq!
-
-	target_u.each do |e|
-		if words[e]
-			words[e] = "#{words[e]}:#{code}"
-		else
-			words[e] = code
-		end
-	end
-
-	words.each do |k, v|
-		r = mariadb( "SELECT codes FROM #{$MYSQL_TB_RECIPEI} WHERE words='#{k}'", false )
-		if r.first
-			a = codes.split( ':' )
-			a.push( v )
-			a.uniq!
-			new_code = a.join( ':' )
-			mariadb( "UPDATE #{$MYSQL_TB_RECIPEI} SET codes='#{new_code}' WHERE words='#{k}';", false )
-		else
-			mariadb( "INSERT INTO #{$MYSQL_TB_RECIPEI} SET words='#{k}', codes='#{v}', count='0';", false )
-		end
+	def debug
+		puts "Recipe.code:#{@code}<br>"
+		puts "Recipe.name:#{@name}<br>"
+		puts "Recipe.public:#{@public}<br>"
+		puts "Recipe.protect:#{@protect}<br>"
+		puts "Recipe.draft:#{@draft}<br>"
+		puts "Recipe.type:#{@type}<br>"
+		puts "Recipe.role:#{@role}<br>"
+		puts "Recipe.tech:#{@tech}<br>"
+		puts "Recipe.dish:#{@dish}<br>"
+		puts "Recipe.time:#{@time}<br>"
+		puts "Recipe.cost:#{@cost}<br>"
+		puts "Recipe.sum:#{@sum}<br>"
+		puts "Recipe.protocol:#{@protocol}<br>"
+		puts "Recipe.date:#{@date}<br>"
+		puts "Recipe.fig1:#{@fig1}<br>"
+		puts "Recipe.fig2:#{@fig2}<br>"
+		puts "Recipe.fig3:#{@fig3}<br>"
 	end
 end
 
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'recipe', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
-#### POSTデータの取得
+#### Getting POST
 command = cgi['command']
 code = cgi['code']
-recipe_name = cgi['recipe_name']
-public_bit = cgi['public'].to_i
-protect = cgi['protect'].to_i
-draft = cgi['draft'].to_i
-type = cgi['type'].to_i
-role = cgi['role'].to_i
-tech = cgi['tech'].to_i
-time = cgi['time'].to_i
-cost = cgi['cost'].to_i
-protocol = cgi['protocol']
 if @debug
 	puts "commnad:#{command}<br>"
 	puts "code:#{code}<br>"
-	puts "recipe_name:#{recipe_name}<br>"
-	puts "public_bit:#{public_bit}<br>"
-	puts "protect:#{protect}<br>"
-	puts "draft:#{draft}<br>"
-	puts "type:#{type}<br>"
-	puts "role:#{role}<br>"
-	puts "tech:#{tech}<br>"
-	puts "time:#{time}<br>"
-	puts "cost:#{cost;}<br>"
-	puts "protocol:#{protocol}<br>"
 end
 
+recipe = Recipe.new( user.name )
+recipe.code = code
+recipe.debug if @debug
 
 case command
-#### レシピの表示
 when 'view'
-	if code == ''
-		# レシピデータベースの仮登録チェック
-  		r = mariadb( "SELECT code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND name='' AND code!='';", false )
-  		code = r.first['code'] unless r.first == nil
+	# Loading recipe from DB
+	recipe.load_db
 
-  		unless r.first
-  			# 新規コードの生成
-			code = generate_code( uname, 'r' )
-		  	# レシピデータベースに仮登録
-		  	mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, protect=0, draft=0, name='', dish=1, type=0, role=0, tech=0, time=0, cost=0, sum='', protocol='', fig1=0, fig2=0, fig3=0;", false )
-  		end
-  		# サムデータベースへ反映
-		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{code}' WHERE user='#{uname}';", false )
-  	end
-
-
-	# レシピの読み込み
-	r = mariadb( "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false )
-
-	public_bit = r.first['public'].to_i
-	protect = r.first['protect'].to_i
-	draft = r.first['draft'].to_i
-	type = r.first['type'].to_i
-	role = r.first['role'].to_i
-	tech = r.first['tech'].to_i
-	time = r.first['time'].to_i
-	cost = r.first['cost'].to_i
-	protocol = r.first['protocol']
-
-	# リセットネーム処理
-	r = mariadb( "SELECT name from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
-	recipe_name = r.first['name']
-
-#### レシピの保存
 when 'save'
-	# プロトコールのタグ抜き
-	protocol.gsub!( '<', '&lt;')
-	protocol.gsub!( '>', '&gt;')
-	protocol.gsub!( ';', '；')
+	recipe.load_cgi( cgi )
 
-	r = mariadb( "SELECT sum, name, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
-	sum = r.first['sum']
-	sum_name = r.first['name']
-	dish_num = r.first['dish'].to_i
 
-	query = "SELECT fig1, fig2, fig3 from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';"
-	db_err = 'recipe select'
-	r = mariadb( "SELECT fig1, fig2, fig3 from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false )
-	fig1 = r.first['fig1'].to_i
-	fig2 = r.first['fig2'].to_i
-	fig3 = r.first['fig3'].to_i
+	# excepting for tags
+	recipe.protocol.gsub!( '<', '&lt;')
+	recipe.protocol.gsub!( '>', '&gt;')
+	recipe.protocol.gsub!( ';', '；')
 
-	new_code_flag = false
-	source_code = code
-	p sum if @debug
+	r = mdb( "SELECT sum, name, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 
-	# レシピ名の確認と新しいコード
-	unless sum_name == ''
-		rr = mariadb( "SELECT code from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}' and name='#{recipe_name}';", false )
-		# 名前が一致しなければ、新規コードとメニューを生成。ただし、下書きの場合はコードの変更なし
-		unless rr.first || draft == 1
-			source_code = code
-#			code = insert_recipe( uname, nil, nil )
-			code = generate_code( uname, 'r' )
+	# Inserting new recipe
+	if r.first['name'] == ''
+		recipe.code = generate_code( user.name, 'r' )
+		recipe.sum = r.first['sum']
+		recipe.dish = r.first['dish'].to_i
+  		recipe.insert_db
 
-			sum = ''
-			sum = "#{food_no}::g::" if food_no
-  			mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false )
+	# Updating recipe
+	else
+		pre_recipe = Recipe.new( user.name )
+		pre_recipe.code = recipe.code
+		pre_recipe.load_db
+		recipe.sum = r.first['sum']
+		recipe.dish = r.first['dish'].to_i
+		recipe.fig1 = pre_recipe.fig1
+		recipe.fig2 = pre_recipe.fig2
+		recipe.fig3 = pre_recipe.fig3
 
-			draft = 0
-			new_code_flag = true
+		copy_flag = false
+
+		# Canceling public mode of recipe using puseudo user foods
+		a = recipe.sum.split( "\t" )
+		a.each do |e|
+			sum_items = e.split( ':' )
+			recipe.public = 0 if /^U/ =~ sum_items[0]
 		end
-	end
 
-	# 保護の確認と新しいコード
-	rr= mariadb( "SELECT name, protect from #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false )
-	# 保存データもポストデータも保護モードだったら、新しいコードと名前を割り振る
-	if rr.first['protect'] == 1 && protect == 1
-		if recipe_name == rr.first['name']
-			t = recipe_name.match( /\((\d+)\)$/ )
-			if t == nil
-				sn = 1
+		# Draft mode
+		if recipe.draft == 1
+			recipe.protect = 0
+			recipe.public = 0
+			recipe.update_db
+
+		# Normal mode
+		elsif recipe.draft == 0 && recipe.protect == 0
+			if recipe.name == pre_recipe.name
+				recipe.update_db
 			else
-				sn = t[1].to_i + 1
+				recipe.protect = 1 if recipe.public == 1
+				copy_flag = true
 			end
-			recipe_name.sub!( /\((\d+)\)$/, '' )
-			recipe_name = "#{recipe_name}(#{sn})"
-			source_code = code
-#			code = insert_recipe( uname, nil, nil )
-			code = generate_code( uname, 'r' )
 
-			sum = ''
-			sum = "#{food_no}::g::" if food_no
-  			mariadb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{code}', user='#{uname}',public=0, name='', type=0, role=0, tech=0, time=0, cost=0, sum='#{sum}', protocol='', fig1='', fig2='', fig3='';", false )
+		# Protect mode
+		else
+			recipe.protect = 1 if recipe.public == 1
+			if pre_recipe.protect == 0 && recipe.name == pre_recipe.name
+				recipe.update_db
+			else
+				copy_flag = true
+			end
+		end
 
-			protect = 0
-			draft = 1
-			new_code_flag = true
+		if copy_flag == true
+			recipe.code = generate_code( user.name, 'r' )
+
+			# Copying name
+			if recipe.name == pre_recipe.name
+				t = pre_recipe.name.match( /\((\d+)\)$/ )
+				sn = 1
+				sn = t[1].to_i + 1 if t != nil
+				pre_recipe.name.sub!( /\((\d+)\)$/, '' )
+				recipe.name = "#{pre_recipe.name}(#{sn})"
+			end
+
+			# Cocying figs
+			if recipe.fig1 == 1 || recipe.fig2 == 1 || recipe.fig3 == 1
+			require 'fileutils'
+				copy_fig( 1, recipe.code, pre_recipe.code )if recipe.fig1 == 1
+				copy_fig( 2, recipe.code, pre_recipe.code )if recipe.fig2 == 1
+				copy_fig( 3, recipe.code, pre_recipe.code )if recipe.fig3 == 1
+			end
+			recipe.insert_db
 		end
 	end
 
-	# コードが新しくなって写真があったら写真もコピー
-	if new_code_flag
-		require 'fileutils'
-		if fig1 == 1
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-1tns.jpg", "#{$PHOTO_PATH}/#{code}-1tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-1tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-1tn.jpg", "#{$PHOTO_PATH}/#{code}-1tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-1tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-1.jpg", "#{$PHOTO_PATH}/#{code}-1.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-1.jpg" )
-			copy_fig1 = 1
-		end
-
-		if fig2 == 1
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-2tns.jpg", "#{$PHOTO_PATH}/#{code}-2tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-2tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-2tn.jpg", "#{$PHOTO_PATH}/#{code}-2tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-2tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-2.jpg", "#{$PHOTO_PATH}/#{code}-2.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-2.jpg" )
-			copy_fig2 = 1
-		end
-
-		if fig3 == 1
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-3tns.jpg", "#{$PHOTO_PATH}/#{code}-3tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-3tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-3tn.jpg", "#{$PHOTO_PATH}/#{code}-3tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-3tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{source_code}-3.jpg", "#{$PHOTO_PATH}/#{code}-3.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{source_code}-3.jpg" )
-			copy_fig3 = 1
-		end
-	end
-
-	# 擬似食品と公開フラグのキャンセル
-	a = sum.split( "\t" )
-	a.each do |e|
-		sum_items = e.split( ':' )
-		public_bit = 0 if /^U/ =~ sum_items[0]
-	end
-
-
-	# 下書きと公開フラグのキャンセル
-	public_bit = 0 if draft == 1
-
-
-	# 上書き保存
-	mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{recipe_name}', dish='#{dish_num}',type='#{type}', role='#{role}', tech='#{tech}', time='#{time}', cost='#{cost}', sum='#{sum}', protocol='#{protocol}', public='#{public_bit}',protect='#{protect}',draft='#{draft}', fig1='#{fig1}', fig2='#{fig2}', fig3='#{fig3}', date='#{$DATETIME}' WHERE user='#{uname}' and code='#{code}';", false )
-	mariadb( "UPDATE #{$MYSQL_TB_SUM} SET name='#{recipe_name}', code='#{code}', protect='#{protect}' WHERE user='#{uname}';", false )
-
-#	update_recipei( code, recipe_name, sum, protocol )
-else
+	mdb( "UPDATE #{$MYSQL_TB_SUM} SET name='#{recipe.name}', code='#{recipe.code}', protect='#{recipe.protect}' WHERE user='#{user.name}';", false, @debug )
 end
 
 
-# 公開チェック
-p public_bit if @debug
+# HTML SELECT Recipe attribute
 check_public = ''
-check_public = 'CHECKED' if public_bit == 1
+check_public = 'CHECKED' if recipe.public == 1
 
-
-# ロックチェック
-p protect if @debug
 check_protect = ''
-check_protect = 'CHECKED' if protect == 1
+check_protect = 'CHECKED' if recipe.protect == 1
 
-
-# 下書きチェック
-p draft if @debug
 check_draft = ''
-check_draft = 'CHECKED' if draft == 1
+check_draft = 'CHECKED' if recipe.draft == 1
 
 
-# 料理スタイル生成
+# HTML SELECT Recipe type
 html_type = lp[1]
 html_type << '<select class="form-control form-control-sm" id="type">'
 $RECIPE_TYPE.size.times do |c|
-	if type == c
+	if recipe.type == c
 		html_type << "<option value='#{c}' SELECTED>#{$RECIPE_TYPE[c]}</option>"
 	else
 		html_type << "<option value='#{c}'>#{$RECIPE_TYPE[c]}</option>"
@@ -326,17 +272,17 @@ end
 html_type << '</select>'
 
 
-# 献立区分
+# HTML SELECT Recipe role
 html_role = lp[2]
 html_role << '<select class="form-control form-control-sm" id="role">'
 $RECIPE_ROLE.size.times do |c|
-	if role == c
+	if recipe.role == c
 		html_role << "<option value='#{c}' SELECTED>#{$RECIPE_ROLE[c]}</option>"
 	else
 		html_role << "<option value='#{c}'>#{$RECIPE_ROLE[c]}</option>"
 	end
 end
-if role == 100
+if recipe.role == 100
 	html_role << "<option value='100' SELECTED>[ 調味％ ]</option>"
 else
 	html_role << "<option value='100'>[ 調味％ ]</option>"
@@ -344,11 +290,11 @@ end
 html_role << '</select>'
 
 
-# 調理区分
+# HTML SELECT Recipe technique
 html_tech = lp[3]
 html_tech << '<select class="form-control form-control-sm" id="tech">'
 $RECIPE_TECH.size.times do |c|
-	if tech == c
+	if recipe.tech == c
 		html_tech << "<option value='#{c}' SELECTED>#{$RECIPE_TECH[c]}</option>"
 	else
 		html_tech << "<option value='#{c}'>#{$RECIPE_TECH[c]}</option>"
@@ -357,11 +303,11 @@ end
 html_tech << '</select>'
 
 
-# 目安時間
+# HTML SELECT Recipe time
 html_time = lp[4]
 html_time << '<select class="form-control form-control-sm" id="time">'
 $RECIPE_TIME.size.times do |c|
-	if time == c
+	if recipe.time == c
 		html_time << "<option value='#{c}' SELECTED>#{$RECIPE_TIME[c]}</option>"
 	else
 		html_time << "<option value='#{c}'>#{$RECIPE_TIME[c]}</option>"
@@ -370,11 +316,11 @@ end
 html_time << '</select>'
 
 
-# 目安費用
+# HTML SELECT Recipe cost
 html_cost = lp[5]
 html_cost << '<select class="form-control form-control-sm" id="cost">'
 $RECIPE_COST.size.times do |c|
-	if cost == c
+	if recipe.cost == c
 		html_cost << "<option value='#{c}' SELECTED>#{$RECIPE_COST[c]}</option>"
 	else
 		html_cost << "<option value='#{c}'>#{$RECIPE_COST[c]}</option>"
@@ -383,7 +329,7 @@ end
 html_cost << '</select>'
 
 
-#### レシピフォームの表示
+#### HTML FORM recipe
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
@@ -412,9 +358,9 @@ html = <<-"HTML"
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="recipe_name">#{lp[10]}</label>
 				</div>
-      			<input type="text" class="form-control" id="recipe_name" value="#{recipe_name}" required>
+      			<input type="text" class="form-control" id="recipe_name" value="#{recipe.name}" required>
 				<div class="input-group-append">
-      				<button class="btn btn-outline-primary" type="button" onclick="recipeSave_BWL2( '#{code}' )">#{lp[11]}</button>
+      				<button class="btn btn-outline-primary" type="button" onclick="recipeSave_BWL2( '#{recipe.code}' )">#{lp[11]}</button>
 				</div>
     		</div>
     	</div>
@@ -432,11 +378,11 @@ html = <<-"HTML"
 		<div class="col form-group">
 			<div class="col">
     			<label for="exampleFormControlTextarea1">#{lp[12]}</label>
-				<textarea class="form-control" id="protocol" rows="10">#{protocol}</textarea>
+				<textarea class="form-control" id="protocol" rows="10">#{recipe.protocol}</textarea>
 			</div>
   		</div>
 	</div>
-	<div align='right' class='code'>#{code}</div>
+	<div align='right' class='code'>#{recipe.code}</div>
 </div>
 HTML
 

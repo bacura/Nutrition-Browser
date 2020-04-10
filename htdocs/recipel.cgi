@@ -17,6 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'recipel'
 $PAGE_LIMIT = 50
 @debug = false
 
@@ -229,18 +230,11 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'recipel', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -266,7 +260,7 @@ cost = 99
 recipe_code_list = []
 case command
 when 'init'
-	r = mdb( "SELECT recipel FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, status )
+	r = mdb( "SELECT recipel FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
 		a = r.first['recipel'].split( ':' )
 		page = a[0].to_i
@@ -281,7 +275,7 @@ when 'init'
 when 'reset'
 	words = ''
 when 'refer'
-	recipe_code_list = referencing( words, uname ) if words != '' && words != nil
+	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
 	words = lp[1] if recipe_code_list.size == 0
 else
 	page = cgi['page'].to_i
@@ -293,9 +287,9 @@ else
 	time = cgi['time'].to_i
 	cost = cgi['cost'].to_i
 
-	r = mdb( "SELECT reciperr FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, status )
+	r = mdb( "SELECT reciperr FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first['reciperr'] != '' && r.first['reciperr'] != nil
-		recipe_code_list = referencing( r.first['reciperr'], uname )
+		recipe_code_list = referencing( r.first['reciperr'], user.name )
 		words = r.first['reciperr']
 	end
 end
@@ -321,23 +315,25 @@ if command == 'delete'
 		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" )
 	end
 	#レシピデータベースのの更新（削除）
-	mdb( "delete FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' and code='#{code}';", false, status )
+	mdb( "delete FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+
+	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+	if r.first
+		mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='', code='', name='', protect=0, dish=1 WHERE user='#{user.name}';", false, @debug )
+	end
 end
 
 
 #### レシピのインポート
 if command == 'import'
 	# インポート元の読み込み
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, status )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 
 	if r.first
 		#レシピデータベースのの更新(新規)
-		require 'securerandom'
 		require 'fileutils'
 
-		new_code = uname[0, 2]
-		new_code = "x" + uname[0, 1] if new_code == nil
-		new_code = "#{new_code}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
+		new_code = generate_code( user.name, 'r' )
 
 		import_fig1 = 0
 		import_fig2 = 0
@@ -365,8 +361,8 @@ if command == 'import'
 			import_fig3 = 1
 		end
 
-		mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{uname}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{$DATETIME}';", false, status )
-		mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{uname}';", false, status )
+		mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{user.name}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{$DATETIME}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{user.name}';", false, @debug )
 	end
 
 end
@@ -378,24 +374,24 @@ sql_where = 'WHERE '
 case range
 # 自分の全て
 when 0
-	sql_where << " user='#{uname}' AND name!=''"
+	sql_where << " user='#{user.name}' AND name!=''"
 # 自分の下書き
 when 1
-	sql_where << "user='#{uname}' AND name!='' AND draft='1'"
+	sql_where << "user='#{user.name}' AND name!='' AND draft='1'"
 # 自分の保護
 when 2
-	sql_where << "user='#{uname}' AND protect='1' AND name!=''"
+	sql_where << "user='#{user.name}' AND protect='1' AND name!=''"
 # 自分の公開
 when 3
-	sql_where << "user='#{uname}' AND public='1' AND name!=''"
+	sql_where << "user='#{user.name}' AND public='1' AND name!=''"
 # 自分の無印
 when 4
-	sql_where << "user='#{uname}' AND public='0' AND draft='0' AND name!=''"
+	sql_where << "user='#{user.name}' AND public='0' AND draft='0' AND name!=''"
 # 他の公開
 when 5
-	sql_where << "public='1' AND user!='#{uname}' AND name!=''"
+	sql_where << "public='1' AND user!='#{user.name}' AND name!=''"
 else
-	sql_where << " user='#{uname}' AND name!=''"
+	sql_where << " user='#{user.name}' AND name!=''"
 end
 
 sql_where << " AND type='#{type}'" unless type == 99
@@ -418,13 +414,13 @@ html_cost = cost_html( cost )
 recipe_solid = []
 if recipe_code_list.size > 0
 	recipe_code_list.each do |e|
-		r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, status )
+		r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
 		if r.first
 			recipe_solid << Hash['code' => e, 'user' => r.first['user'], 'protect' => r.first['protect'], 'name' => r.first['name'], 'fig1' => r.first['fig1']]
 		end
 	end
 else
-	r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, status )
+	r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, @debug )
 	recipe_solid = r
 end
 
@@ -468,7 +464,7 @@ recipe_solid.each do |e|
 		else
 			recipe_html << "<td><a href='photo/#{e['code']}-1tn.jpg' target='photo'><img src='photo/#{e['code']}-1tns.jpg'></a></td>"
 		end
-		if e['user'] == uname
+		if e['user'] == user.name
 			recipe_html << "<td onclick=\"initCB_BWL1( 'load', '#{e['code']}' )\">#{e['name']}</td>"
 		else
 			recipe_html << "<td>#{e['name']}</td>"
@@ -493,20 +489,20 @@ recipe_solid.each do |e|
 
 		recipe_html << "</td>"
 		recipe_html << "<td>"
-		if status >= 2 && e['user'] == uname
+		if user.status >= 2 && e['user'] == user.name
 			recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
 		end
-		if status >= 2 && e['user'] == uname
+		if user.status >= 2 && e['user'] == user.name
 			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[21]}</button>"
 		end
 		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect_BWL2( '#{e['code']}' )\">#{lp[9]}</button>"
 		recipe_html << "	<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[19]}</button>"
-		if status >= 2 && e['user'] == uname
+		if user.status >= 2 && e['user'] == user.name
 			recipe_html << "	<button class='btn btn-primary btn-sm' type='button' onclick=\"\">#{lp[20]}</button>&nbsp;"
 		end
 		recipe_html << "</td>"
 
-		if e['user'] == uname
+		if e['user'] == user.name
 			if e['protect'] == 0
 				recipe_html << "<td><input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"recipeDelete_BWL1( '#{e['code']}', #{page} )\">#{lp[10]}</button></td>"
 			else
@@ -569,4 +565,4 @@ puts html
 recipel = "#{page}:#{range}:#{type}:#{role}:#{tech}:#{time}:#{cost}"
 reciperr = ''
 reciperr = "#{words}" if recipe_code_list.size > 0
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{uname}';", false, status )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{user.name}';", false, @debug )

@@ -1,15 +1,16 @@
 # Ginmi module for basal metabolism reference 0.00
 #encoding: utf-8
 
-def ginmi_module( cgi )
-	uname, uid, status = login_check( cgi )
+def ginmi_module( cgi, user )
+	module_js()
+
 	command = cgi['command']
 	html = ''
 
 	case command
 	when 'form', 'koyomiex'
 		#importing from config
-		r = mdb( "SELECT age, sex, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, true )
+		r = mdb( "SELECT age, sex, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
 		sex = 0
 		age = 18
 		weight = 0.0
@@ -25,7 +26,7 @@ def ginmi_module( cgi )
 			a.size.times do |c|
 				aa = a[c].split( "\t" )
 				if aa[0] == '3'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{uname}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
+					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
 					if rr.first
 						weight = BigDecimal( rr.first["item#{aa[0]}"] )
 					end
@@ -229,4 +230,28 @@ HTML
 	end
 
 	return html
+end
+
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+var ginmiEnergyRefres = function(){
+	var sex = document.getElementById( "sex" ).value;
+	var age = document.getElementById( "age" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	var pal = document.getElementById( "pal" ).value;
+	var pregnancy = document.getElementById( "pregnancy" ).value;
+	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+var ginmiEnergyRefkex = function(){
+	$.post( "ginmi.cgi", { mod:"energy-ref", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+</script>
+JS
+	puts js
 end

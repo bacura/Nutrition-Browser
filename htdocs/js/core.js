@@ -460,6 +460,11 @@ var metaDisplay = function( com ){
 // Display config menu
 var configInit = function(){
 	closeBroseWindows( 2 );
-	$.post( "config.cgi", { command:'init' }, function( data ){ $( "#bw_level1" ).html( data );});
+	$.post( "config.cgi", { mod:'' }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
+};
+
+var configForm = function( mod ){
+	$.post( "config.cgi", { mod:mod }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
 };

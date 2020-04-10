@@ -1,8 +1,9 @@
 # Ginmi module for Laurel index 0.00
 #encoding: utf-8
 
-def ginmi_module( cgi )
-	uname, uid, status = login_check( cgi )
+def ginmi_module( cgi, user )
+	module_js()
+
 	command = cgi['command']
 	html = ''
 
@@ -10,7 +11,7 @@ def ginmi_module( cgi )
 	when 'form', 'koyomiex'
 		#importing from config
 
-		r = mdb( "SELECT height, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, true )
+		r = mdb( "SELECT height, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
 		height = 0.0
 		weight = 0.0
 		if r.first
@@ -25,14 +26,14 @@ def ginmi_module( cgi )
 			a.size.times do |c|
 				aa = a[c].split( "\t" )
 				if aa[0] == '2'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{uname}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
+					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
 					if rr.first
 						height = rr.first["item#{aa[0]}"].to_f
 					end
 				end
 
 				if aa[0] == '3'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{uname}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
+					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
 					if rr.first
 						weight = rr.first["item#{aa[0]}"].to_f
 					end
@@ -205,4 +206,25 @@ HTML
 	end
 
 	return html
+end
+
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+var ginmiLaurelres = function(){
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	$.post( "ginmi.cgi", { mod:"laureli", command:'result', height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
+	document.getElementById( "bw_level3" ).style.display = 'block';
+};
+
+var ginmiLaurelkex = function(){
+	$.post( "ginmi.cgi", { mod:"laureli", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+};
+
+</script>
+JS
+	puts js
 end

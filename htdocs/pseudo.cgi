@@ -17,7 +17,8 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
+script = 'pseudo'
+@debug = false
 
 
 #==============================================================================
@@ -30,18 +31,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'pseudo', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+
 fct_opt = Hash.new
 
 #### POSTデータの取得
@@ -98,7 +93,7 @@ end
 
 #### 成分読み込み
 if command == 'init' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false, @debug )
+	r = mdb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false, @debug )
 	if r.first
 		4.upto( 67 ) do |i| fct_opt[$FCT_ITEM[i]] = r.first[$FCT_ITEM[i]] end
 	end
@@ -107,7 +102,7 @@ end
 
 #### クラス・タグ読み込み
 if command == 'init' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false, @debug )
+	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false, @debug )
 	if r.first
 		user = r.first['user']
 		class1 = r.first['class1']
@@ -120,7 +115,7 @@ if command == 'init' && code != ''
 		tag5 = r.first['tag5']
 	end
 elsif command == 'save' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
+	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 	user = r.first['user'] if r.first
 end
 
@@ -202,11 +197,11 @@ if command == 'save'
 
 	# 新規食品番号の合成
 	over_max_flag = false
-	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{uname}' AND public='2';", false, @debug )
+	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 	if r.first
 		code = r.first['FN']
 	else
-		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{uname}');", false, @debug )
+		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}');", false, @debug )
 		if rr.first
 			last_FN = rr.first['FN'][-3,3].to_i
 			if public_bit == 1
@@ -225,29 +220,29 @@ if command == 'save'
 
 	# 食品番号のチェック
 	unless code == ''
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{uname}' AND FN='#{code}';", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	else
 		r = []
 	end
 
 	if r.first
 		# 擬似食品テーブルの更新
-		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 
 		# タグテーブルの更新
-		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 
 		# 拡張タグテーブルに追加
-		mdb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{uname}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 	else
 		# 擬似食品テーブルに追加
-		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{@new_FN}',user='#{uname}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{@new_FN}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
 
 		# タグテーブルに追加
-		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{@new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{uname}',public='#{public_bit}';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{@new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
 
 		# 拡張タグテーブルに追加
-		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{@new_FN}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{@new_FN}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
 
 		code = @new_FN
 	end
@@ -258,7 +253,7 @@ end
 
 #### 削除部分
 if command == 'delete'
-	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='2' WHERE user='#{uname}' AND FN='#{code}';", false, @debug )
+	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='2' WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	code = ''
 end
 
@@ -285,7 +280,7 @@ end
 
 #### disable option
 disabled_option = ''
-disabled_option = 'disabled' if user != uname && user != nil
+disabled_option = 'disabled' if user != user.name && user != nil
 
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
@@ -315,14 +310,14 @@ html_fct_block6 << '</table>'
 
 #### save button
 save_button = ''
-if user == uname || code == ''
+if user == user.name || code == ''
 	save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"pseudoSave_BWLF( '#{code}' )\">#{lp[1]}</button>"
 end
 
 
 #### delete button
 delete_button = ''
-if code != '' && user == uname
+if code != '' && user == user.name
 	delete_button = "<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"pseudoDelete_BWLF( '#{code}' )\">#{lp[2]}</button>"
 end
 

@@ -33,11 +33,7 @@ var initCB_BWL1 = function( com, code ){
 	closeBroseWindows( 1 );
 	$.post( "cboard.cgi", { command:com, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
-
-	var fx = function(){
-		refreshCB();
-	};
-	setTimeout( fx, 1000 );
+	setTimeout( refreshCB(), 1000 );
 	bw_level = 1;
 };
 
@@ -58,10 +54,7 @@ var clear_BWL1 = function( order, code ){
 	} else{
 		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 	}
-	var fx = function(){
-		refreshCB();
-	};
-	setTimeout( fx, 1000 );
+	setTimeout( refreshCB(), 1000 );
 };
 
 
@@ -123,10 +116,7 @@ var allSwitch = function( code ){
 var recipeAdd_BWL1 = function( code ){
 	var fn = document.getElementById( "food_add" ).value;
 	$.post( "cboard.cgi", { command:'add', option1:fn, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
-	var fx = function(){
-		refreshCB();
-	};
-	setTimeout( fx, 1000 );
+	setTimeout( refreshCB(), 1000 );
 };
 
 
@@ -134,10 +124,7 @@ var recipeAdd_BWL1 = function( code ){
 var seasoningAdd_BWL1 = function( code ){
 	var seasoning = document.getElementById( "seasoning" ).value;
 	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
-	var fx = function(){
-		refreshCB();
-	};
-	setTimeout( fx, 1000 );
+	setTimeout( refreshCB(), 1000 );
 };
 
 
@@ -300,6 +287,7 @@ var recipeBit_draft = function(){
 // レシピ編集の写真を削除、そしてL3にリストを再表示
 var photoDel_BWL2 = function( slot, code ){
 	$.post( "photo.cgi", { command:'delete', code:code, slot:slot }, function( data ){ displayVideo( '写真を削除' );});
+//	$.post( "photo.cgi", { command:'delete', code:code, slot:slot }, function( data ){ $( '#bw_level3' ).html( data );});
 	var fx = function(){
 		$.post( 'photo.cgi', { command:'form', code:code }, function( data ){ $( '#bw_level3' ).html( data );});
 	};

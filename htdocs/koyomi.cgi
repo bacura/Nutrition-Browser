@@ -88,12 +88,13 @@ end
 
 ####
 class Nutrition_calc
-	attr_reader :results, :fn_set, :weight_set
+	attr_reader :results, :fn_set, :weight_set, :unit_set
 
-	def initialize( uname, fn_set, weight_set )
+	def initialize( uname, fn_set, weight_set, unit_set )
 		@uname = uname
 		@fn_set = fn_set
 		@weight_set = weight_set
+		@unit_set = unit_set
 		@results = Hash.new
 		@results.default = BigDecimal( 0 )
 	end
@@ -140,6 +141,7 @@ class Nutrition_calc
 
 			if sum_no != '+' && sum_no != '-'
 				@fn_set << sum_no
+				@unit_set << unit
 				sum_ew = sum_weight if sum_ew == nil
 				weight_set_ << ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
 				recipe_total_weight += ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
@@ -154,22 +156,24 @@ class Nutrition_calc
 		@weight_set.concat( weight_set_ )
 	end
 
-	def calculate( fn_set, weight_set )
-		fn_set.size.times do |c|
+	def calculate()
+		@fn_set.size.times do |c|
 			query = ''
-			if /^P/ =~ fn_set[c]
-				query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[c]}';"
+			if /^P/ =~ @fn_set[c]
+				query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{@fn_set[c]}';"
 			elsif /^U/ =~ fn_set[c]
-				query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[c]}' AND user='#{@uname}';"
+				query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{@fn_set[c]}' AND user='#{@uname}';"
 			else
-				query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{fn_set[c]}';"
+				query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{@fn_set[c]}';"
 			end
 
 			r = mdb( query, false, false )
 			if r.first
+				@weight_set[c] = unit_weight( @weight_set[c], @unit_set[c], @fn_set[c] ) if @unit_set[c] != 0 && @unit_set[c] != 99
+
 				5.upto( 65 ) do |cc|
 					t = convert_zero( r.first[$FCT_ITEM[cc]] )
-					@results[$FCT_ITEM[cc]] += BigDecimal( num_opt( t, weight_set[c], 1, $FCT_FRCT[$FCT_ITEM[cc]] + 3 ))
+					@results[$FCT_ITEM[cc]] += BigDecimal( num_opt( t, @weight_set[c], 1, $FCT_FRCT[$FCT_ITEM[cc]] + 3 ))
 				end
 			end
 		end
@@ -303,7 +307,7 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 1.upto( calendar.ddl ) do |c|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	if r.first
-		calc = Nutrition_calc.new( user.name, [], [] )
+		calc = Nutrition_calc.new( user.name, [], [], [] )
 		some_set = ''
 		fzcode = r.first['fzcode']
 		freeze_flag = false
@@ -355,28 +359,22 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 							recipe_set.size.times do |ccc|
 								if /\-r\-/ =~ recipe_set[ccc] || /\w+\-\h{4}\-\h{4}/ =~ recipe_set[ccc]
 									calc.expand_recipe( recipe_set[ccc], rate, unit )
-									fn_set = calc.fn_set
-									weight_set = calc.weight_set
 								end
 							end
 
 							# food
-							if fn_set.size == 0
-								fn_set << code
-								weight_set << rate
+							if /\-/ !~ code
+								calc.fn_set << code
+								calc.weight_set << rate
+								calc.unit_set << unit
 							end
-							if unit != 0 && unit != 99
-								fn_set.size.times do |ccc|
-									weight_set[ccc] = unit_weight( weight_set[ccc], unit, fn_set[ccc] )
-								end
-							end
-
-							calc.calculate( fn_set, weight_set )
 						end
 					end
 				end
+
 			end
 		end
+		calc.calculate()
 
 		unless freeze_flag
 			sub_query = ''
