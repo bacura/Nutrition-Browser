@@ -11,13 +11,13 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'cboardm.cgi'
 @debug = false
 
 
@@ -29,10 +29,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status = login_check( cgi )
+user = User.new( cgi )
+user.debug if @debug
 
 
 #### POSTデータの取得
@@ -45,9 +47,9 @@ mode = cgi['mode']
 food_weight = BigDecimal( food_weight_check( food_weight ).first )
 
 #### データと表示の更新
-if uname
+if user.name
 	# まな板データの読み込み
-	r = mariadb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 	sum = r.first['sum'].split( "\t" )
 	cb_num = sum.size
 	new_sum = ''
@@ -61,12 +63,12 @@ if uname
 		end
 
 		# まな板データ更新
-		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
 		cb_num += 1
 		puts cb_num
 
 		# 履歴データ更新
-		add_his( uname, food_no )
+		add_his( user.name, food_no )
 	elsif mode == 'change'
 		sum.each do |e|
 			t = e.split( ':' )
@@ -79,7 +81,7 @@ if uname
 		new_sum.chop!
 
 		# まな板データ更新
-		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{uname}';", false )
+		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
 		puts cb_num
 	elsif mode == 'refresh'
 

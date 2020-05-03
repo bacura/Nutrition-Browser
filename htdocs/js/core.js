@@ -236,7 +236,7 @@ var searchBWL1 = function(){
 			$.post( "recipel.cgi", { command:'refer', words:words }, function( data ){ $( "#bw_level1" ).html( data );});
 			break;
 		case '2':
-			$.post( "memory.cgi", { command:'refer', pointer:words }, function( data ){ $( "#bw_level1" ).html( data );});
+			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#bw_level1" ).html( data );});
 			break;
  		}
 		document.getElementById( "bw_level1" ).style.display = 'block';
@@ -442,6 +442,12 @@ var nextMemoryPB = function(){
 	document.getElementById( "bw_level4" ).style.display = 'block';
 };
 
+// Open memory link
+var memoryOpenLink = function( pointer, depth ){
+	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){ $( "#bw_level" + depth ).html( data );});
+	if( depth == '1' ){ closeBroseWindows( 1 );	}
+	document.getElementById( "bw_level" + depth ).style.display = 'block';
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Meta data //////////////////////////////////////////////////////////////////////////

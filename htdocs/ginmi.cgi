@@ -37,8 +37,8 @@ def init( lp )
 	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</button>
 	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</button>
 	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[10]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[11]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'es-height' )">#{lp[10]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'es-muscle' )">#{lp[11]}</button>
 	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[12]}</button>
 	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[13]}</button>
 	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[14]}</button>

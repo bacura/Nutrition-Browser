@@ -347,17 +347,36 @@ when 'add'
 	add_food_no = '00000' if add_food_no == '0'
 	p add_food_no if @debug
 
+	insert_posi = 0
+	check_flag = false
+	food_list.size.times do |c|
+		if food_list[c].check == "1"
+			insert_posi = c
+			check_flag = true
+		end
+	end
+	insert_posi = food_list.size - 1 unless check_flag
+	food_list_ = []
+	0.upto( insert_posi ) do |c| food_list_ << food_list[c] end
+
 	if add_food_no == nil
-		food_list << Food.new( '-', '-', '-', '-', 0, '-', '-', '-' )
+		food_list_ << Food.new( '-', '-', '-', '-', 0, '-', '-', '-' )
 	elsif /\d{5}/ =~ add_food_no
 		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}';", false, @debug )
-		food_list << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
+		food_list_ << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
 	elsif /[PU]?\d{5}/ =~ add_food_no
 		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{user.name}' AND public!='#{2}' ) OR public='1' );", false, @debug )
-		food_list << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
+		food_list_ << Food.new( add_food_no, add_food_weight, '0', add_food_weight, '0', '', '1.0', add_food_weight ) if r.first
 	else
-		food_list << Food.new( '+', '-', '-', '-', '0', add_food_no, '-', '-' )
+		food_list_ << Food.new( '+', '-', '-', '-', '0', add_food_no, '-', '-' )
 	end
+
+	if check_flag
+		insert_posi += 1
+		insert_posi.upto( food_list.size - 1 ) do |c| food_list_ << food_list[c] end
+	end
+	food_list = food_list_
+
 	update = '*'
 
 

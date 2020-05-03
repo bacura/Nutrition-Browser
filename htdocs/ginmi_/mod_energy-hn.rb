@@ -148,7 +148,7 @@ HTML
 			formula = "( 0.0481 * #{weight.to_f} + 0.0234 * #{height.to_f} - 0.0138 * #{age} - 0.4235 ) * 1000 / 4.186"
 		else
 			result = (( 0.0481 * weight + 0.0234 * height - 0.0138 * age - 0.9708 ) * 1000 / 4.186 ).round( 0 )
-			formula = "( 0.0481 * #{weight.to_f} + 0.0234 * #{height.to_f} - 0.0138 * #{age} - 0.4235 ) * 1000 / 4.186"
+			formula = "( 0.0481 * #{weight.to_f} + 0.0234 * #{height.to_f} - 0.0138 * #{age} - 0.9708 ) * 1000 / 4.186"
 		end
 		eer_result = ( result * pal ).round( 0 )
 		eer_formula = "#{result.to_i} * #{pal.to_f}"
@@ -162,7 +162,7 @@ HTML
 			ibw_formula = "( 0.0481 * #{ibw.to_f} + 0.0234 * #{height.to_f} - 0.0138 * #{age} - 0.4235 ) * 1000 / 4.186"
 		else
 			ibw_result = (( 0.0481 * ibw + 0.0234 * height - 0.0138 * age - 0.9708 ) * 1000 / 4.186 ).round( 0 )
-			ibw_formula = "( 0.0481 * #{ibw.to_f} + 0.0234 * #{height.to_f} - 0.0138 * #{age} - 0.4235 ) * 1000 / 4.186"
+			ibw_formula = "( 0.0481 * #{ibw.to_f} + 0.0234 * #{height.to_f} - 0.0138 * #{age} - 0.9708 ) * 1000 / 4.186"
 		end
 		ibw_eer_result = ( ibw_result * pal ).round( 0 )
 		ibw_eer_formula = "#{ibw_result.to_i} * #{pal.to_f}"

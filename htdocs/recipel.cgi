@@ -205,19 +205,21 @@ def referencing( words, uname )
 		end
 	end
 	if @debug
-		puts "query_word:"
-		puts query_word
-		puts "true_query:"
-		puts true_query
+		puts "query_word:#{query_word}<br>"
+		puts "true_query:#{true_query}<br>"
 		puts "<hr>"
 	end
 
 	# Referencing recipe code
 	recipe_code_list = []
 	true_query.each do |e|
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e}' AND ( user='#{uname}' OR public='1' );", false, @debug )
-		r.each do |ee|
-			recipe_code_list << ee['code']
+		if e =~ /\-r\-/
+			recipe_code_list << e
+		else
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e}' AND ( user='#{uname}' OR public='1' );", false, @debug )
+			r.each do |ee|
+				recipe_code_list << ee['code']
+			end
 		end
 	end
 	recipe_code_list.uniq!

@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,30 +18,39 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'memorypb'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+def extend_linker( memory, depth )
+	depth += 1 if depth < 5
+	link_pointer = memory.scan( /\{\{[^\}\}]+\}\}/ )
+	link_pointer.uniq!
+
+	memory_ = memory
+	link_pointer.each do |e|
+		pointer = e.sub( '{{', "" ).sub( '}}', "" )
+		pointer_ = e.sub( '{{', "<span class='memory_link' onclick=\"memoryOpenLink( '#{pointer}', '#{depth}' )\">" )
+		pointer_.sub!( '}}', "</span>" )
+		memory_.gsub!( e, pointer_ )
+	end
+
+	return memory_
+end
 
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'memorypb', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
-
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 #### Getting POST data
 command = cgi['command']
@@ -116,8 +124,8 @@ when 'category'
 	else
 		memory_html << "<h6 id='close_memory' style='visibility:hidden;'>"
 	end
-	memory_html << "#{memory[n]}</h6>"
-	memory_html << "#{edit_button}" if status >= 8
+	memory_html << "#{extend_linker( memory[n], 5 )}</h6>"
+	memory_html << "#{edit_button}" if user.status >= 8
 	memory_html << "</div>"
 end
 

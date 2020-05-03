@@ -118,6 +118,17 @@ nav {
   color: lavender;
 }
 
+.memory_pointer{
+  font-weight: bolder;
+  font-size: large;
+}
+
+.memory_link{
+  font-weight: bolder;
+  border-bottom: dotted 1px purple;
+}
+
+
 /*=====================*/
 /* 閲覧階層 ＋ 詳細表示 */
 /*=====================*/

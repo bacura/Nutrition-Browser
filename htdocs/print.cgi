@@ -11,13 +11,13 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'print'
 @debug = false
 
 
@@ -29,19 +29,13 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'print', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -54,21 +48,22 @@ if @debug
 end
 
 
-#### コードの確認
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+#### Checking recipe code
+r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 unless r.first
 	puts "#{lp[1]}(#{code})#{lp[2]}"
 	exit( 9 )
 end
 recipe_name = r.first['name']
+recipe_dish = r.first['dish']
 
 
-#### HTMLパレットの生成
+#### Generating palette HTML
 palette_html = ''
 #### Setting palette
 palette_sets = []
 palette_name = []
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
@@ -97,7 +92,7 @@ html = <<-"HTML"
   				<div class="input-group-prepend">
     				<span class="input-group-text" for="dish">#{lp[4]}</span>
   				</div>
-  				<input type='number' min='1' class="form-control" id='dish' value='1'>
+  				<input type='number' min='1' class="form-control" id='dish' value='#{recipe_dish}'>
 			</div>
 		</div>
 		<div class='col-1'>
@@ -146,7 +141,7 @@ html = <<-"HTML"
 
 	<div class='row'>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{uname}', '#{code}', '2' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '2' )">
   				<img class="card-img-top" src="photo/pvt_sample_2.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[13]}</h6>
@@ -154,7 +149,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{uname}', '#{code}', '4' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '4' )">
   				<img class="card-img-top" src="photo/pvt_sample_4.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[14]}</h6>
@@ -162,7 +157,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{uname}', '#{code}', '6' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '6' )">
   				<img class="card-img-top" src="photo/pvt_sample_6.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[15]}</h6>
@@ -170,7 +165,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{uname}', '#{code}', '8' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '8' )">
   				<img class="card-img-top" src="photo/pvt_sample_8.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[16]}</h6>

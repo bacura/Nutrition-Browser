@@ -266,7 +266,7 @@ end
 
 
 #### コードの読み込み
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @degug )
 unless r.first
 	puts "指定のレシピコード(#{code})は存在しません。"
 	exit( 9 )
@@ -322,7 +322,7 @@ if template > 4
 	# Setting palette
 	palette_sets = []
 	palette_name = []
-	r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @degug )
 	if r.first
 		r.each do |e|
 			a = e['palette'].split( '' )
@@ -515,7 +515,7 @@ html_foot = <<-"HTML"
 	<hr>
 	<div class='row'>
 		<div class='col-10'>
-			<a href='fctb.bacura.jp/'>食品成分表ブラウザ2015</a>・<a href='http://neg.bacura.jp/'>日本栄養ギルド</a>・<a href='http://bacura.jp'>ばきゅら京都Lab</a><br>
+			<a href='nb.bacura.jp/'>栄養ブラウザ</a>・<a href='http://neg.bacura.jp/'>日本えいようギルド</a>・<a href='http://bacura.jp'>ばきゅら京都Lab</a><br>
 			#{url}
 		</div>
 		<div class='col-2'>

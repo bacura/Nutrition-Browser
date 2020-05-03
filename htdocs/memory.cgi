@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,36 +18,47 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'memory'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+def extend_linker( memory, depth )
+	depth += 1 if depth < 5
+	link_pointer = memory.scan( /\{\{[^\}\}]+\}\}/ )
+	link_pointer.uniq!
+
+	memory_ = memory
+	link_pointer.each do |e|
+		pointer = e.sub( '{{', "" ).sub( '}}', "" )
+		pointer_ = e.sub( '{{', "<span class='memory_link' onclick=\"memoryOpenLink( '#{pointer}', '#{depth}' )\">" )
+		pointer_.sub!( '}}', "</span>" )
+		memory_.gsub!( e, pointer_ )
+	end
+
+	return memory_
+end
+
 
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'memory', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### Getting POST data
 command = cgi['command']
 category = cgi['category']
 pointer = cgi['pointer']
-depth = cgi['depth']
+depth = cgi['depth'].to_i
 if @debug
 	puts "command:#{command}<br>"
 	puts "category:#{category}<br>"
@@ -62,8 +72,8 @@ memory_html = ''
 onclick = ''
 case command
 when 'init'
-	r = mariadb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY} ORDER BY category ASC;", false )
-	if status.to_i >= 1
+	r = mdb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY} ORDER BY category ASC;", false, @debug )
+	if user.status.to_i >= 1
 		memory_html << "<button type='button' class='btn btn-primary btn-sm nav_button' onclick=\"initMemoryPB()\">#{lp[4]}</button>"
 	else
 		memory_html << "<button type=\"button\" class=\"btn btn-dark text-secondary btn-sm nav_button\" onclick=\"displayVideo( '#{lp[5]}' )\">#{lp[4]}</button>"
@@ -73,17 +83,17 @@ when 'init'
 	end
 
 when 'category'
-	r = mariadb( "SELECT pointer from #{$MYSQL_TB_MEMORY} WHERE category='#{category}' ORDER BY pointer ASC;", false )
+	r = mdb( "SELECT pointer from #{$MYSQL_TB_MEMORY} WHERE category='#{category}' ORDER BY pointer ASC;", false, @debug )
 	r.each do |e|
 		memory_html << "<button type='button' class='btn btn-outline-secondary btn-sm nav_button' onclick=\"memoryOpen( 'pointer', '#{category}', '#{e['pointer']}', 2 )\">#{e['pointer']}</button>\n"
 	end
 	onclick = "onclick=\"memoryOpen( 'init', '', '', 2 )\""
 
 when 'pointer'
-	r = mariadb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
+	r = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false, @debug )
 	r.each do |e|
 		edit_button = ''
-		edit_button = "&nbsp<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{e['category']}', '#{e['pointer']}', 'back' )\">#{lp[3]}</button>" if status >= 8
+		edit_button = "&nbsp<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{e['category']}', '#{e['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
 		raw_memory = e['memory']
 		memory = raw_memory
 		memory_html << "<div class='row'>"
@@ -98,16 +108,14 @@ when 'refer'
 	pointer.gsub!( /\s+/, ' ' )
 	a = pointer.split( ' ' )
 	a.each do |e|
-		r = mariadb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false )
+		r = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false, @debug )
 		if r.first
 			pointer = ''
+			memory_html << "<span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge badge-pill badge-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">再検索</span><br><br>"
 			r.each do |ee|
 				edit_button = ''
-				edit_button = "<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{ee['category']}', '#{ee['pointer']}')\">#{lp[3]}</button>" if status >= 8
-				raw_memory = e['memory']
-				memory = raw_memory
-				memory_html << "<h5>#{ee['pointer']}</h5>"
-				memory_html << "#{ee['memory']}"
+				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
+				memory_html << extend_linker( ee['memory'], depth )
 				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
 			end
 		end
@@ -115,9 +123,12 @@ when 'refer'
 	memory_html << lp[2] if memory_html == ''
 end
 
+title = ''
+title = "<div class='col' #{onclick}><h5>#{lp[1]}: #{category} / #{pointer}</h5></div>" if command != 'refer'
+
 html = <<-"HTML"
 <div class='container-fluid'>
-	<div class='col' #{onclick}><h5>#{lp[1]}: #{category} / #{pointer}</h5></div>
+	#{title}
 	<blockquote>
 	#{memory_html}
 	</blockquote>

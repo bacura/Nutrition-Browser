@@ -292,22 +292,47 @@ var initMemory_BWLF = function(){
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
-// New memory
-var newMemory_BWLF = function(){
-	$.post( "gm-memory.cgi", { command:'new' }, function( data ){ $( "#bw_levelF" ).html( data );});
+// List each pointer
+var listPointer = function( category ){
+	$.post( "gm-memory.cgi", { command:'list_pointer', category:category }, function( data ){ $( "#bw_levelF" ).html( data );});
 };
 
-// New pointer
+// New category form
+var newCategory = function(){
+	$.post( "gm-memory.cgi", { command:'new_category' }, function( data ){ $( "#bw_levelF" ).html( data );});
+};
+
+// Save New category
+var saveCategory = function(){
+	var category = document.getElementById( 'category' ).value;
+	$.post( "gm-memory.cgi", { command:'save_category', category:category }, function( data ){ $( "#bw_levelF" ).html( data );});
+};
+
+// Delete category
+var deleteCategory = function( category, delete_check_no ){
+	if( document.getElementById( delete_check_no ).checked ){
+		$.post( "gm-memory.cgi", { command:'delete_category', category:category }, function( data ){ $( "#bw_levelF" ).html( data );});
+	}else{
+		displayVideo( 'Check!' );
+	}
+};
+
+// New memory bat form
+var newMemoryBat = function(){
+	$.post( "gm-memory.cgi", { command:'new_bat' }, function( data ){ $( "#bw_levelF" ).html( data );});
+};
+
+// Save memory bat
+var saveMemoryBat = function( mode ){
+	var memory = document.getElementById( 'memory' ).value;
+	$.post( "gm-memory.cgi", { command:'save_bat', memory:memory, mode:mode }, function( data ){ $( "#bw_levelF" ).html( data );});
+	displayVideo( 'Saved' );
+};
+
+// New pointer form
 var newPMemory_BWLF = function( category, pointer, post_process ){
 	$.post( "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
-};
-
-// Save memory
-var saveMemory_BWLF = function( mode ){
-	var memory = document.getElementById( 'memory' ).value;
-	$.post( "gm-memory.cgi", { command:'save', memory:memory, mode:mode }, function( data ){ $( "#bw_levelF" ).html( data );});
-	displayVideo( 'Saved' );
 };
 
 // Save pointer
@@ -324,32 +349,31 @@ var savePMemory_BWLF = function( category, post_process ){
 	displayVideo( 'Saved' );
 }
 
-//
-var editMemory_BWLF = function( category ){
-	$.post( "gm-memory.cgi", { command:'edit', category:category }, function( data ){ $( "#bw_levelF" ).html( data );});
-};
-
-var newCategory_BWLF = function(){
-	$.post( "gm-memory.cgi", { command:'new_category' }, function( data ){ $( "#bw_levelF" ).html( data );});
-};
-
-var saveCategory_BWLF = function(){
-	var category = document.getElementById( 'category' ).value;
-	$.post( "gm-memory.cgi", { command:'save_category', category:category }, function( data ){ $( "#bw_levelF" ).html( data );});
-};
-
-var deleteMemory_BWLF = function( category, delete_check_no ){
-	if( document.getElementById( delete_check_no ).checked ){
-		$.post( "gm-memory.cgi", { command:'delete', category:category }, function( data ){ $( "#bw_levelF" ).html( data );});
+// Move pointer
+var movePMemory = function( category, pointer, post_process ){
+	var memory = document.getElementById( 'memory' ).value;
+	var rank = document.getElementById( 'rank' ).value;
+	var mvcategory = document.getElementById( 'mvcategory' ).value;
+	if( post_process == 'front'){
+		$.post( "gm-memory.cgi", { command:'move_pointer', memory:memory, category:category, pointer:pointer, rank:rank, mvcategory:mvcategory }, function( data ){ $( "#bw_levelF" ).html( data );});
 	}else{
-		displayVideo( 'Check!' );
+		$.post( "gm-memory.cgi", { command:'move_pointer', memory:memory, category:category, pointer:pointer, rank:rank, mvcategory:mvcategory }, function( data ){});
+		document.getElementById( "bw_levelF" ).style.display = 'none';
 	}
-};
+	displayVideo( 'Moved' );
+}
 
-var deletePMemory_BWLF = function( category, pointer, delete_check_no ){
-	if( document.getElementById( delete_check_no ).checked ){
-		$.post( "gm-memory.cgi", { command:'delete_pointer', category:category, pointer:pointer }, function( data ){ $( "#bw_levelF" ).html( data );});
+
+// Delete pointer
+var deletePMemory = function( category, pointer, post_process ){
+	if( document.getElementById( 'deletepm_check' ).checked ){
+		if( post_process == 'front'){
+			$.post( "gm-memory.cgi", { command:'delete_pointer', category:category, pointer:pointer, post_process }, function( data ){ $( "#bw_levelF" ).html( data );});
+		}else{
+			$.post( "gm-memory.cgi", { command:'delete_pointer', category:category, pointer:pointer, post_process }, function( data ){});
+			document.getElementById( "bw_levelF" ).style.display = 'none';
+		}
 	}else{
-		displayVideo( 'Check!' );
+		displayVideo( '(>_<)check!!' );
 	}
 };
