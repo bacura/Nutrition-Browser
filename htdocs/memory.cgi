@@ -17,7 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 script = 'memory'
 
 
@@ -25,6 +25,7 @@ script = 'memory'
 #DEFINITION
 #==============================================================================
 
+#### Memory extender
 def extend_linker( memory, depth )
 	depth += 1 if depth < 5
 	link_pointer = memory.scan( /\{\{[^\}\}]+\}\}/ )
@@ -33,12 +34,63 @@ def extend_linker( memory, depth )
 	memory_ = memory
 	link_pointer.each do |e|
 		pointer = e.sub( '{{', "" ).sub( '}}', "" )
+		pointer.gsub!( '<', "&lt;" )
+		pointer.gsub!( '>', "&gt;" )
+
 		pointer_ = e.sub( '{{', "<span class='memory_link' onclick=\"memoryOpenLink( '#{pointer}', '#{depth}' )\">" )
 		pointer_.sub!( '}}', "</span>" )
 		memory_.gsub!( e, pointer_ )
 	end
+	memory_.gsub!( "\n", "<br>\n" )
 
 	return memory_
+end
+
+
+#### Alike pointer
+def alike_pointer( key )
+	pointer = ''
+
+	begin
+		pointer_h = Hash.new
+		normal = key.tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
+		r = mdb( "SELECT pointer from #{$MYSQL_TB_MEMORY};", false, @debug )
+		r.each do |e|
+			normal_pointer = e['pointer'].tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
+			small = ''
+			large = ''
+			large_size = 1
+			hit = 0.0
+			if normal.size <= normal_pointer.size
+				small = normal
+				large = normal_pointer
+				large_size = normal_pointer.size
+			else
+				small = normal_pointer
+				large = normal
+				large_size = normal.size
+			end
+			a = small.split( '' )
+			pre_char = ''
+			a.each do |ee|
+				if ee != '+'
+					if /#{pre_char}#{ee}/ =~ large
+						hit += 3 if /#{pre_char}#{ee}/ =~ large
+						pre_char = ee
+					elsif /#{ee}/ =~ large
+						hit += 1 if /#{ee}/ =~ large
+						pre_char = ee
+					end
+				end
+			end
+			pointer_h[e['pointer']] = hit / large_size
+		end
+
+		ap = pointer_h.max do |k, v| k[1] <=> v[1] end
+		pointer = ap[0] if ap[1] >= 1.0
+	end
+
+	return pointer
 end
 
 
@@ -117,6 +169,23 @@ when 'refer'
 				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
 				memory_html << extend_linker( ee['memory'], depth )
 				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
+			end
+			count = r.first['count'].to_i + 1
+			mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{e}';", false, @debug )
+		else
+			a_pointer = alike_pointer( e )
+			unless a_pointer == ''
+				rr = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{a_pointer}';", false, @debug )
+				pointer = ''
+				memory_html << "<span class='memory_pointer'>#{a_pointer}&nbsp;??</span>&nbsp;&nbsp;<span class='badge badge-pill badge-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">再検索</span><br><br>"
+				rr.each do |ee|
+					edit_button = ''
+					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory_BWLF( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
+					memory_html << extend_linker( ee['memory'], depth )
+					memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
+				end
+				count = rr.first['count'].to_i + 1
+				mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{a_pointer}';", false, @debug )
 			end
 		end
 	end

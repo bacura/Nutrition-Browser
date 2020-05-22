@@ -101,10 +101,11 @@ end
 
 
 #### クラス・タグ読み込み
+tag_user = nil
 if command == 'init' && code != ''
 	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false, @debug )
 	if r.first
-		user = r.first['user']
+		tag_user = r.first['user']
 		class1 = r.first['class1']
 		class2 = r.first['class2']
 		class3 = r.first['class3']
@@ -116,7 +117,7 @@ if command == 'init' && code != ''
 	end
 elsif command == 'save' && code != ''
 	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
-	user = r.first['user'] if r.first
+	tag_user = r.first['user'] if r.first
 end
 
 
@@ -143,6 +144,7 @@ if command == 'save'
 		fct_opt['ENERC_KCAL'] = cgi['ENERC_KCAL']
 		fct_opt['ENERC'] = cgi['ENERC']
 	end
+
 
 	# 重量影響成分
 	fct_opt['ENERC_KCAL'] = ( BigDecimal( fct_opt['ENERC_KCAL'].to_s ) / ( food_weight / 100 )).round( $FCT_FRCT[$FCT_ITEM[5]] )
@@ -186,6 +188,7 @@ if command == 'save'
 	tag5_new = "　#{tag5}" unless tag5 == ''
 	tagnames_new = "#{class1_new}#{class2_new}#{class3_new}#{food_name}#{tag1_new}#{tag2_new}#{tag3_new}#{tag4_new}#{tag5_new}"
 
+
 	# 擬似食品成分表テーブルに追加
 	fct_set = ''
 	4.upto( 67 ) do |i| fct_set << "#{$FCT_ITEM[i]}='#{fct_opt[$FCT_ITEM[i]]}'," end
@@ -193,7 +196,7 @@ if command == 'save'
 
 	# タグテーブルに追加
 	public_bit = 0
-	public_bit = 1 if status == 9
+	public_bit = 1 if user.status == 9
 
 	# 新規食品番号の合成
 	over_max_flag = false
@@ -265,7 +268,7 @@ if @debug
 end
 
 
-#### food froup html
+#### food group html
 food_group_option = ''
 19.times do |c|
 	cc = c
@@ -280,7 +283,8 @@ end
 
 #### disable option
 disabled_option = ''
-disabled_option = 'disabled' if user != user.name && user != nil
+disabled_option = 'disabled' if tag_user != user.name && tag_user != nil
+
 
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
@@ -310,14 +314,14 @@ html_fct_block6 << '</table>'
 
 #### save button
 save_button = ''
-if user == user.name || code == ''
+if tag_user == user.name || code == ''
 	save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"pseudoSave_BWLF( '#{code}' )\">#{lp[1]}</button>"
 end
 
 
 #### delete button
 delete_button = ''
-if code != '' && user == user.name
+if code != '' && tag_user == user.name
 	delete_button = "<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"pseudoDelete_BWLF( '#{code}' )\">#{lp[2]}</button>"
 end
 

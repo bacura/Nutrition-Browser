@@ -118,17 +118,11 @@ nav {
   color: lavender;
 }
 
-.memory_pointer{
-  font-weight: bolder;
-  font-size: large;
+.error{
+  background: red;
+  color: black;
+  font-weight: bold;
 }
-
-.memory_link{
-  font-weight: bolder;
-  border-bottom: dotted 1px purple;
-}
-
-
 /*=====================*/
 /* 閲覧階層 ＋ 詳細表示 */
 /*=====================*/
@@ -237,4 +231,18 @@ nav {
 .fct_sum{
   color: tomato;
   font-size: medium;
+}
+
+/*===============*/
+/* 記憶 */
+/*===============*/
+
+.memory_pointer{
+  font-weight: bolder;
+  font-size: large;
+}
+
+.memory_link{
+  font-weight: bolder;
+  border-bottom: dotted 1px purple;
 }

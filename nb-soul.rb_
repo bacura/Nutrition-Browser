@@ -18,8 +18,8 @@ require 'bigdecimal'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = '****'
-$MYSQL_PW = '****'
+$MYSQL_USER = ''
+$MYSQL_PW = ''
 $MYSQL_DB = 'nutrition'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
@@ -49,10 +49,10 @@ $MYSQL_TB_METST = 'metst'
 
 $DEBUG = false
 
-$GM = '****'
+$GM = ''
 
 #### 注意！！
-$HTDOCS_PATH = '****'
+$HTDOCS_PATH = ''
 
 $PHOTO_PATH = "#{$HTDOCS_PATH}/photo"
 $PHOTO_PATH_TMP = "#{$HTDOCS_PATH}/photo_"
@@ -75,8 +75,8 @@ $RECIPE_TECH = ['未設定','茹でる・煮る・炊く','直火・炙る','炒
 $RECIPE_TIME = ['未設定','～5','～10','～15','～20','～30','～45','～60','～120']
 $RECIPE_COST = ['未設定','50円未満','100円未満','150円未満','200円未満','300円未満','400円未満','500円未満','600円未満','800円未満','1000円未満', '1000円以上']
 
-#         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15
-$UNIT = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前']
+#         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15       16    17
+$UNIT = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前', 'cm', '普通']
 
 #              0    1           2         3     4       5
 $SUB_GROUP = ['','緑黄色野菜','普通牛乳','味噌','醤油','食塩']
@@ -259,16 +259,16 @@ end
 
 #### GETデータの抽出
 def get_data()
-	data = Hash.new
-	if ENV['QUERY_STRING']
-		querys = ENV['QUERY_STRING'].split( '&' )
-		querys.each { |e|
-			( k, v ) = e.split( '=' )
-			data[ k ] = v
-		}
-	end
+  data = Hash.new
+  if ENV['QUERY_STRING']
+    querys = ENV['QUERY_STRING'].split( '&' )
+    querys.each { |e|
+      ( k, v ) = e.split( '=' )
+      data[ k ] = v
+    }
+  end
 
-	return data
+  return data
 end
 
 
@@ -279,7 +279,7 @@ def mariadb( query, html_opt )
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     t = query.chop
     if /\;/ =~ t
-        puts "データベース処理エラーが発生しました。処理を中止します。<br>#{query}<br>"
+        puts "[mariadb]データベース処理エラーが発生しました。処理を中止します。<br>#{query}<br>"
         exit( 9 )
     end
 
@@ -291,7 +291,7 @@ def mariadb( query, html_opt )
       html_head( nil )
       html_top( nil )
     end
-    puts "データベース処理エラーが発生しました。処理を中止します。<br>#{query}<br>"
+    puts "[mariadb]データベース処理エラーが発生しました。処理を中止します。<br>#{query}<br>"
   end
 
   return res
@@ -306,7 +306,7 @@ def mdb( query, html_opt, debug )
     query_ = ''
     query_ = query if debug
     if /\;/ =~ t
-        puts "データベース処理エラーが発生しました。処理を中止します。<br>#{query_}<br>"
+        puts "<span class='error'>[mdb]ERROR!! #{query_}</span><br>"
         exit( 9 )
     end
 
@@ -318,7 +318,8 @@ def mdb( query, html_opt, debug )
       html_head( nil )
       html_top( nil )
     end
-    puts "データベース処理エラーが発生しました。処理を中止します。<br>#{query_}<br>"
+      puts "<span class='error'>[mdb]ERROR!!<br>"
+      puts "#{query_}</span><br>"
   end
   return res
 end
@@ -327,8 +328,8 @@ end
 #### ログインチェック
 #### 将来的に廃止
 def login_check( cgi )
-	cookie_name = cgi.cookies['NAME'].first
- 	cookie_uid = cgi.cookies['UID'].first
+  cookie_name = cgi.cookies['NAME'].first
+  cookie_uid = cgi.cookies['UID'].first
   r = mdb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true, true )
   if r.first
     return cookie_name, cookie_uid, r.first['status'].to_i, r.first['aliasu'], $DEFAULT_LP
@@ -343,51 +344,59 @@ def num_opt( num, weight, mode, limit )
   # リミットがない→数値ではない場合はそのまま返す
   return num if limit == nil
 
-  kakko = false
-  if /^\(/ =~ num.to_s
-    num.sub!( '(', '' )
-    num.sub!( ')', '' )
-    kakko = true
-  end
-  ans = BigDecimal( 0 )
+    kakko = false
+    if /^\(/ =~ num.to_s
+      num.sub!( '(', '' )
+      num.sub!( ')', '' )
+      kakko = true
+    end
+    ans = BigDecimal( 0 )
 
-
-  if num == '-'
-    return '-'
-  elsif num == 'Tr'
-    return 'Tr'
-  else
-    weight = weight / 100
-    #weight_f = 1 if weight_f < 0
-
-    case mode
-    # 四捨五入
-    when '1'
-      ans = ( BigDecimal( num ) * weight ).round( limit )
-    # 切り上げ
-    when '2'
-      ans = ( BigDecimal( num ) * weight ).ceil( limit )
-    # 切り捨て
-    when '3'
-      ans = ( BigDecimal( num ) * weight ).floor( limit )
+  begin
+    if num == '-'
+      return '-'
+    elsif num == 'Tr'
+      return 'Tr'
     else
-      ans = ( BigDecimal( num ) * weight ).round( limit )
-    end
-  end
+      weight = weight / 100
+      #weight_f = 1 if weight_f < 0
 
-  if limit == 0
-    ans = ans.to_i
-  else
-    t = ans.to_f.to_s.split( '.' )
-    l = t[1].size
-    if l != limit
-      d = limit - l
-      d.times do t[1] << '0' end
+      case mode
+      # 四捨五入
+      when '1'
+        ans = ( BigDecimal( num ) * weight ).round( limit )
+      # 切り上げ
+      when '2'
+        ans = ( BigDecimal( num ) * weight ).ceil( limit )
+      # 切り捨て
+      when '3'
+        ans = ( BigDecimal( num ) * weight ).floor( limit )
+      else
+        ans = ( BigDecimal( num ) * weight ).round( limit )
+      end
     end
-    ans = t[0] + '.' + t[1]
-  end
 
-  ans = "(#{ans})" if kakko
+    if limit == 0
+      ans = ans.to_i
+    else
+      t = ans.to_f.to_s.split( '.' )
+      l = t[1].size
+      if l != limit
+        d = limit - l
+        d.times do t[1] << '0' end
+      end
+      ans = t[0] + '.' + t[1]
+    end
+
+    ans = "(#{ans})" if kakko
+  rescue
+    puts "<span class='error'>[num_opt]ERROR!!<br>"
+    puts "num:#{num}<br>"
+    puts "weight:#{weight}<br>"
+    puts "mode:#{mode}<br>"
+    puts "limit:#{limit}</span><br>"
+    exit( 9 )
+  end
 
   return ans
 end
@@ -460,30 +469,37 @@ def food_weight_check( food_weight )
   fw.sub!( '＋', '+')
   uv = BigDecimal( '0' )
 
-  # 分数処理
-  if /\d+\+\d+\/\d+/ =~ fw
-    # 帯分数
-    a = fw.scan( /(\d+)\+\d+\/\d+/ )[0][0].to_i
-    b = fw.scan( /\d+\+(\d+)\/\d+/ )[0][0].to_i
-    c = fw.scan( /\d+\+\d+\/(\d+)/ )[0][0].to_i
-    if c == 0
-      fw = 100
-      uv = 100
+  begin
+    # 分数処理
+    if /\d+\+\d+\/\d+/ =~ fw
+      # 帯分数
+      a = fw.scan( /(\d+)\+\d+\/\d+/ )[0][0].to_i
+      b = fw.scan( /\d+\+(\d+)\/\d+/ )[0][0].to_i
+      c = fw.scan( /\d+\+\d+\/(\d+)/ )[0][0].to_i
+      if c == 0
+        fw = 100
+        uv = 100
+      else
+        uv = BigDecimal( b ) / c + a
+      end
+    elsif /\d+\/\d+/ =~ fw
+      # 仮分数
+      b = fw.scan( /(\d+)\/\d+/ )[0][0].to_i
+      c = fw.scan( /\d+\/(\d+)/ )[0][0].to_i
+      if c == 0
+        fw = 100
+        uv = 100
+      else
+        uv = BigDecimal( b ) / c
+      end
     else
-      uv = BigDecimal( b ) / c + a
+      uv = BigDecimal( fw )
     end
-  elsif /\d+\/\d+/ =~ fw
-    # 仮分数
-    b = fw.scan( /(\d+)\/\d+/ )[0][0].to_i
-    c = fw.scan( /\d+\/(\d+)/ )[0][0].to_i
-    if c == 0
-      fw = 100
-      uv = 100
-    else
-      uv = BigDecimal( b ) / c
-    end
-  else
-    uv = BigDecimal( fw )
+  rescue
+    puts "<span class='error'>[food_weight_check]ERROR!!"
+    puts "food_weight:#{food_weight}</span><br>"
+    fw = 100
+    uv = 100
   end
 
   return fw, uv
@@ -589,20 +605,23 @@ end
 
 #### from unit volume to weight
 def unit_weight( vol, uc, fn )
+  w = 0.0
   r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
   if r.first
     if r.first['unitc']
-      a = r.first['unitc'].split( ':' )
-      if  a[uc.to_i] == ''
-        return 0
-      else
-        w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )
-        return w
+      begin
+        a = r.first['unitc'].split( ':' )
+        w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )  unless  a[uc.to_i] == ''
+      rescue
+        puts "<span class='erro'>[unit_weight]ERROR!!<br>"
+        puts "vol:#{vol}<br>"
+        puts "uc:#{uc}<br>"
+        puts "fn:#{fn}</span><br>"
       end
     end
   end
 
-  return 0
+  return w
 end
 
 
@@ -661,10 +680,14 @@ class Calendar
     @yyyy = yyyy
     @mm = mm
     @dd = dd
-    d = Date.today
+p @yyyy
+    if @yyyy == 0
+      d = Date.today
+    else
+      d = Date.new( @yyyy, @mm, @dd )
+    end
     @yyyyt = d.year
     @ddt = d.day
-    d = Date.new( @yyyy, @mm, @dd ) unless @yyyy == 0
     @wf = Date.new( d.year, d.month, 1 ).wday
     @ddl = Date.new( d.year, d.month, -1 ).day
 

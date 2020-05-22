@@ -163,7 +163,7 @@ NEW
 
 	memory_html = <<-"MEMORY"
 	<div class='row'>
-		<textarea class='form-control' aria-label='memory' id='memory'>#{memory}</textarea>
+		<textarea class='form-control' rows='5' aria-label='memory' id='memory'>#{memory}</textarea>
 	</div><br>
 	<div class='row'>
 		<div class='col-1'><button type='button' class='btn btn-success btn-sm' onclick="savePMemory_BWLF( '#{category}', '#{pointer}', '#{post_process}' )">保存</button></div>

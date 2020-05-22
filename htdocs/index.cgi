@@ -128,7 +128,7 @@ def html_nav( user_name, status, lp )
       </nav>
       </nav>
       <nav class='container-fluid' id='gs_menu' style='display:none;'>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSchool()">#{lp[47]}</button>
       </nav>
       <nav class='container-fluid' id='gm_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnitc_BWLF( 'init' )">#{lp[29]}</button>

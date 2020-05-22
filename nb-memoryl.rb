@@ -31,49 +31,60 @@ require '/var/www/nb-soul.rb'
 
 db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
-category = []
-pointer_list = []
-memory = []
+pointer_h = Hash.new
 
 #### Lording all pointer
-puts "Lording all pointer.\n"
+puts "Lording all memories.\n"
 r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY};" )
 r.each do |e|
-	pointer_list << e['pointer']
+	pointer_h[e['pointer']] = e['pointer'].size if e['pointer'].size > 2
 end
-pointer_list.uniq!
 
 
-#### Adding pointer mark
-puts "Adding pointer mark.\n"
+memory_size = r.size
+puts "#{pointer_h.size} pointers.\n"
+puts "#{memory_size} memories.\n"
+
+
+c = 0
 r.each do |e|
+	sub_pointer = []
 	memory = e['memory']
+	memory.gsub!( '{{', '' )
+	memory.gsub!( '}}', '' )
 
-	pointer_sub_list = []
-	pointer_list.each do |ee| pointer_sub_list << memory.scan( ee ) end
-	pointer_sub_list.flatten!
-	pointer_sub_list.uniq!
-	pointer_sub_list_ = Array.new( pointer_sub_list )
-
-	# Removing smaller pointer & number
-	pointer_sub_list.size.times do |c|
-		pointer_sub_list_.each do |e|
-			begin
-				pointer_sub_list[c] = nil if /#{pointer_sub_list[c]}/ =~ e && pointer_sub_list[c] != e || /\d+/ =~ e || e.size < 2
-			rescue
-				pointer_sub_list[c] = nil
-				puts "ERROR.\n"
+	# 記憶に存在するポインタの抽出
+	pointer_h.each_key do |k|
+		begin
+			if /#{k}/ =~ memory
+				sub_pointer << k
 			end
+		rescue
+		end
+	end
+	sub_pointer.flatten!
+	sub_pointer.uniq!
+
+	opt_pointer_h = Hash.new
+	sub_pointer.each do |ee| opt_pointer_h[ee] = true end
+
+	#ポインタ in ポインタのフラグ折り
+	sub_pointer.each do |ee|
+		sub_pointer.each do |eee|
+			opt_pointer_h[eee] = false if /#{eee}/ =~ ee && eee != ee
+			opt_pointer_h[eee] = false if /^\d+$/ =~ eee
 		end
 	end
 
-	pointer_sub_list.each do |ee|
-		memory.gsub!( ee, "{{#{ee}}}" ) if ee != nil && ee != e['pointer']
+	# ポインターの拡張タグ
+	opt_pointer_h.each do |k, v|
+		memory.gsub!( k, "{{#{k}}}") if v
 	end
-	memory.gsub!( '{{{{', '{{' )
-	memory.gsub!( '}}}}', '}}' )
+
 	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
+
+	c += 1
+	print( "#{c}/#{memory_size}\r" )
 end
 
-
-puts "Done.\n"
+puts "\nDone."

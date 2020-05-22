@@ -620,7 +620,7 @@ end
 def memory_init()
 	puts '記憶テーブルの作成'
 
-	query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, date DATETIME );'
+	query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, count BIGINT UNSIGNED, date DATETIME );'
 	$db.query( query )
 end
 
