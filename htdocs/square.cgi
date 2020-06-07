@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser food square 0.00a
+#Nutrition browser food square 0.00b
 
 #==============================================================================
 # CHANGE LOG
 #==============================================================================
-#20171006, 0.00a, start
+#20200605, 0.00b, start
 
 
 #==============================================================================
@@ -17,6 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # STATIC
 #==============================================================================
+script = 'square'
 @debug = false
 
 
@@ -76,21 +77,13 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-status = 0 if status == nil
-lp = lp_init( 'square', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
 
-#### GETデータの取得
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+
+#### GET data
 get_data = get_data()
 channel = get_data['channel']
 category = get_data['category'].to_i
@@ -131,7 +124,7 @@ frct_mode, frct_select = frct_check( frct_mode )
 
 
 #### 名前の履歴の取得
-name_his = get_history_name( uname, @fg )
+name_his = get_history_name( user.name, @fg )
 #puts "name_his: #{name_his}<br>" if @debug
 
 
@@ -212,8 +205,8 @@ when 'fctb'
 	direct_html = make_direct_group( direct_group, name_his, @fg, '', '', '', 1, 0 )
 
 	# 擬似食品
-	unless status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{uname}' AND public!='2' ) OR public='1' );", false, @debug )
+	unless user.status == 0
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{user.name}' AND public!='2' ) OR public='1' );", false, @debug )
 		r.each do |e|
 			if e['class1'] != ''
 				class1_group_p << e['class1']
@@ -244,7 +237,7 @@ when 'fctb'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"pseudoAdd_BWLF( 'init', '#{@fg}::::', '' )\">＋</button>\n" if status > 0
+	pseudo_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"pseudoAdd_BWLF( 'init', '#{@fg}::::', '' )\">＋</button>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{category}.#{$CATEGORY[category]}</h6>
@@ -285,8 +278,8 @@ when 'fctb_l2'
 
 
 	# 擬似食品
-	unless status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
+	unless user.status == 0
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
 		r.each do |e|
 			if e['class1'] != '' && e['class2'] != ''
 				class2_group_p << e['class2']
@@ -314,7 +307,7 @@ when 'fctb_l2'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if status > 0
+	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -345,8 +338,8 @@ when 'fctb_l3'
 	direct_html = make_direct_group( direct_group, name_his, fg_key, class1, class2, class3, 0, 0 )
 
 	# 擬似食品
-	unless status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1' );", false, @debug )
+	unless user.status == 0
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1' );", false, @debug )
 		r.each do |e|
 			if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 				class3_group_p << e['class3']
@@ -366,7 +359,7 @@ when 'fctb_l3'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if status > 0
+ 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if user.status > 0
 
   html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -386,8 +379,8 @@ when 'fctb_l4'
 	direct_html = make_direct_group( direct_group, name_his, fg_key, class1, class2, class3, 0, 0 )
 
 	# 擬似食品
-	unless status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
+	unless user.status == 0
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
 		r.each do |e| direct_group_p << e['name'] end
 
 		# ダイレクトグループの作成
@@ -395,7 +388,7 @@ when 'fctb_l4'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if status > 0
+ 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -443,9 +436,9 @@ when 'fctb_l5'
 
 	# 擬似食品
 	if class_no.to_i == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
 	else
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{uname}' AND public!='2' ) OR public='1');", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
 	end
 	if r.first
 		r.each do |e|
@@ -462,7 +455,7 @@ when 'fctb_l5'
  	# 簡易表示の項目
  	fc_items = []
 	fc_items_html = ''
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='簡易表示用';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
 	if r.first
 		palette = r.first['palette']
 		palette.size.times do |c|
@@ -481,7 +474,7 @@ when 'fctb_l5'
 		pseudo_flag = false
 		# 栄養素の一部を取得
 		if /^U/ =~ food_no_list[c]
-			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}' AND user='#{uname}';"
+			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';"
 			pseudo_flag = true
 		elsif /^P/ =~ food_no_list[c]
 			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}';"
@@ -500,16 +493,16 @@ when 'fctb_l5'
 		end
 
 		# 追加・変更ボタン
-		if uname && base == 'cb'
+		if user.name && base == 'cb'
 			add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{lp[1]}</button>"
-		elsif uname
+		elsif user.name
 			add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"addingCB( '#{food_no_list[c]}', 'weight' )\">#{lp[2]}</button>"
 		else
 			add_button = ""
 		end
 
 		# Koyomi button
-		if status >= 2
+		if user.status >= 2
 			koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{food_no_list[c]}', -5 )\">#{lp[3]}</button>"
 		else
 			koyomi_button = ''
@@ -517,19 +510,19 @@ when 'fctb_l5'
 
 		# GM専用単位変換ボタン
 		gm_unitc = ''
-		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc_BWLF( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if status == 9
+		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc_BWLF( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if user.status == 9
 
 		# GM専用色ボタン
 		gm_color = ''
-		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor_BWLF( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if status == 9
+		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor_BWLF( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if user.status == 9
 
 		# GM専用アレルギーボタン
 		gm_allergen = ''
-		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen_BWLF( '#{food_no_list[c]}' )\">#{lp[6]}</button>" if status == 9
+		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen_BWLF( '#{food_no_list[c]}' )\">#{lp[6]}</button>" if user.status == 9
 
 		# GM専用旬ボタン
 		gm_shun = ''
-		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun_BWLF( '#{food_no_list[c]}' )\">#{lp[7]}</button>" if status == 9
+		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun_BWLF( '#{food_no_list[c]}' )\">#{lp[7]}</button>" if user.status == 9
 
 
 		tags = "<span class='tag1'>#{tag1_list[c]}</span> <span class='tag2'>#{tag2_list[c]}</span> <span class='tag3'>#{tag3_list[c]}</span> <span class='tag4'>#{tag4_list[c]}</span> <span class='tag5'>#{tag5_list[c]}</span>"
@@ -542,7 +535,7 @@ when 'fctb_l5'
 	db.close
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">＋</button>\n" if status > 0
+ 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">＋</button>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<div class='container-fluid'><div class="row">

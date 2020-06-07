@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi 0.00
+#Nutrition browser koyomi 0.00b
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
-#20190220, 0.00, start
+#20200603, 0.00b
 
 
 #==============================================================================
@@ -31,7 +31,7 @@ def sub_menu( lp )
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">#{lp[23]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex_BW1( '', '' )">#{lp[24]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex( '', '' )">#{lp[24]}</button></div>
 		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[25]}</button></div>
 		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[26]}</button></div>
 		<div class='col-2'></div>
@@ -248,6 +248,12 @@ sub_menu ( lp ) if command == 'menu'
 
 #### Date & calendar config
 calendar = Calendar.new( user.name, yyyy, mm, dd )
+calendar_nm = Calendar.new( user.name, yyyy, mm, dd )
+calendar_nm.move_mm( 1 )
+calendar_pm = Calendar.new( user.name, yyyy, mm, dd )
+calendar_pm.move_mm( -1 )
+calendar_td = Calendar.new( user.name, 0, 0, 0 )
+
 calendar.debug if @debug
 sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
 sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
@@ -426,7 +432,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	end
 
 	freeze_checked = 'CHECKED' if freeze_flag
-	onclick = "onclick=\"editKoyomi_BW2( 'init', '#{c}' )\""
+	onclick = "onclick=\"editKoyomi( 'init', '#{c}' )\""
 
 	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
@@ -469,8 +475,8 @@ end
 ####
 select_html = ''
 select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='yyyy' class='custom-select' onChange=\"changeKoyomi_BW1()\">"
-calendar.yyyyf.upto( calendar.yyyyt + 1 ) do |c|
+select_html << "<select id='yyyy' class='custom-select' onChange=\"changeKoyomi( '', '' )\">"
+calendar.yyyyf.upto( calendar_td.yyyy + 1 ) do |c|
 	if c == calendar.yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
@@ -482,7 +488,7 @@ select_html << "<div class='input-group-append'><label class='input-group-text'>
 select_html << "</div>"
 
 select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomi_BW1()\">"
+select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomi( '', '' )\">"
 1.upto( 12 ) do |c|
 	if c == calendar.mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -499,19 +505,19 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><h5>#{lp[8]}:食事</h5></div>
-		<div class='col-2'>
-			<a href='#day#{calendar.ddt}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
-			<button class='btn btn-sm btn-outline-light' onclick="">←</button>
-			<button class='btn btn-sm btn-outline-light' onclick="">今日</button>
-			<button class='btn btn-sm btn-outline-light' onclick="">→</button>
-		</div>
 		<div class='col-3 form-inline'>
 			#{select_html}
+		</div>
+		<div class='col-2'>
+			<a href='#day#{calendar_td.dd}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
+			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_pm.yyyy}', '#{calendar_pm.mm}' )">←</button>
+			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_td.yyyy}', '#{calendar_td.mm}' )">今日</button>
+			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_nm.yyyy}', '#{calendar_nm.mm}' )">→</button>
 		</div>
 		<div class='col-3'>
 		</div>
 		<div class='col-2'>
-			<button class='btn btn-sm btn-success' onclick="initKoyomiex_BW1( '#{calendar.yyyy}', '#{calendar.mm}' )">#{lp[22]}</button>
+			<button class='btn btn-sm btn-success' onclick="initKoyomiex( '#{calendar.yyyy}', '#{calendar.mm}' )">#{lp[22]}</button>
 		</div>
 	</div>
 	<div class='row'>

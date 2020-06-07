@@ -1,23 +1,23 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.00
+#Nutrition browser recipe to pseudo food 0.00b
 
 #==============================================================================
 # CHANGE LOG
 #==============================================================================
-#20180228, 0.00a, start
+#20200606, 0.00b, start
 
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
+script = 'pseudo_r2f'
 @debug = false
 
 
@@ -60,19 +60,13 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'pseudo_r2f', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -118,12 +112,10 @@ end
 
 
 #### SUMからデータを抽出
-r = mariadb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
-food_name = r.first['name']
+r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 code = r.first['code']
 dish_num = r.first['dish'].to_i
 food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, ew_mode )
-
 
 if command == 'form'
 	# 食品群オプション html
@@ -204,7 +196,7 @@ if command == 'save'
 			fct << '0'
 		else
 			if /P|U/ =~ e
-				query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
+				query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{user.name}' OR user='#{$GM}' );"
 			else
 				query = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
 			end
@@ -276,11 +268,11 @@ if command == 'save'
 	# 新規食品番号の合成
 	over_max_flag = false
 	new_FN = ''
-	r = mariadb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{uname}' AND public='2';", false )
+	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 	if r.first
 		code = r.first['FN']
 	else
-		rr = mariadb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_FCTP} WHERE FG='#{food_group}' AND user='#{uname}');", false )
+		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_FCTP} WHERE FG='#{food_group}' AND user='#{user.name}');", false, @debug )
 		if rr.first
 			last_FN = rr.first['FN'][-3,3].to_i
 			if public_bit == 1
@@ -299,33 +291,31 @@ if command == 'save'
 
 	# 食品番号のチェック
 	unless code == ''
-		r = mariadb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{uname}' AND FN='#{code}';", false )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	else
 		r = []
 	end
 
 	if r.first
 		# 擬似食品テーブルの更新
-		mariadb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 
 		# タグテーブルの更新
-		mariadb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 
 		# 拡張タグテーブルに追加
-		mariadb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 	else
 		# 擬似食品テーブルに追加
-		mariadb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{new_FN}',user='#{uname}',Tagnames='#{tagnames_new}',#{fct_set};", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{new_FN}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
 
 		# タグテーブルに追加
-		mariadb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{uname}',public='#{public_bit}';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
 
 		# 拡張タグテーブルに追加
-		mariadb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{new_FN}', user='#{uname}',color1='0', color2='0', color1h='0', color2h='0';", false )
-
-		code = new_FN
+		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{new_FN}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
 	end
 end
 
-puts html
 
+puts html

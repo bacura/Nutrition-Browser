@@ -101,17 +101,6 @@ var lossAdj = function( code ){
 };
 
 
-// Switching all check
-var allSwitch = function( code ){
-	if( document.getElementById( 'switch_all' ).checked ){
-		var allSwitch = 1;
-	} else{
-		var allSwitch = 0;
-	}
-	$.post( "cboard.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#bw_level1" ).html( data );});
-};
-
-
 // まな板の食品番号追加ボタンを押して食品を追加してL1にリストを表示。そしてカウンターも更新
 var recipeAdd_BWL1 = function( code ){
 	var fn = document.getElementById( "food_add" ).value;
@@ -151,13 +140,24 @@ var initCB_SS = function( order, unitv_id, unit_id, food_init_id, food_rr_id, co
 
 
 // まな板の食品チェックボックスを押してL1にリストを更新
-var checkCB_BWL1 = function( order, code, check_id ){
+var checkCB = function( order, code, check_id ){
 	if( document.getElementById( check_id ).checked ){
 		var checked = 1;
 	} else{
 		var checked = 0;
 	}
-	$.post( "cboard.cgi", { command:'check_box', order:order, option2:checked, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
+	$.post( "cboard.cgi", { command:'check_box', order:order, option2:checked, code:code }, function( data ){});
+};
+
+
+// Switching all check box
+var allSwitch = function( code ){
+	if( document.getElementById( 'switch_all' ).checked ){
+		var allSwitch = 1;
+	} else{
+		var allSwitch = 0;
+	}
+	$.post( "cboard.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#bw_level1" ).html( data );});
 };
 
 
@@ -337,7 +337,7 @@ var recipeDelete_BWL1 = function( code, page ){
 		};
 		setTimeout( fxRR, 1000 );
 	} else{
-		displayVideo( 'Check!' );
+		displayVideo( '(>_<) Check!' );
 	}
 };
 
@@ -407,7 +407,7 @@ var recalcView_BWL2 = function( code ){
 		var ew_mode = 0;
 	}
 	$.post( "calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#bw_level2" ).html( data );});
-	displayVideo( '再計算' );
+	displayVideo( 'Recalc' );
 };
 
 
@@ -460,7 +460,7 @@ var clearCT_BWL2 = function( code ){
 	if( document.getElementById( "clearCT_check" ).checked ){
 		$.post( "price.cgi", { command:'clearCT', code:code }, function( data ){ $( "#bw_level2" ).html( data );});
 	}else{
-		displayVideo( 'チェックが必要' );
+		displayVideo( '(>_<) check!' );
 	}
 };
 
@@ -523,14 +523,15 @@ var Pseudo_R2F_BWLX = function( code ){
 			command:'save', code:code, frct_mode:0, frct_accu:1, ew_mode:0,
 			food_name:food_name, food_group:food_group, class1:class1, class2:class2, class3:class3, tag1:tag1,
 			tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5
-		}, function( data ){});
+//		}, function( data ){});
+		}, function( data ){$( "#bw_level3" ).html( data );});
 		document.getElementById( "bw_level3" ).style.display = 'block';
 
 		closeBroseWindows( 3 );
 		bw_level1 = 3;
-		displayVideo( code + 'を食品化' );
+		displayVideo( 'Foodized' );
 	}else{
-		displayVideo( '食品名が必要' );
+		displayVideo( '(>_<) Food name!' );
 	}
 };
 
@@ -577,5 +578,5 @@ var openPrint = function( uname, code, template ){
 	var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode + '&hr=' + hr_image;
 
 	window.open( url, 'print' );
-	displayVideo( '印刷ページ' );
+	displayVideo( 'Printing page' );
 };

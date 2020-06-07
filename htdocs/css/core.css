@@ -246,3 +246,39 @@ nav {
   font-weight: bolder;
   border-bottom: dotted 1px purple;
 }
+
+/*===============*/
+/* 料理教室 */
+/*===============*/
+
+
+.month{
+
+}
+
+.weekday{
+  font-weight: bolder;
+  border-bottom: dotted 1px purple;
+}
+
+.sunday{
+  font-weight: bolder;
+  border-bottom: dotted 1px purple;
+}
+
+.saturday{
+  font-weight: bolder;
+  border-bottom: dotted 1px purple;
+}
+
+.day{
+
+}
+
+.reserve_on{
+
+}
+
+.reserve_off{
+
+}

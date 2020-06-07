@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 script = 'koyomi-cmm'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -81,21 +81,8 @@ end
 
 
 #### Getting date
-date = Date.today
-date = Date.new( yyyy, mm, dd ) unless yyyy == 0
-date_first = Date.new( date.year, date.month, 1 )
-first_week = date_first.wday
-last_day = Date.new( date.year, date.month, -1 ).day
-if yyyy == 0
- 	yyyy = date.year
-	mm = date.month
-	dd = date.day
-end
-if @debug
-	puts "date:#{date.to_time}<br>\n"
-	puts "first_week:#{first_week}<br>\n"
-	puts "last_day:#{last_day}<br>\n"
-end
+calendar = Calendar.new( user.name, yyyy, mm, dd )
+calendar.debug if @debug
 
 
 #### Save food
@@ -137,7 +124,7 @@ end
 
 ####
 save_button = ''
-if command == 'copy'
+if cm_mode == 'copy'
 	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi2( '#{cm_mode}', '#{origin}' )\">#{lp[12]}</button>"
 else
 	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi2( '#{cm_mode}', '#{origin}' )\">#{lp[8]}</button>"
@@ -146,9 +133,10 @@ end
 
 #### Date HTML
 date_html = ''
-week_count = first_week
+week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
-1.upto( last_day ) do |c|
+p calendar.ddl
+1.upto( calendar.ddl ) do |c|
 	date_html << "<tr>"
 	if week_count == 0
 		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
@@ -192,7 +180,7 @@ select_html = ''
 onchange = "onChange=\"\""
 
 
-select_html << "<select id='yyyy_add' class='custom-select custom-select-sm' #{onchange}>"
+select_html << "<select id='yyyy_cmm' class='custom-select custom-select-sm' #{onchange}>"
 start_year.upto( 2020 ) do |c|
 	if c == yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -202,7 +190,7 @@ start_year.upto( 2020 ) do |c|
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='mm_add' class='custom-select custom-select-sm' #{onchange}>"
+select_html << "<select id='mm_cmm' class='custom-select custom-select-sm' #{onchange}>"
 1.upto( 12 ) do |c|
 	if c == mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -212,8 +200,8 @@ select_html << "<select id='mm_add' class='custom-select custom-select-sm' #{onc
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='dd' class='custom-select custom-select-sm'>"
-1.upto( last_day ) do |c|
+select_html << "<select id='dd_cmm' class='custom-select custom-select-sm'>"
+1.upto( calendar.ddl ) do |c|
 	if c == dd
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
@@ -223,7 +211,7 @@ end
 select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
 
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
-select_html << "<select id='tdiv' class='custom-select custom-select-sm'>"
+select_html << "<select id='tdiv_cmm' class='custom-select custom-select-sm'>"
 0.upto( 3 ) do |c|
 	if tdiv == c
 		select_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
@@ -233,7 +221,7 @@ select_html << "<select id='tdiv' class='custom-select custom-select-sm'>"
 end
 select_html << "</select>&nbsp;&nbsp;&nbsp;"
 
-select_html << "<select id='hh' class='custom-select custom-select-sm'>"
+select_html << "<select id='hh_cmm' class='custom-select custom-select-sm'>"
 select_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if c == hh

@@ -1,5 +1,3 @@
-//guild.js ver 0.00b
-
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
 
@@ -13,11 +11,9 @@ var initKoyomi = function(){
 };
 
 // Koyomi change
-var changeKoyomi = function( yyyy, mm ){
-	if( yyyy == '' ){
-		var yyyy = document.getElementById( "yyyy" ).value;
-		var mm = document.getElementById( "mm" ).value;
-	}
+var changeKoyomi_BW1 = function(){
+	var yyyy = document.getElementById( "yyyy" ).value;
+	var mm = document.getElementById( "mm" ).value;
 	$.post( "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#bw_level2" ).html( data );});
 };
 
@@ -43,7 +39,7 @@ var freezeKoyomiAll = function( yyyy, mm ){
 // Koyomi Edit//////////////////////////////////////////////////////////////
 
 // Koyomi edit
-var editKoyomi = function( com, dd ){
+var editKoyomi_BW2 = function( com, dd ){
 	var yyyy = document.getElementById( "yyyy" ).value;
 	var mm = document.getElementById( "mm" ).value;
 	$.post( "koyomi-edit.cgi", { command:com, yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#bw_level3" ).html( data );});
@@ -129,7 +125,7 @@ var koyomiG100check = function(){
 // Koyomi fix save
 var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 	var food_name = document.getElementById( "food_name" ).value;
-	var hh = document.getElementById( "hh_fix" ).value;
+	var hh = document.getElementById( "hh" ).value;
 	var food_number = document.getElementById( "food_number" ).value;
 
 	if( food_name != '' ){
@@ -354,19 +350,17 @@ var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
 };
 
 var cmmSaveKoyomi = function( cm_mode, yyyy, mm, dd, tdiv, origin ){
-	var hh = document.getElementById( "hh_cmm" ).value;
+	var hh = document.getElementById( "hh" ).value;
 	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
 
 var cmmSaveKoyomi2 = function( cm_mode, origin ){
-	var yyyy = document.getElementById( "yyyy_cmm" ).value;
-	var mm = document.getElementById( "mm_cmm" ).value;
-	var dd = document.getElementById( "dd_cmm" ).value;
-	var tdiv = document.getElementById( "tdiv_cmm" ).value;
-	var hh = document.getElementById( "hh_cmm" ).value;
-displayVideo( mm );
-
+	var yyyy = document.getElementById( "yyyy" ).value;
+	var mm = document.getElementById( "mm" ).value;
+	var dd = document.getElementById( "dd" ).value;
+	var tdiv = document.getElementById( "tdiv" ).value;
+	var hh = document.getElementById( "hh" ).value;
 	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#bw_levelF" ).html( data );});
 	document.getElementById( "bw_levelF" ).style.display = 'block';
 };
@@ -376,7 +370,7 @@ displayVideo( mm );
 // Koyomi EX //////////////////////////////////////////////////////////////
 
 // Koyomi EX init
-var initKoyomiex = function( yyyy, mm ){
+var initKoyomiex_BW1 = function( yyyy, mm ){
 	closeBroseWindows( 2 );
 	$.post( "koyomiex.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';

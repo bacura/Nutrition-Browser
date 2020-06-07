@@ -90,9 +90,9 @@ $COLOR = ['未指定','赤','ピンク','オレンジ','黄','緑','青','紫','
 #           0      1      2       3        4           5         6    7   8       9
 $ACCOUNT = ['退会','一般','ギルメン','guest', 'ギルメン・萌','ギルメン・旬','-','-','サブマス','ギルマス']
 
-#           0           1       2       3       4     5         6       7         8
-$KEX_ITEM = ['未設定', '独自→', '身長', '体重', 'BMI', '体脂肪率', '腹囲', '首回り', '骨盤上部周囲']
-$KEX_UNIT = ['',       ''   , 'cm',   'kg',  '',     '%',       'cm',  'cm',    'cm']
+#           0           1       2       3       4     5         6       7         8              9      10
+$KEX_ITEM = ['未設定', '独自→', '身長', '体重', 'BMI', '体脂肪率', '腹囲', '首回り', '骨盤上部周囲', '便通', 'METs']
+$KEX_UNIT = ['',       ''    , 'cm'  ,  'kg',    '',        '%',  'cm',    'cm',          'cm',   'BS',     '']
 
 $SOMETHING = {'?--'=>'何か食べた（微盛）', '?-'=>'何か食べた（小盛）', '?='=>'何か食べた（並盛）', '?+'=>'何か食べた（大盛）', '?++'=>'何か食べた（特盛）'}
 
@@ -672,24 +672,43 @@ class User
 end
 
 
+class FCT
+  attr_reader :n
+
+  def initialize()
+    @n = Hash.new
+    $FCT_ITEM.each do |e| @n[e] = '' end
+  end
+
+  def load( code, user )
+  end
+
+  def debug()
+  end
+
+end
+
+
+
+
+
 ####
 class Calendar
-  attr_reader :yyyy, :yyyyt, :yyyyf, :mm, :dd, :ddt, :ddl, :wf
+  attr_reader :yyyy, :yyyyf, :mm, :dd, :ddl, :wf, :wl
 
   def initialize( uname, yyyy, mm, dd )
     @yyyy = yyyy
     @mm = mm
     @dd = dd
-p @yyyy
+
     if @yyyy == 0
       d = Date.today
     else
       d = Date.new( @yyyy, @mm, @dd )
     end
-    @yyyyt = d.year
-    @ddt = d.day
     @wf = Date.new( d.year, d.month, 1 ).wday
     @ddl = Date.new( d.year, d.month, -1 ).day
+    @wl = Date.new( d.year, d.month, @ddl ).wday
 
     if @yyyy == 0
       @yyyy = d.year
@@ -707,15 +726,27 @@ p @yyyy
     end
   end
 
+  def move_mm( mm )
+    @mm += mm
+   if @mm > 12
+      @yyyy += 1
+      @mm = 1
+    end
+
+    if @mm < 1
+      @yyyy -= 1
+      @mm = 12
+    end
+  end
+
   def debug()
     puts "calender.yyyy:#{@yyyy}<br>"
-    puts "calender.yyyyt:#{@yyyyt}<br>"
     puts "calender.yyyyf:#{@yyyyf}<br>"
     puts "calender.mm:#{@mm}<br>"
     puts "calender.dd:#{@dd}<br>"
-    puts "calender.ddt:#{@ddt}<br>"
     puts "calender.ddl:#{@ddl}<br>"
     puts "calender.wf:#{@wf}<br>"
+    puts "calender.wl:#{@wl}<br>"
   end
 end
 

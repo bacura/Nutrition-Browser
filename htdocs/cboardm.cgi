@@ -63,7 +63,7 @@ if user.name
 		end
 
 		# まな板データ更新
-		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
 		cb_num += 1
 		puts cb_num
 
@@ -81,7 +81,7 @@ if user.name
 		new_sum.chop!
 
 		# まな板データ更新
-		mariadb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
 		puts cb_num
 	elsif mode == 'refresh'
 

@@ -274,7 +274,7 @@ html_fct_block6 << '</table>'
 
 ####
 hh_html = ''
-hh_html << "<select class='custom-select custom-select-sm' id='hh'>"
+hh_html << "<select class='custom-select custom-select-sm' id='hh_fix'>"
 hh_html << "	<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if hh == c

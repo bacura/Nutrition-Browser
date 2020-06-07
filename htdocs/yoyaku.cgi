@@ -25,7 +25,6 @@ script = 'yoyaku'
 #==============================================================================
 
 def html_header()
-p 'vv'
 	html = <<-"HTML"
 <!DOCTYPE html>
 <head>
@@ -38,12 +37,12 @@ p 'vv'
   <!-- bootstrap -->
   <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
-
 <!-- Jquery -->
   <script type="text/javascript" src="./jquery-3.2.1.min.js"></script>
 <!-- bootstrap -->
   <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
+  <script type="text/javascript" src="#{$JS_PATH}/shun.js"></script>
 </head>
 
 <body class="body">
@@ -54,6 +53,23 @@ HTML
 end
 
 
+class Cals
+	attr_accessor :yyyy, :mm, :dd, :available, :am, :pm
+
+  def initialize( yyyy, mm, dd, available )
+    @yyyy = yyyy
+    @mm = mm
+    @dd = dd
+    @available = available
+    @am = 2
+    @pm = 2
+  end
+
+
+
+
+
+end
 
 #==============================================================================
 # Main
@@ -67,7 +83,6 @@ user = User.new( cgi )
 
 html_init( nil )
 html_header()
-
 
 
 #### Getting POST
@@ -89,7 +104,7 @@ end
 calendar = Calendar.new( user.name, yyyy, mm, dd )
 calendar.wf = 7 if calendar.wf == 0
 
-yyyy_prev = calendar.yyyy + 1
+yyyy_prev = calendar.yyyy
 mm_prev = calendar.mm - 1
 if mm_prev == 0
 	mm_prev = 12
@@ -98,7 +113,7 @@ end
 calendar_prev = Calendar.new( user.name, yyyy_prev, mm_prev, dd )
 calendar_prev.wf = 7 if calendar_prev.wf == 0
 
-yyyy_next = calendar.yyyy - 1
+yyyy_next = calendar.yyyy
 mm_next = calendar.mm + 1
 if mm_next == 13
 	mm_next = 1
@@ -113,26 +128,55 @@ calendar_next.debug if @debug
 sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
 sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
+calendar_set = []
 a = []
 mm_set = []
 yyyy_set = []
-1.upto( calendar.wf - 2 ) do |c|
-	a << calendar_prev.ddl - c
+1.upto( calendar.wf - 1 ) do |c|
+	a << 0
 	mm_set << calendar_prev.mm
 	yyyy_set << calendar_prev.yyyy
+	calendar_set << Cals.new( calendar_prev.yyyy, calendar_prev.mm, 0, false )
 end
 days = a.reverse
 1.upto( calendar.ddl) do |c|
 	days << c
 	mm_set << calendar.mm
 	yyyy_set << calendar.yyyy
+	calendar_set << Cals.new( calendar.yyyy, calendar.mm, calendar.mm, true )
 end
-1.upto( 7 - calendar_next.wf ) do |c|
+1.upto( calendar_next.wf ) do |c|
+	break if calendar_next.wf == 1
 	days << c
 	mm_set << calendar_next.mm
 	yyyy_set << calendar_next.yyyy
+	calendar_set << Cals.new( calendar_next.yyyy, calendar_next.mm, c, true )
 end
 
+calendar_next_set = []
+a = []
+mm_next_set = []
+yyyy_next_set = []
+1.upto( calendar_next.wf - 2 ) do |c|
+	a << calendar.ddl - c
+	mm_next_set << calendar.mm
+	yyyy_next_set << calendar.yyyy
+	calendar_next_set << Cals.new( calendar.yyyy, calendar.mm, calendar.ddl - c, true )
+end
+days_next = a.reverse
+1.upto( calendar_next.ddl) do |c|
+	days_next << c
+	mm_next_set << calendar_next.mm
+	yyyy_next_set << calendar_next.yyyy
+end
+1.upto( 7 - calendar_next.wl ) do |c|
+	days_next << 0
+	mm_next_set << calendar_next.mm
+	yyyy_next_set << calendar_next.yyyy
+end
+
+
+#### This month
 week_count = 0
 cal_html = ''
 0.upto( days.size - 1 ) do |c|
@@ -155,8 +199,30 @@ cal_html = ''
 end
 
 
+#### Next month
+week_count = 0
+cal_next_html = ''
+0.upto( days_next.size - 1 ) do |c|
+	if week_count == 0
+		cal_next_html << "<tr><td align='center'>　<br>AM<br>PM</td>"
+	end
+	cal_next_html << '<td>'
+	cal_next_html << "<div>#{days_next[c]}</div>"
+	cal_next_html << "<div align='center'>◎</div>"
+	cal_next_html << "<div align='center'>○</div>"
+
+	cal_next_html << '</td>'
+
+	if week_count ==  6
+		cal_next_html << '</tr>'
+		week_count = 0
+	else
+		week_count += 1
+	end
+end
+
 html = <<-"HTML"
-<h3>5月</h3>
+<h2 align="center">#{calendar.yyyy}年　#{calendar.mm}月</h2>
 <table align='center' border='5' width='95%'>
   <tr>
     <td></td>
@@ -170,9 +236,23 @@ html = <<-"HTML"
   <tr>
   #{cal_html}
 </table>
+<br>
+<h2 align="center">#{calendar_next.yyyy}年　#{calendar_next.mm}月</h2>
+<table align='center' border='5' width='95%'>
+  <tr>
+    <td></td>
+    <td width='13.5%' align='center'>月</td>
+    <td width='13.5%' align='center'>火</td>
+    <td width='13.5%' align='center'>水</td>
+    <td width='13.5%' align='center'>木</td>
+    <td width='13.5%' align='center'>金</td>
+    <td width='13.5%' align='center'>土</td>
+    <td width='13.5%' align='center'>日</td>
+  <tr>
+  #{cal_next_html}
+</table>
 HTML
 
 puts html
-
 
 html_foot

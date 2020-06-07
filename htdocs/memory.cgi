@@ -17,7 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'memory'
 
 
@@ -54,13 +54,31 @@ def alike_pointer( key )
 	begin
 		pointer_h = Hash.new
 		normal = key.tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
+		normal.gsub!( '一', '1' )
+		normal.gsub!( '二', '2' )
+		normal.gsub!( '三', '3' )
+		normal.gsub!( '四', '4' )
+		normal.gsub!( '五', '5' )
+		normal.gsub!( '六', '6' )
+		normal.gsub!( '七', '7' )
+		normal.gsub!( '八', '8' )
+		normal.gsub!( '九', '9' )
 		r = mdb( "SELECT pointer from #{$MYSQL_TB_MEMORY};", false, @debug )
 		r.each do |e|
 			normal_pointer = e['pointer'].tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
+			normal_pointer.gsub!( '一', '1' )
+			normal_pointer.gsub!( '二', '2' )
+			normal_pointer.gsub!( '三', '3' )
+			normal_pointer.gsub!( '四', '4' )
+			normal_pointer.gsub!( '五', '5' )
+			normal_pointer.gsub!( '六', '6' )
+			normal_pointer.gsub!( '七', '7' )
+			normal_pointer.gsub!( '八', '8' )
+			normal_pointer.gsub!( '九', '9' )
 			small = ''
 			large = ''
 			large_size = 1
-			hit = 0.0
+			score = 0.0
 			if normal.size <= normal_pointer.size
 				small = normal
 				large = normal_pointer
@@ -71,23 +89,26 @@ def alike_pointer( key )
 				large_size = normal.size
 			end
 			a = small.split( '' )
-			pre_char = ''
+			follower = ''
 			a.each do |ee|
 				if ee != '+'
-					if /#{pre_char}#{ee}/ =~ large
-						hit += 3 if /#{pre_char}#{ee}/ =~ large
-						pre_char = ee
+					if /#{follower}#{ee}/ =~ large
+						score += 3 if /#{follower}#{ee}/ =~ large
+						follower = ee
 					elsif /#{ee}/ =~ large
-						hit += 1 if /#{ee}/ =~ large
-						pre_char = ee
+						score += 1 if /#{ee}/ =~ large
+						follower = ee
+					else
+						follower = ''
 					end
 				end
 			end
-			pointer_h[e['pointer']] = hit / large_size
+			pointer_h[e['pointer']] = score / large_size
 		end
 
 		ap = pointer_h.max do |k, v| k[1] <=> v[1] end
-		pointer = ap[0] if ap[1] >= 1.0
+		pointer = ap[0] if ap[1] >= 1.5
+	rescue
 	end
 
 	return pointer

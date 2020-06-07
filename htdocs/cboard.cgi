@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser cutting board 0.00
+#Nutrition browser cutting board 0.00b
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
-#20171026, 0.00, start
+#20200605, 0.00b, start
 
 
 #==============================================================================
@@ -759,7 +759,7 @@ food_list.each do |e|
 		html << "<div class='col-7'><hr></div>"
   	else
 
-	  	html << "	<div class='col-1 fct_value'><input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB_BWL1( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>#{e.no}</div>"
+	  	html << "	<div class='col-1 fct_value'><input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>#{e.no}</div>"
   		html << "	<div class='col-3 fct_value' onclick=\"cb_summonBWL5( '#{food_key}', '#{e.weight}', '#{e.no}' )\">#{food_tag[c]}</div>"
   		html << "	<div class='col-3'>"
   		html << "		<div class='form-group form-row cb_form'>"
