@@ -8,6 +8,11 @@ var addingCB = function( fn, weight_id ){
 	}
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){ $( "#cb_num" ).html( data );});
 	if( fn != '' ){ displayVideo( '+' + fn ); }
+
+	var fxRI = function(){
+		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#cb_num" ).html( data );});
+	};
+	setTimeout( fxRI, 1000 );
 };
 
 
@@ -298,8 +303,8 @@ var photoDel_BWL2 = function( slot, code ){
 ////////////////////////////////////////////////////////////////////////////////////
 // Recipe list ////////////////////////////////////////////////////////////////////////
 
-// まな板のレシピ読み込みボタンを押してL1にリストを表示
-var recipeList_BWL1 = function( com ){
+// Dosplaying recipe list with reset
+var recipeList = function( com ){
 	closeBroseWindows( 1 );
 	$.post( "recipel.cgi", { command:com }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
@@ -307,21 +312,26 @@ var recipeList_BWL1 = function( com ){
 };
 
 
-// レシピ一覧の絞り込み、またはページボタンを押してL1にリストを表示
-var recipeList2_BWL1 = function( page ){
+// Refreshing list
+var fxRLR = function( range, type, role, tech, time, cost, page ){
+	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#bw_level1" ).html( data );});
+};
+
+
+// Dosplaying recipe list with narrow down
+var recipeList2 = function( page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
 	var role = document.getElementById( "role" ).value;
 	var tech = document.getElementById( "tech" ).value;
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
-	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#bw_level1" ).html( data );});
-	document.getElementById( "bw_level1" ).style.display = 'block';
+	fxRLR( range, type, role, tech, time, cost, page )
 };
 
 
-// レシピ一覧の削除ボタンを押してレシピを削除し、L1にリストを再表示
-var recipeDelete_BWL1 = function( code, page ){
+// Dosplaying recipe list after delete
+var recipeDelete = function( code, page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
 	var role = document.getElementById( "role" ).value;
@@ -330,20 +340,17 @@ var recipeDelete_BWL1 = function( code, page ){
 	var cost = document.getElementById( "cost" ).value;
 
 	if( document.getElementById( code ).checked ){
-		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
+		$.post( "recipel.cgi", { command:'delete', code:code }, function( data ){});
 		displayVideo( 'Removed' );
-		var fxRR = function(){
-			$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#bw_level1" ).html( data );});
-		};
-		setTimeout( fxRR, 1000 );
+		setTimeout( fxRLR( range, type, role, tech, time, cost, page ), 1000 );
 	} else{
 		displayVideo( '(>_<) Check!' );
 	}
 };
 
 
-// importing public recipe form recipe list
-var recipeImport_BWL1 = function( code, page ){
+// Importing public recipe & Generationg subSpecies
+var recipeImport = function( com, code, page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
 	var role = document.getElementById( "role" ).value;
@@ -351,32 +358,9 @@ var recipeImport_BWL1 = function( code, page ){
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
 
-	$.post( "recipel.cgi", { command:'import', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
-	displayVideo( 'Imported' );
-
-	var fxRI = function(){
-		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#cb_num" ).html( data );});
-	};
-	setTimeout( fxRI, 1000 );
-};
-
-
-// importing public recipe form recipe list
-var recipeSub = function( code, page ){
-	var range = document.getElementById( "range" ).value;
-	var type = document.getElementById( "type" ).value;
-	var role = document.getElementById( "role" ).value;
-	var tech = document.getElementById( "tech" ).value;
-	var time = document.getElementById( "time" ).value;
-	var cost = document.getElementById( "cost" ).value;
-
-	$.post( "recipel.cgi", { command:'sub', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
-	displayVideo( 'Imported' );
-
-	var fxRI = function(){
-		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#cb_num" ).html( data );});
-	};
-	setTimeout( fxRI, 1000 );
+	$.post( "recipel.cgi", { command:com, code:code }, function( data ){});
+	displayVideo( '+recipe' );
+	setTimeout( fxRLR( range, type, role, tech, time, cost, page ), 1000 );
 };
 
 
@@ -393,19 +377,11 @@ var calcView_BWL2 = function( code ){
 };
 
 // 成分計算表の再計算ボタンを押してL2にリストを表示
-var recalcView_BWL2 = function( code ){
+var recalcView = function( code ){
 	var palette = document.getElementById( "palette" ).value;
 	var frct_mode = document.getElementById( "frct_mode" ).value;
-	if( document.getElementById( "frct_accu" ).checked ){
-		var frct_accu = 1;
-	}else{
-		var frct_accu = 0;
-	}
-	if( document.getElementById( "ew_mode" ).checked ){
-		var ew_mode = 1;
-	}else{
-		var ew_mode = 0;
-	}
+	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
+	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
 	$.post( "calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#bw_level2" ).html( data );});
 	displayVideo( 'Recalc' );
 };
@@ -539,7 +515,7 @@ var Pseudo_R2F_BWLX = function( code ){
 // 印刷用清書レシピ /////////////////////////////////////////////////////////////////
 
 // レシピ帳の印刷ボタンを押してL2に印刷画面テンプレートを表示
-var print_templateSelect_BWL2 = function( code ){
+var print_templateSelect = function( code ){
 	$.post( "print.cgi", { command:'select', code:code }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'none';
 	document.getElementById( "bw_level2" ).style.display = 'block';

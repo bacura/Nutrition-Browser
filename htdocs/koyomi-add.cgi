@@ -1,12 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi adding panel 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20190511, 0.00, start
-
+#Nutrition browser koyomi adding panel 0.00b
 
 #==============================================================================
 #LIBRARY
@@ -195,7 +189,7 @@ save_button = "<button class='btn btn-sm btn-outline-primary' type='button' oncl
 
 
 ####
-if command == 'modify' || command == 'move'
+if command == 'modify' || command == 'move' || command == 'move_fix'
 	copy_html << "<div class='form-group form-check'>"
     copy_html << "<input type='checkbox' class='form-check-input' id='copy'>"
     copy_html << "<label class='form-check-label'>#{lp[24]}</label>"
@@ -208,10 +202,13 @@ end
 ####
 food_name = code
 if /\-m\-/ =~ code
-	r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false, @debug )
+	r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
+	food_name = r.first['name']
+elsif /\-f\-/ =~ code
+	r = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
 	food_name = r.first['name']
 elsif /\-/ =~ code
-	r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
+	r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
 	food_name = r.first['name']
 else
 	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';"
@@ -239,7 +236,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 			koyomi_c = '-'
 			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
 			onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move'
+			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move' || command == 'move_fix'
 			if rr.first
 				if rr.first['koyomi'] == ''
 					date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
@@ -278,7 +275,7 @@ select_html << "</select>&nbsp;/&nbsp;"
 
 select_html << "<select id='mm_add' class='custom-select custom-select-sm' #{onchange}>"
 1.upto( 12 ) do |c|
-	if c == mm
+	if c == calendar.mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
 		select_html << "<option value='#{c}'>#{c}</option>"
@@ -288,7 +285,7 @@ select_html << "</select>&nbsp;/&nbsp;"
 
 select_html << "<select id='dd' class='custom-select custom-select-sm'>"
 1.upto( calendar.ddl ) do |c|
-	if c == dd
+	if c == calendar.dd
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
 		select_html << "<option value='#{c}'>#{c}</option>"
@@ -317,29 +314,35 @@ select_html << "<option value='99'>時刻</option>"
 	end
 end
 select_html << "</select>"
+#select_html << "<button class='btn btn-sm btn-outline-success' type='button' onclick=\"nowKoyomi()\">#{lp[11]}</button>"
 
 
 #### Rate HTML
 rate_selected = ''
-rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 rate_html = ''
-rate_html << "<div class='input-group input-group-sm'>"
-rate_html << "	<div class='input-group-prepend'>"
-rate_html << "		<span class='input-group-text' id='basic-addon1'>#{lp[22]}</span>"
-rate_html << "	</div>"
-rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
-rate_html << "  <div class='input-group-append'>"
-rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
-if /^[UP]?\d{5}/ =~ code
-	rate_html << unit_select_html( code, eu )
+if command != 'move_fix'
+	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
+	rate_html = ''
+	rate_html << "<div class='input-group input-group-sm'>"
+	rate_html << "	<div class='input-group-prepend'>"
+	rate_html << "		<span class='input-group-text'>#{lp[22]}</span>"
+	rate_html << "	</div>"
+	rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
+	rate_html << "  <div class='input-group-append'>"
+	rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
+	if /^[UP]?\d{5}/ =~ code
+		rate_html << unit_select_html( code, eu )
+	else
+		rate_html << "			<option value='99'>%</option>"
+		rate_html << "			<option value='0' #{rate_selected}>g</option>"
+	end
+	rate_html << "		</select>"
+	rate_html << "	</div>"
+	rate_html << "</div>"
 else
-	rate_html << "			<option value='99'>%</option>"
-	rate_html << "			<option value='0' #{rate_selected}>g</option>"
+	rate_html = '<input type="hidden" id="ev" value="100">'
+	rate_html = '<input type="hidden" id="eu" value="0">'
 end
-rate_html << "		</select>"
-rate_html << "	</div>"
-rate_html << "</div>"
-
 
 #### Return button
 return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn()\">#{lp[11]}</button>"
@@ -355,7 +358,7 @@ html = <<-"HTML"
 		<div class='col-1'>#{return_button}</div>
 	</div>
 	<div class='row'>
-		<div class='col-5 form-inline'>
+		<div class='col-6 form-inline'>
 			#{select_html}
 		</div>
 		<div class='col-3 form-inline'>

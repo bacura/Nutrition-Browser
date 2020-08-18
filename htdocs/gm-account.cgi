@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM account editor 0.00
+#Nutrition browser GM account editor 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'gm-account'
 
 
 #==============================================================================
@@ -29,23 +29,17 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'gm-account', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GM check
-if status < 9
+if user.status < 9
 	puts "GM error."
 	exit
 end
@@ -73,7 +67,7 @@ end
 
 account_html = ''
 if command == 'edit'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{target_uid}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{target_uid}';", false, @debug )
 	if r.first
 		account_html << "<hr>"
 		account_html << "<div class='row'>"
@@ -113,11 +107,11 @@ if command == 'edit'
 	end
 else
 	if command == 'save'
-		mariadb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{target_pass}', mail='#{target_mail}', aliasu='#{target_aliasu}', status='#{target_status}', language='#{target_language}' WHERE user='#{target_uid}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{target_pass}', mail='#{target_mail}', aliasu='#{target_aliasu}', status='#{target_status}', language='#{target_language}' WHERE user='#{target_uid}';", false, @debug )
 	end
 
 	account_html << "<div class='row'>"
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status!='9' AND user!='';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status!='9' AND user!='';", false, @debug )
 	if r.first
 		account_html << "<table class='table-striped table-bordered'>"
 		account_html << "<thead>"

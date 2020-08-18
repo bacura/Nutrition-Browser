@@ -66,7 +66,7 @@ if mod == ''
 	html = init( lp )
 else
 	require "#{$HTDOCS_PATH}/config_/mod_#{mod}.rb"
-	html = config_module( cgi, user )
+	html = config_module( cgi, user, lp )
 end
 
 

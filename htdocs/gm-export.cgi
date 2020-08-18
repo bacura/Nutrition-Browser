@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM extag export 0.00
+#Nutrition browser GM extag export 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
-
+script = 'gm-export.cgi'
 
 #==============================================================================
 #DEFINITION
@@ -39,10 +38,10 @@ extag = get_data['extag']
 puts "extag:#{extag}\n" if @debug
 
 cgi = CGI.new
-uname, uid, status = login_check( cgi )
+user = User.new( cgi )
 
 #### GMチェック
-if status < 9
+if user.status < 8
 	puts "GM error."
 	exit
 end
@@ -50,26 +49,26 @@ end
 export = ''
 case extag
 when 'unitc'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_EXT};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, @debug )
 	r.each do |e| export << "#{e['FN']}\t#{e['user']}\t#{e['unitc']}\t#{e['unitn']}\n" end
 when 'color'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_EXT};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, @debug )
 	r.each do |e| export << "#{e['FN']}\t#{e['user']}\t#{e['color1']}\t#{e['color2']}\t#{e['color1h']}\t#{e['color2h']}\n" end
 
 when 'allergen'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_EXT};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, @debug )
 	r.each do |e| export << "#{e['FN']}\t#{e['user']}\t#{e['allergen']}\n" end
 
 when 'gycv'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_EXT};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, @debug )
 	r.each do |e| export << "#{e['FN']}\t#{e['user']}\t#{e['gycv']}\n" end
 
 when 'shun'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_EXT};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, @debug )
 	r.each do |e| export << "#{e['FN']}\t#{e['user']}\t#{e['shun1s']}\t#{e['shun1e']}\t#{e['shun2s']}\t#{e['shun2e']}\n" end
 
 when 'dic'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_DIC};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC};", false, @debug )
 #	r.each do |e| export << "#{e['tn']}\t#{e['org_name']}\t#{e['alias']}\t#{e['user']}\n" end
 
 else

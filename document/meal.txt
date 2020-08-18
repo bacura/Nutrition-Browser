@@ -1,0 +1,42 @@
+#Nutrition browser menul 0.00b
+
+#==============================================================================
+# OVERVIEW
+#==============================================================================
+栄養ブラウザの献立リスト表示スクリプト
+
+
+#==============================================================================
+# DEPENDENCE
+#==============================================================================
+nb-soul.rb
+fileutils
+
+#==============================================================================
+# ITEM FROM GET / POST
+#==============================================================================
+#POST
+command.to_i	#コマンド
+code.to_s		#レシピコード
+order.to_i		#並び順
+
+
+#==============================================================================
+# TRANSITION
+#==============================================================================
+menu.js/clear_meal( order, code )	->	meal.cgi{ command:'clear', order:'all', code:code }
+										meal.cgi{ command:'clear', order:order, code:code }
+
+menu.js/upper_meal( order, code )	->	meal.cgi{ command:'upper', order:order, code:code }
+menu.js/lower_meal( order, code )	->	meal.cgi{ command:'lower', order:order, code:code }
+
+menu.js/menuEdit( 'view', code )	->	menu.cgi{ command:com, code:code }
+										menu-photo.cgi{ command:'form', code:code }
+menu.js/menuCalcView( code )		->	menu-calc.cgi{ command:'view', code:code }
+menu.js/menuAnalysis( code )		->	menu-analysis.cgi{ command:'', code:code }
+
+
+#==============================================================================
+#CHANGE LOG
+#==============================================================================
+20200815	0.00b	βスタート

@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'gm-color'
 
 
 #==============================================================================
@@ -29,23 +29,17 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'gm-color', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GM check
-if status < 9
+if user.status < 8
 	puts "GM error."
 	exit
 end
@@ -58,7 +52,7 @@ code = '' if code == nil
 code.gsub!( /\s/, ',' )
 code.gsub!( '　', ',' )
 if @debug
-	puts "uname:#{uname}<br>\n"
+	puts "user.name:#{user.name}<br>\n"
 	puts "uid:#{uid}<br>\n"
 	puts "status:#{status}<hr>\n"
 	puts "command:#{command}<br>\n"
@@ -92,7 +86,7 @@ when 'update'
 
 	fn.each do |e|
 		if /\d\d\d\d\d/ =~ e
-			r = mariadb( "UPDATE #{$MYSQL_TB_EXT} SET color1='#{color1}', color2='#{color2}', color1h='#{color1h}', color2h='#{color2h}' WHERE FN='#{e}';", false )
+			r = mdb( "UPDATE #{$MYSQL_TB_EXT} SET color1='#{color1}', color2='#{color2}', color1h='#{color1h}', color2h='#{color2h}' WHERE FN='#{e}';", false, @debug )
 		end
 	end
 end
@@ -100,17 +94,17 @@ end
 
 #### 未設定選択モード
 if command == 'undefine'
-	r = mariadb( "SELECT FN from #{$MYSQL_TB_EXT} WHERE color1='0';", false )
+	r = mdb( "SELECT FN from #{$MYSQL_TB_EXT} WHERE color1='0';", false, @debug )
 	code = r.first['FN'] if r.first
 end
 
 
 #### コードが未設定モード
 unless code == ''
-	r = mariadb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false )
+	r = mdb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false, @debug )
 	food_name = r.first['name']
 
-	r = mariadb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false )
+	r = mdb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, @debug )
 	if r.first
 		color1 = r.first['color1'].to_i
 		color2 = r.first['color2'].to_i

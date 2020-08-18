@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe list 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20171114, 0.00, start
+#Nutrition browser recipe list 0.20b
 
 
 #==============================================================================
@@ -18,7 +13,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 script = 'recipel'
-$PAGE_LIMIT = 50
+page_limit = 50
 @debug = false
 
 
@@ -153,23 +148,23 @@ def pageing_html( page, page_start, page_end, page_max )
 	if page == 1
 		html << '<li class="page-item disabled"><span class="page-link">前頁</span></li>'
 	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2_BWL1( #{page - 1} )\">前頁</span></li>"
+		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2( #{page - 1} )\">前頁</span></li>"
 	end
 	unless page_start == 1
-		html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2_BWL1( '1' )\">1…</a></li>"
+		html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2( '1' )\">1…</a></li>"
 	end
 	page_start.upto( page_end ) do |c|
 		active = ''
 		active = ' active' if page == c
-		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeList2_BWL1( #{c} )\">#{c}</a></li>"
+		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeList2( #{c} )\">#{c}</a></li>"
 	end
 	unless page_end == page_max
-		html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2_BWL1( '#{page_max}' )\">…#{page_max}</a></li>"
+		html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2( '#{page_max}' )\">…#{page_max}</a></li>"
 	end
 	if page == page_max
 		html << '<li class="page-item disabled"><span class="page-link">次頁</span></li>'
 	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2_BWL1( #{page + 1} )\">次頁</span></li>"
+		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2( #{page + 1} )\">次頁</span></li>"
 	end
 	html << '  </ul>'
 
@@ -232,11 +227,17 @@ end
 #==============================================================================
 cgi = CGI.new
 
-html_init( nil )
-
 user = User.new( cgi )
 user.debug if @debug
 lp = user.language( script )
+
+r = mdb( "SELECT icache, ilist FROM cfg WHERE user='#{user.name}';", false, @debug )
+if r.first['icache'].to_i == 1
+	html_init_cache( nil )
+else
+	html_init( nil )
+end
+page_limit = r.first['ilist'].to_i unless r.first['ilist'].to_i == 0
 
 
 #### POSTデータの取得
@@ -276,9 +277,59 @@ when 'init'
 	end
 when 'reset'
 	words = ''
+
 when 'refer'
 	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
 	words = lp[1] if recipe_code_list.size == 0
+
+when 'delete'
+	# Deleting photos
+	3.times do |c|
+		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}tns.jpg" )
+		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}tn.jpg" )
+		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" )
+	end
+	# Deleting recipe from DB
+	mdb( "delete FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+
+	# Updating SUM
+	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+	if r.first
+		mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='', code='', name='', protect=0, dish=1 WHERE user='#{user.name}';", false, @debug )
+	end
+
+	exit
+
+when 'import', 'subspecies'
+	# Loading original recipe
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
+	if r.first
+		require 'fileutils'
+		# Generating new code
+		new_code = generate_code( user.name, 'r' )
+
+		# Copying phots
+		import_figs = [ nil, 0, 0, 0 ]
+		figs = [nil, 'fig1', 'fig2', 'fig3' ]
+		1.upto( 3 ) do |c|
+			if r.first[figs[c]] == 1
+				FileUtils.cp( "#{$PHOTO_PATH}/#{code}-1tns.jpg", "#{$PHOTO_PATH}/#{new_code}-1tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-1tns.jpg" )
+				FileUtils.cp( "#{$PHOTO_PATH}/#{code}-1tn.jpg", "#{$PHOTO_PATH}/#{new_code}-1tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-1tn.jpg" )
+				FileUtils.cp( "#{$PHOTO_PATH}/#{code}-1.jpg", "#{$PHOTO_PATH}/#{new_code}-1.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-1.jpg" )
+				import_figs[c] = 1
+			end
+		end
+
+		# Insertinbg recipe into DB
+		if command == 'import'
+			mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{user.name}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_figs[1]}', fig2='#{import_figs[2]}', fig3='#{import_figs[3]}', date='#{$DATETIME}';", false, @debug )
+		elsif command == 'subspecies'
+			mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{user.name}', root='#{code}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_figs[1]}', fig2='#{import_figs[2]}', fig3='#{import_figs[3]}', date='#{$DATETIME}';", false, @debug )
+		end
+	end
+
+	exit
+
 else
 	page = cgi['page'].to_i
 	page = 1 if page == 0
@@ -305,68 +356,6 @@ if @debug
 	puts "cost: #{cost}<br>"
 	puts "recipe_code_list: #{recipe_code_list}<br>"
 	puts "<hr>"
-end
-
-
-#### レシピの削除
-if command == 'delete'
-	# 写真の削除
-	3.times do |c|
-		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}tns.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}tn.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" )
-	end
-	#レシピデータベースのの更新（削除）
-	mdb( "delete FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-
-	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-	if r.first
-		mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='', code='', name='', protect=0, dish=1 WHERE user='#{user.name}';", false, @debug )
-	end
-end
-
-
-#### レシピのインポート
-if command == 'import'
-	# インポート元の読み込み
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
-
-	if r.first
-		#レシピデータベースのの更新(新規)
-		require 'fileutils'
-
-		new_code = generate_code( user.name, 'r' )
-
-		import_fig1 = 0
-		import_fig2 = 0
-		import_fig3 = 0
-
-		# 写真のコピー
-		if r.first['fig1'] == 1
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-1tns.jpg", "#{$PHOTO_PATH}/#{new_code}-1tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-1tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-1tn.jpg", "#{$PHOTO_PATH}/#{new_code}-1tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-1tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-1.jpg", "#{$PHOTO_PATH}/#{new_code}-1.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-1.jpg" )
-			import_fig1 = 1
-		end
-
-		if r.first['fig2'] == 1
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-2tns.jpg", "#{$PHOTO_PATH}/#{new_code}-2tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-2tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-2tn.jpg", "#{$PHOTO_PATH}/#{new_code}-2tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-2tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-2.jpg", "#{$PHOTO_PATH}/#{new_code}-2.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-2.jpg" )
-			import_fig2 = 1
-		end
-
-		if r.first['fig3'] == 1
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-3tns.jpg", "#{$PHOTO_PATH}/#{new_code}-3tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-3tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-3tn.jpg", "#{$PHOTO_PATH}/#{new_code}-3tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-3tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{code}-3.jpg", "#{$PHOTO_PATH}/#{new_code}-3.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{code}-3.jpg" )
-			import_fig3 = 1
-		end
-
-		mdb( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{new_code}', user='#{user.name}', dish='#{r.first['dish']}', public='0', protect='0', draft='1', name='#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='#{import_fig1}', fig2='#{import_fig2}', fig3='#{import_fig3}', date='#{$DATETIME}';", false, @debug )
-		mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='#{new_code}', dish='#{r.first['dish']}', protect='0', name='#{r.first['name']}', sum='#{r.first['sum']}' WHERE user='#{user.name}';", false, @debug )
-	end
-
 end
 
 
@@ -403,7 +392,7 @@ sql_where << " AND time>0 AND time<=#{time}" unless time == 99
 sql_where << " AND cost>0 AND cost<=#{cost}" unless cost == 99
 
 
-# 検索条件HTML
+#### 検索条件HTML
 html_range = range_html( range )
 html_type = type_html( type )
 html_role = role_html( role )
@@ -416,20 +405,18 @@ html_cost = cost_html( cost )
 recipe_solid = []
 if recipe_code_list.size > 0
 	recipe_code_list.each do |e|
-		r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
-		if r.first
-			recipe_solid << Hash['code' => e, 'user' => r.first['user'], 'protect' => r.first['protect'], 'name' => r.first['name'], 'fig1' => r.first['fig1']]
-		end
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
+		recipe_solid << r.first if r.first
 	end
 else
-	r = mdb( "SELECT code, user, protect, public, draft, name, fig1 FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, @debug )
 	recipe_solid = r
 end
 
 
 #### ページングパーツ
 recipe_num = recipe_solid.size
-page_max = recipe_num / $PAGE_LIMIT + 1
+page_max = recipe_num / page_limit + 1
 page_start = 1
 page_end = page_max
 if page_end > 5
@@ -450,8 +437,8 @@ html_paging = pageing_html( page, page_start, page_end, page_max )
 
 
 #### ページ内範囲抽出
-recipe_start = $PAGE_LIMIT * ( page - 1 )
-recipe_end = recipe_start + $PAGE_LIMIT - 1
+recipe_start = page_limit * ( page - 1 )
+recipe_end = recipe_start + page_limit - 1
 recipe_end = recipe_solid.size if recipe_end >= recipe_solid.size
 
 
@@ -495,23 +482,22 @@ recipe_solid.each do |e|
 			recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
 		end
 		if user.status >= 2 && e['user'] == user.name
-			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[21]}</button>"
+			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}' )\">#{lp[21]}</button>"
 		end
-		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect_BWL2( '#{e['code']}' )\">#{lp[9]}</button>"
-		recipe_html << "	<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[19]}</button>"
-		if user.status >= 2 && e['user'] == user.name
-			recipe_html << "	<button class='btn btn-primary btn-sm' type='button' onclick=\"\">#{lp[20]}</button>&nbsp;"
+		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect( '#{e['code']}' )\">#{lp[9]}</button>"
+		if user.status >= 2 && e['user'] == user.name && ( e['root'] == nil || e['root'] == '' )
+			recipe_html << "	<button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport( 'subspecies', '#{e['code']}', '#{page}' )\">#{lp[20]}</button>&nbsp;"
 		end
 		recipe_html << "</td>"
 
 		if e['user'] == user.name
 			if e['protect'] == 0
-				recipe_html << "<td><input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"recipeDelete_BWL1( '#{e['code']}', #{page} )\">#{lp[10]}</button></td>"
+				recipe_html << "<td><input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"recipeDelete( '#{e['code']}', #{page} )\">#{lp[10]}</button></td>"
 			else
 				recipe_html << "<td></td>"
 			end
 		else
-			recipe_html << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport_BWL1( '#{e['code']}', '#{page}' )\">#{lp[11]}</button></td>"
+			recipe_html << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport( 'import', '#{e['code']}', '#{page}' )\">#{lp[11]}</button></td>"
 		end
 		recipe_html << '</tr>'
 	end
@@ -536,8 +522,8 @@ html = <<-"HTML"
 	</div><br>
 	<div class='row'>
 		<div class='col-5'></div>
-		<div class='col-5'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2_BWL1( 'init' )">#{lp[13]}</button></div>
-		<div class='col-2'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList_BWL1( 'reset' )">#{lp[14]}</button></div>
+		<div class='col-5'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2( '#{page}' )">#{lp[13]}</button></div>
+		<div class='col-2'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
 	</div>
 	<br>
 

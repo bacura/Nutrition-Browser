@@ -1,7 +1,7 @@
-# Config module for Nutorition browser koyomiex 0.00
+# Config module for koyomiex 0.00b
 #encoding: utf-8
 
-def config_module( cgi, user )
+def config_module( cgi, user, lp )
 	module_js()
 
 	step = cgi['step']
@@ -32,26 +32,26 @@ def config_module( cgi, user )
 		koyomiex_new = ''
 		0.upto( 9 ) do |c| koyomiex_new << "#{kex_select_set[c]}\t#{item_set[c]}\t#{unit_set[c]}:" end
 		koyomiex_new.chop!
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{user.name}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{user.name}';", false, @debug )
 	when 'delete'
-		r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
+		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		kex_select_set = r.first['koyomiex'].split( ':' )
 		koyomiex_new = ''
 		kex_select_set.size.times do |c|
 			if del_no == c
 				koyomiex_new << "0\t\t:"
-				mariadb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{user.name}';", false )
+				mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{user.name}';", false, @debug )
 			else
 				koyomiex_new << "#{kex_select_set[c]}:"
 			end
 		end
 		koyomiex_new.chop!
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{user.name}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{user.name}';", false, @debug )
 	end
 
-	r = mariadb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
+	r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first['koyomiex'] == '' || r.first['koyomiex'] == nil
-		mariadb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{user.name}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{user.name}';", false, @debug )
 		0.upto( 9 ) do |c|
 			kex_select_set[c] = 0
 			item_set[c] = ''
@@ -74,7 +74,7 @@ def config_module( cgi, user )
 	breakfast_st = 7
 	lunch_st = 12
 	dinner_st = 19
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first['koyomiy']
 		a = r.first['koyomiy'].split( ':' )
 		koyomiy = a[0].to_i
@@ -88,7 +88,7 @@ def config_module( cgi, user )
 	html << "<div class='row'>"
 	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
-	html << "<div class='input-group-prepend'><span class='input-group-text'>こよみ開始年</span></div>"
+	html << "<div class='input-group-prepend'><span class='input-group-text'>#{lp[55]}</span></div>"
   	html << "<select class='custom-select' id='koyomiy'>"
 	2000.upto(2050) do |c|
 		if c == koyomiy
@@ -104,7 +104,7 @@ def config_module( cgi, user )
 	html << "<div class='row'>"
 	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
-	html << "<div class='input-group-prepend'><span class='input-group-text'>朝食標準時刻</span></div>"
+	html << "<div class='input-group-prepend'><span class='input-group-text'>#{lp[56]}</span></div>"
  	html << "<select class='custom-select' id='breakfast_st'>"
 	0.upto(23) do |c|
 		if c == breakfast_st
@@ -118,7 +118,7 @@ def config_module( cgi, user )
 
 	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
-	html << "<div class='input-group-prepend'><span class='input-group-text'>昼食標準時刻</span></div>"
+	html << "<div class='input-group-prepend'><span class='input-group-text'>#{lp[57]}</span></div>"
  	html << "<select class='custom-select' id='lunch_st'>"
 	0.upto(23) do |c|
 		if c == lunch_st
@@ -132,7 +132,7 @@ def config_module( cgi, user )
 
 	html << "<div class='col-3'>"
 	html << "<div class='input-group input-group-sm'>"
-	html << "<div class='input-group-prepend'><span class='input-group-text'>夕食標準時刻</span></div>"
+	html << "<div class='input-group-prepend'><span class='input-group-text'>#{lp[58]}</span></div>"
  	html << "<select class='custom-select' id='dinner_st'>"
 	0.upto(23) do |c|
 		if c == dinner_st
@@ -146,14 +146,14 @@ def config_module( cgi, user )
 
 	html << "</div><hr>"
 
-	html << "<h5>こよみ拡張・項目設定:</h5><br>"
+	html << "<h5>#{lp[59]}</h5><br>"
 
 	0.upto( 9 ) do |c|
 		html << "<div class='row'>"
 		html << "	<div class='col-3'>"
 		html << "		<div class='input-group input-group-sm'>"
   		html << "			<div class='input-group-prepend'>"
-    	html << "				<label class='input-group-text'>項目#{c}</label>"
+    	html << "				<label class='input-group-text'>#{lp[60]}#{c}</label>"
   		html << "			</div>"
   		html << "			<select class='custom-select' id='kex_select#{c}' onChange=\"kexChangeselect( '#{c}' )\">"
 		$KEX_ITEM.size.times do |cc|
@@ -169,7 +169,7 @@ def config_module( cgi, user )
 		html << "	<div class='col-3'>"
 		html << "		<div class='input-group input-group-sm'>"
 		html << "			<div class='input-group-prepend'>"
-		html << "				<span class='input-group-text'>名称</span>"
+		html << "				<span class='input-group-text'>#{lp[61]}</span>"
 		html << "			</div>"
 		if kex_select_set[c] == 1
 			html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='#{item_set[c]}'>"
@@ -181,7 +181,7 @@ def config_module( cgi, user )
 		html << "	<div class='col-2'>"
 		html << "		<div class='input-group input-group-sm'>"
 		html << "			<div class='input-group-prepend'>"
-		html << "				<span class='input-group-text'>単位</span>"
+		html << "				<span class='input-group-text'>#{lp[62]}</span>"
 		html << "			</div>"
 		if kex_select_set[c] == 1
 			html << "			<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='#{item_set[c]}'>"
@@ -191,13 +191,13 @@ def config_module( cgi, user )
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-1'></div>"
-		html << "	<div class='col-2'><input type='checkbox' id='kex_del#{c}'>&nbsp;<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"koyomiex_cfg( 'delete', 'kex_del#{c}', '#{c}' )\">初期化</button></div>"
+		html << "	<div class='col-2'><input type='checkbox' id='kex_del#{c}'>&nbsp;<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"koyomiex_cfg( 'delete', 'kex_del#{c}', '#{c}' )\">#{lp[63]}</button></div>"
 		html << "</div><br>"
 	end
 
   	html << "<div class='row'>"
 	html << "<div class='col-2'></div>"
-	html << "<div class='col-4'><button type='button' class='btn btn-outline-primary btn-sm nav_button' onclick=\"koyomiex_cfg( 'update' )\">保存</button></div>"
+	html << "<div class='col-4'><button type='button' class='btn btn-outline-primary btn-sm nav_button' onclick=\"koyomiex_cfg( 'update' )\">#{lp[64]}</button></div>"
 	html << "</div>"
 	html << "</div>"
 

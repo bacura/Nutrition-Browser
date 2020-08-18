@@ -37,9 +37,9 @@ end
 class Recipe
 	attr_accessor :code, :user, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sum, :protocol, :fig1, :fig2, :fig3, :date
 
-	def initialize( uname )
-		@code = ''
-		@user = uname
+	def initialize( user )
+		@code = nil
+		@user = user
 		@branch = nil
 		@root = nil
 		@public = 0
@@ -74,8 +74,9 @@ class Recipe
 		@protocol = cgi['protocol']
 	end
 
-	def load_db()
-		r = mdb( "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{@user}' and code='#{@code}';", false, false )
+	def load_db( code )
+		@code = code
+		r = mdb( "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{@user}' and code='#{code}';", false, false )
 		if r.first
 			@public = r.first['public'].to_i
 			@protect = r.first['protect'].to_i
@@ -150,13 +151,12 @@ if @debug
 end
 
 recipe = Recipe.new( user.name )
-recipe.code = code
 recipe.debug if @debug
 
 case command
 when 'view'
 	# Loading recipe from DB
-	recipe.load_db
+	recipe.load_db( code )
 
 when 'save'
 	recipe.load_cgi( cgi )

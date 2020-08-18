@@ -1,0 +1,61 @@
+#Nutrition browser koyomi 0.02b
+
+#==============================================================================
+# OVERVIEW
+#==============================================================================
+栄養ブラウザのカレンダー機能の編集サブスクリプト。
+
+
+#==============================================================================
+# DEPENDENCE
+#==============================================================================
+nb-soul.rb
+
+
+#==============================================================================
+# DB
+#==============================================================================
+
+
+
+#==============================================================================
+# ITEM FROM CGI
+#==============================================================================
+command.to_i	#コマンド
+yyyy.to_i		#年
+mm.to_i			#月
+dd.to_i			#日
+hh.to_i			#時間
+tdiv.to_i		#食事時間区分
+code.to_s		#各種コード
+memo,to_s		#メモ
+order.to_i		#食事区分毎のコードの順番
+some.to_s		#何か食べたコード
+
+
+#==============================================================================
+# TRANSITION
+#==============================================================================
+guild/memoKoyomi( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'memo', yyyy:yyyy, mm:mm, dd:dd, memo:memo }
+guild/koyomiSaveSome( yyyy, mm, dd, tdiv, id ) -> koyomi-edit.cgi{ command:'some', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99, some:some }
+guild/deleteKoyomi( yyyy, mm, dd, tdiv, '#{aa[0]}', '#{c}' ) -> koyomi-edit.cgi{ command:'delete', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, code:code, order:order }
+
+guild/modifysaveKoyomiFC( code, origin ) -> koyomi-add.cgi{ command:"move_fix", code:code, origin:origin, copy:copy }
+guild/modifyKoyomi( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ) -> koyomi-add.cgi{command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, order:order }
+
+guild/modifyKoyomif( code, yyyy, mm, dd, tdiv, hh, order ) -> koyomi-fix.cgi{ command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, order:order }
+guild/fixKoyomi( command, yyyy, mm, dd, tdiv ) -> koyomi-fix.cgi{ command:com, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }
+
+guild/cmmKoyomi( cm_mode, yyyy, mm, dd, tdiv ) -> koyomi-cmm.cgi{ command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99 }
+
+guild/editKoyomiR( yyyy, mm ) -> koyomi.cgi{ command:"init", yyyy:yyyy, mm:mm }
+
+
+#==============================================================================
+#CHANGE LOG
+#==============================================================================
+20200613	0.00b	βスタート。直接単位仕様の一時仕様を削除し、単位コードに統一。
+20200711	0.01b	問題：st_setの定義を忘れていたので、何か食べたを保存でエラー発生。
+					修正：get_starty関数でst_setを定義。
+20200715	0.02b	問題：一時的な単位と単位コードの変換を消したらエラーとなる。
+					修正：単位コードの形式が文字列だったので、数字形式に変更した。

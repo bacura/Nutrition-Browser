@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser memory play backer 0.00
+#Nutrition browser memory play backer 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -72,7 +72,7 @@ checked = ''
 case command
 when 'init'
 	checked = 'CHECKED' if open_res == 1
-	r = mariadb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY} ORDER BY category ASC;", false )
+	r = mdb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY} ORDER BY category ASC;", false, @debug )
 	memory_html << "<div class='row'>"
 	memory_html << "<div class='col-1'>"
 	memory_html << "	<button type='button' class='btn btn-primary btn-sm nav_button' onclick=\"nextMemoryPB()\">#{lp[4]}</button>\n"
@@ -97,12 +97,11 @@ when 'init'
 	memory_html << "</div>"
 
 when 'category'
-	require 'securerandom'
 	edit_button = ''
 
 	q = "SELECT * from #{$MYSQL_TB_MEMORY} WHERE category='#{category}' ORDER BY RAND() LIMIT 10;"
 	q = "SELECT * from #{$MYSQL_TB_MEMORY} ORDER BY RAND() LIMIT 10;" if category == 'all'
-	r = mariadb( q, false )
+	r = mdb( q, false, @debug )
 
 	pointer = []
 	memory = []

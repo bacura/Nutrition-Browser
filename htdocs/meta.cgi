@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser meta data viewer 0.00
+#Nutrition browser meta data viewer 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -25,40 +25,15 @@ script = 'meta'
 #DEFINITION
 #==============================================================================
 
-
-#==============================================================================
-# Main
-#==============================================================================
-cgi = CGI.new
-
-html_init( nil )
-
-user = User.new( cgi )
-user.debug if @debug
-lp = user.language( script )
-
-
-#### POSTデータの取得
-command = cgi['command']
-if @debug
-	puts "command:#{command}<br>"
-	puts "<hr>"
-end
-
-
-html = ''
-case command
-
-when 'food'
+def meta_food( lp )
 	fct_num = 0
 	fctu_num = 0
 	fctp_num = 0
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_FCT};", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_FCT};", false, @debug )
 	fct_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_FCTP};", false )
-
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_FCTP};", false, @debug )
 	r.each do |e|
 		if /U/ =~ e['FN']
 			fctu_num += 1
@@ -92,27 +67,30 @@ when 'food'
 	</tbody>
 </table>
 HTML
+	return html
+end
 
-when 'user'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER};", false )
+
+def meta_user( lp )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER};", false, @debug )
 	cumulative_user_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=1;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=1;", false, @debug )
 	general_user_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=2;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=2;", false, @debug )
 	guild_member_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=4;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=4;", false, @debug )
 	guild_moe_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=5;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=5;", false, @debug )
 	guild_shun_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=6;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=6;", false, @debug )
 	children_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=3 OR status=8 OR status=9;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=3 OR status=8 OR status=9;", false, @debug )
 	admin_user_num = r.size
 
 	html = <<-"HTML"
@@ -157,23 +135,27 @@ when 'user'
 </table>
 HTML
 
-when 'recipe'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE};", false )
+	return html
+end
+
+
+def meta_recipe( lp, user )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE};", false, @debug )
 	recipe_total_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE role!=100;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE role!=100;", false, @debug )
 	recipe_real_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1;", false, @debug )
 	recipe_public_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1 AND role!=100;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1 AND role!=100;", false, @debug )
 	recipe_real_public_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}';", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}';", false, @debug )
 	recipe_user_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and public=1;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and public=1;", false, @debug )
 	recipe_user_public_num = r.size
 
 	html = <<-"HTML"
@@ -214,11 +196,15 @@ when 'recipe'
 </table>
 HTML
 
-when 'menu'
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_MENU};", false )
+	return html
+end
+
+
+def meta_menu( lp, user )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU};", false, @debug )
 	menu_total_num = r.size
 
-	r = mariadb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE public=1;", false )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE public=1;", false, @debug )
 	menu_public_num = r.size
 
 	html = <<-"HTML"
@@ -242,6 +228,43 @@ when 'menu'
 	</tbody>
 </table>
 HTML
+
+	return html
+end
+
+#==============================================================================
+# Main
+#==============================================================================
+cgi = CGI.new
+
+html_init( nil )
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+
+
+#### Getting POST data
+command = cgi['command']
+if @debug
+	puts "command:#{command}<br>"
+	puts "<hr>"
+end
+
+
+html = ''
+case command
+when 'food'
+	html = meta_food( lp )
+
+when 'user'
+	html = meta_user( lp )
+
+when 'recipe'
+	html = meta_recipe( lp, user )
+
+when 'menu'
+	html = meta_menu( lp, user )
 
 else
 	html = "#{lp[25]}"

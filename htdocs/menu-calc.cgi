@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser magic menu calc 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20171218, 0.00, start
+#Nutrition browser magic menu calc 0.00b
 
 
 #==============================================================================
@@ -19,6 +14,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 fct_num = 14
 @debug = false
+script = 'menu-calc'
 
 
 #==============================================================================
@@ -60,18 +56,15 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-cgi = CGI.new
-
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'menu-calc', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "<hr>"
-end
+
+cgi = CGI.new
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+
+r = mdb( "SELECT icalc FROM cfg WHERE user='#{user.name}';", false, @debug )
+fct_num = r.first['icalc'].to_i unless r.first['icalc'].to_i == 0
 
 
 #### Getting POST data
@@ -84,7 +77,7 @@ palette = cgi['palette']
 
 
 if ew_mode == nil || ew_mode == ''
-	r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
+	r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first && r.first['calcc'] != nil
 		a = r.first['calcc'].split( ':' )
 		ew_mode = a[0].to_i
@@ -123,7 +116,7 @@ ew_check = ew_check( ew_mode )
 #### Setting palette
 palette_sets = []
 palette_name = []
-r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
@@ -154,7 +147,7 @@ end
 
 
 #### mealからデータを抽出
-r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false, @debug )
+r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
 meal_name = r.first['name']
 code = r.first['code']
 meal = r.first['meal'].split( "\t" )
@@ -198,7 +191,7 @@ recipe_code.each do |e|
 			fct_name << '0'
 		else
 			if /P|U/ =~ ee
-				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{uname}' OR user='#{$GM}' );"
+				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{user.name}' OR user='#{$GM}' );"
 			else
 				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
 			end
@@ -216,7 +209,7 @@ recipe_code.each do |e|
 		food_no.size.times do |c|
  			unless food_no[c] == '+' || food_no[c] == '-' || food_no[c] == '0'
 				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ food_no[c]
+				q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}' AND ( user='#{user.name}' OR user='#{$GM}' );" if /P|U/ =~ food_no[c]
 				rr = db.query( q )
 				fct_name[c] = bind_tags( rr ) if rr.first
 			end
@@ -367,17 +360,17 @@ html = <<-"HTML"
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="palette">#{lp[6]}</label>
 				</div>
-				<select class="form-control" id="palette" onchange="menuRecalcView_BWL2('#{code}')">
+				<select class="form-control" id="palette" onchange="menuRecalcView('#{code}')">
 					#{palette_html}
 				</select>
 			</div>
 		</div>
 		<div class='col-3' align='center'>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="menuRecalcView_BWL2('#{code}')">#{lp[7]}
+    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="menuRecalcView('#{code}')">#{lp[7]}
 			</div>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="menuRecalcView_BWL2('#{code}')">#{lp[8]}
+    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="menuRecalcView('#{code}')">#{lp[8]}
 			</div>
 		</div>
 		<div class='col-2'>
@@ -385,7 +378,7 @@ html = <<-"HTML"
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="">#{lp[9]}</label>
 				</div>
-				<select class="form-control" id="frct_mode" onchange="menuRecalcView_BWL2('#{code}')">
+				<select class="form-control" id="frct_mode" onchange="menuRecalcView('#{code}')">
 					<option value="1"#{frct_select[0]}>#{lp[10]}</option>
 					<option value="2"#{frct_select[1]}>#{lp[11]}</option>
 					<option value="3"#{frct_select[2]}>#{lp[12]}</option>
@@ -394,11 +387,11 @@ html = <<-"HTML"
 		</div>
 
 		<div class='col-1'>
-			<button class="btn btn-outline-primary btn-sm" onclick="menuRecalcView_BWL2('#{code}')">#{lp[13]}</button>&nbsp;
+			<button class="btn btn-outline-primary btn-sm" onclick="menuRecalcView('#{code}')">#{lp[13]}</button>&nbsp;
 		</div>
 		<div class='col-3'>
-			<a href='menu-calcex.cgi?uname=#{uname}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' target='menu-calc-ex'><button type='button' class='btn btn-primary btn-sm'>#{lp[14]}</button></a>&nbsp;
-			<a href='plain-menu-calc.cgi?uname=#{uname}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[15]}</button></a>
+			<a href='menu-calcex.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' target='menu-calc-ex'><button type='button' class='btn btn-primary btn-sm'>#{lp[14]}</button></a>&nbsp;
+			<a href='plain-menu-calc.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[15]}</button></a>
 		</div>
     </div>
 </div>
@@ -477,4 +470,4 @@ fct_html.each do |e| puts e end
 puts "<div align='right' class='code'>#{code}</div>"
 
 #### Updating Calculation option
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette}:#{ew_mode}:#{frct_mode}:#{frct_accu}' WHERE user='#{uname}';", false, @debug )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette}:#{ew_mode}:#{frct_mode}:#{frct_accu}' WHERE user='#{user.name}';", false, @debug )

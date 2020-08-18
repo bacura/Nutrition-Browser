@@ -18,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'calcex'
 
 
 #==============================================================================
@@ -57,6 +58,19 @@ def ew_check( ew_mode, lp )
 end
 
 
+#### Language init
+def lp_init( script, language_set )
+  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
+  f.each do |line|
+    lp << line.chomp.force_encoding( 'UTF-8' )
+  end
+  f.close
+
+  return lp
+end
+
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -73,7 +87,9 @@ frct_mode = get['frct_mode']
 frct_accu = get['frct_accu']
 palette = get['palette']
 ew_mode = get['ew_mode']
-lp = lp_init( 'calcex', language )
+lp = lp_init( script, language )
+
+
 if @debug
 	puts "uname: #{uname}<br>"
 	puts "<hr>"

@@ -5,13 +5,12 @@
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
-#20190120, 0.00, start
+#20190120, 0.00b, start
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'lucky'
 
 
 #==============================================================================
@@ -54,20 +54,16 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'lucky', language )
-if @debug
-	puts "uname:#{uname}<br>"
-	puts "uid:#{uname}<br>"
-	puts "status:#{status}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
-#### POSTデータの取得
+#### Getting POST data
 command = cgi['command']
 mode = cgi['mode']
 lucky_data = cgi['lucky_data']
@@ -82,7 +78,6 @@ end
 ####
 html = ''
 case command
-# フォーム
 when 'form'
 	html = <<-"HTML"
 <div class='container-fluid'>
@@ -159,7 +154,7 @@ when 'analyze'
 		require "#{$HTDOCS_PATH}/lucky_/oi.rb"
 	end
 
-	r = add2cb( lucky_solid, uname, mode )
+	r = add2cb( lucky_solid, user.name, mode )
 end
 
 puts html

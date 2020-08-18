@@ -1,35 +1,34 @@
-# Config module for FCTB Palette 0.00
+# Config module for Palette 0.00
 #encoding: utf-8
 
 #### displying palette
-def listing( uname )
+def listing( uname, lp )
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 
-	# 操作ボタン準備
 	list_body = ''
 	r.each do |e|
 		list_body << "<tr><td>#{e['name']}</td><td>#{e['count']}</td>"
-		list_body << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick='palette_cfg( \"edit_palette\", \"#{e['name']}\" )'>編集</button></td>"
+		list_body << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick='palette_cfg( \"edit_palette\", \"#{e['name']}\" )'>#{lp[41]}</button></td>"
 		list_body << "<td>"
-		list_body << "<input type='checkbox' id=\"#{e['name']}\">&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick='palette_cfg( \"delete_palette\", \"#{e['name']}\" )'>削除</button></td></tr>\n" unless e['name'] == '簡易表示用'
+		list_body << "<input type='checkbox' id=\"#{e['name']}\">&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick='palette_cfg( \"delete_palette\", \"#{e['name']}\" )'>#{lp[42]}</button></td></tr>\n" unless e['name'] == '簡易表示用'
 		list_body << "</td></tr>"
 	end
 
 	html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-8'><h5>カスタム成分パレット一覧</h5></div>
-		<div class='col-2'><button class="btn btn-outline-primary btn-sm" type="button" onclick="palette_cfg( 'new_palette' )">新規登録</button></div>
-		<div class='col-2'><button class="btn btn-outline-danger btn-sm" type="button" onclick="palette_cfg( 'reset_palette' )">リセット</button></div>
+		<div class='col-8'><h5>#{lp[43]}</h5></div>
+		<div class='col-2'><button class="btn btn-outline-primary btn-sm" type="button" onclick="palette_cfg( 'new_palette' )">#{lp[44]}</button></div>
+		<div class='col-2'><button class="btn btn-outline-danger btn-sm" type="button" onclick="palette_cfg( 'reset_palette' )">#{lp[45]}</button></div>
 	</div>
 	<br>
 
 	<table class="table table-sm table-hover">
 	<thead>
 		<tr>
-			<td>パレット名</td>
-			<td>成分数</td>
-			<td>操作</td>
+			<td>#{lp[46]}</td>
+			<td>#{lp[47]}</td>
+			<td>#{lp[48]}</td>
 			<td></td>
 		</tr>
 	</thead>
@@ -43,8 +42,7 @@ HTML
 end
 
 
-#### モジュールメイン
-def config_module( cgi, user )
+def config_module( cgi, user, lp )
 	module_js()
 
 	step = cgi['step']
@@ -52,7 +50,7 @@ def config_module( cgi, user )
 
 	case step
 	when ''
-		html = listing( user.name )
+		html = listing( user.name, lp )
 
 	when 'new_palette', 'edit_palette'
 		checked = []
@@ -68,7 +66,6 @@ def config_module( cgi, user )
 			end
 		end
 
-		# 食品成分HTML準備
 		fc_table = ['', '', '', '', '', '', '']
 		4.upto( 7 ) do |i| fc_table[0] << "<tr><td><input type='checkbox' id='#{$FCT_ITEM[i]}' #{checked[i]}>&nbsp;#{$FCT_NAME[$FCT_ITEM[i]]}</td></tr>" end
 		8.upto( 20 ) do |i| fc_table[1] << "<tr><td><input type='checkbox' id='#{$FCT_ITEM[i]}' #{checked[i]}>&nbsp;#{$FCT_NAME[$FCT_ITEM[i]]}</td></tr>" end
@@ -82,12 +79,12 @@ def config_module( cgi, user )
 		<div class="row">
 			<div class="col-6">
 				<div class="input-group mb-3">
-  					<div class="input-group-prepend"><span class="input-group-text">パレット名</span></div>
+  					<div class="input-group-prepend"><span class="input-group-text">#{lp[49]}</span></div>
   					<input type="text" class="form-control" id="palette_name" value="#{cgi['palette_name']}" maxlength="60">
   				</div>
 			</div>
 			<div class="col-5"></div>
-			<div class="col-1"><button class="btn btn-outline-primary btn-sm" type="button" onclick="palette_cfg( 'regist' )">登録</button></div>
+			<div class="col-1"><button class="btn btn-outline-primary btn-sm" type="button" onclick="palette_cfg( 'regist' )">#{lp[50]}</button></div>
 		</div>
 		<br>
 		<div class="row">
@@ -111,32 +108,28 @@ HTML
 			fct_count += 1 if cgi[$FCT_ITEM[i]] == '1'
 		end
 
-		# パレット名チェック
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
-
 		if r.first
-			# 更新
 			mdb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', count='#{fct_count}' WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
 		else
-			# 追加
 			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{user.name}', palette='#{fct_bits}', count='#{fct_count}';", false, @debug )
 		end
 
-		html = listing( user.name )
+		html = listing( user.name, lp )
 
 	when 'delete_palette'
 		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{user.name}';", false, @debug )
 
-		html = listing( user.name )
+		html = listing( user.name, lp )
 
 	when 'reset_palette'
 		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
- 		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='基本の5成分', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='基本の14成分', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='全て', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
+ 		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[51]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[52]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[53]}', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[54]}', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
 
-		html = listing( user.name )
+		html = listing( user.name, lp )
 	end
 
 	return html
@@ -247,7 +240,7 @@ var palette_cfg = function( step, id ){
 				NACL_EQ:NACL_EQ, ALC:ALC, NITRA:NITRA, THEBRN:THEBRN, CAFFN:CAFFN, TAN:TAN, POLYPHENT:POLYPHENT, ACEAC:ACEAC, COIL:COIL, OA:OA, WCR:WCR,
 				Notice:Notice
 			}, function( data ){ $( "#bw_level2" ).html( data );});
-			displayVideo( palette_name + 'を登録' );
+			displayVideo( palette_name + 'saved' );
 
 //			$.post( "config.cgi", { command:"palette", step:'list' }, function( data ){ $( "#bw_level2" ).html( data );});
 			closeBroseWindows( 2 );

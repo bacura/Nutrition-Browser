@@ -6,7 +6,7 @@ header {
 
 /* Sticky footer styles */
 footer {
-  position: absolute;
+  position: static;
   bottom: 0;
   width: 100%;
   z-index: 0;
@@ -54,6 +54,20 @@ nav {
 }
 
 .video{
+  background-color: transparent;
+  position: fixed;
+  top: 0em;
+  right: 0.5em;
+  margin: 1em;
+  border: none;
+  font-size: 2em;
+  font-weight: bold;
+  text-align: right;
+  color: lime;
+  z-index: 0
+}
+
+.control_pad{
   background-color: transparent;
   position: fixed;
   top: 0em;
@@ -253,32 +267,79 @@ nav {
 
 
 .month{
-
+  font-weight: bolder;
+  font-size: 3em;
+  color: dimgray;
 }
 
+
 .weekday{
+  padding: 0.2em;
   font-weight: bolder;
-  border-bottom: dotted 1px purple;
+  font-size: 1.5em;
+  color: dimgray;
 }
 
 .sunday{
+  padding: 0.2em;
   font-weight: bolder;
-  border-bottom: dotted 1px purple;
+  font-size: 1.5em;
+  color: crimson;
 }
 
 .saturday{
+  padding: 0.2em;
   font-weight: bolder;
-  border-bottom: dotted 1px purple;
+  font-size: 1.5em;
+  color: dodgerblue;
 }
 
-.day{
+.ampm{
+  padding: 0.2em;
+  font-weight: bolder;
+  font-size: 1.5em;
+  color: dimgray;
+}
 
+.day_on{
+  padding: 0.2em;
+  font-weight: bolder;
+  font-size: 1.5em;
+  background-color: lightyellow;
+  border: solid 0.2em dimgray;
+
+}
+
+.day_on_sample{
+  color: lightyellow;
+}
+
+.day_off{
+  padding: 0.2em;
+  font-weight: bolder;
+  font-size: 1.5em;
+  background-color: silver;
+  border: solid 0.2em dimgray;
+}
+
+.day_off_sample{
+  color: silver;
+}
+
+.day_out{
+  padding: 0.2em;
+  font-weight: bolder;
+  font-size: 1.5em;
+  background-color: white;
+  border: solid 0.2em dimgray;
 }
 
 .reserve_on{
-
+  border: solid 0.2em hotpink;
 }
 
-.reserve_off{
-
+.scs_menu{
+  font-weight: bolder;
+  font-size: 2em;
+  color: dimgray;
 }

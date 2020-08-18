@@ -1,0 +1,50 @@
+#Nutrition browser koyomi-add 0.00b
+
+#==============================================================================
+# OVERVIEW
+#==============================================================================
+栄養ブラウザのカレンダー機能のアイテム追加スクリプト。
+
+
+#==============================================================================
+# DEPENDENCE
+#==============================================================================
+nb-soul.rb
+
+
+#==============================================================================
+# ITEM FROM GET / POST
+#==============================================================================
+[POST]
+command.to_i	#コマンド
+yyyy.to_i		#年
+mm.to_i			#月
+dd.to_i			#日
+tdiv.to_i		#食事区分
+hh.to_i			#時間
+code.to_s		#コード
+ev.to_i			#アイテム量
+eu.to_i			#アイテム単位
+order.to_i		#順番
+copy.to_i		#移動/コピー
+origin.to_s		#移動/コピー元情報
+
+#==============================================================================
+# TRANSITION
+#==============================================================================
+guild.js/saveKoyomi_BWF( code, origin ) -> koyomi-add.cgi{ command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
+guild.js/saveKoyomi2_BWF( code, yyyy, mm, dd, tdiv, origin ) -> koyomi-add.cgi{ command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
+guild.js/modifysaveKoyomi( code, origin ) -> koyomi-add.cgi{ command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }
+guild.js/modifysaveKoyomi2( code, yyyy, mm, mm, tdiv, origin ) -> koyomi-add.cgi{ command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }
+guild.js/changeKoyomi_BWF( code, origin ) -> koyomi-add.cgi{ command:"init", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
+guild.js/modifychangeKoyomi( code, origin ) -> koyomi-add.cgi{ command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
+
+guild.js/koyomiReturn() -> {}
+guild.js/koyomiReturn2KE( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'init', yyyy:yyyy, mm:mm, dd:dd }
+
+
+
+#==============================================================================
+#CHANGE LOG
+#==============================================================================
+20200803	0.00b	βスタート

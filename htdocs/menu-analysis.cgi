@@ -1,17 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser menu basic analysis 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20190218, 0.00, start
+#Nutrition browser menu basic analysis 0.00b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +13,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'menu-analysis'
 
 
 #==============================================================================
@@ -39,54 +34,30 @@ def frct_select( frct_mode )
 end
 
 
-#### 合計精密チェック
-def accu_check( frct_accu )
-  accu_check = ''
-  accu_check = 'CHECKED' if frct_accu == 1
-
-  return accu_check
-end
-
-
-#### 予想重量チェック
-def ew_check( ew_mode )
-  ew_check = ''
-  ew_check = 'CHECKED' if ew_mode == 1
-
-  return ew_check
-end
-
-
 #==============================================================================
 # Main
 #==============================================================================
 html_init( nil )
+
 cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'menu-analysis', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
-#### POSTデータの取得
+#### Getting POST data
 command = cgi['command']
 code = cgi['code']
 ew_mode = cgi['ew_mode']
-frct_mode = cgi['frct_mode']
-frct_accu = cgi['frct_accu']
-
 ew_mode = 0 if ew_mode == nil
 ew_mode = ew_mode.to_i
+frct_mode = cgi['frct_mode']
 frct_mode = 0 if frct_mode == nil
 frct_mode = frct_mode.to_i
+frct_accu = cgi['frct_accu']
 frct_accu = 0 if frct_accu == nil
-frct_accu = frct_accu.to_i
+frct_accu = frct_accu.to_s
+
 if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
@@ -99,8 +70,6 @@ end
 
 #### セレクト＆チェック設定
 frct_select = frct_select( frct_mode )
-accu_check = accu_check( frct_accu )
-ew_check = ew_check( ew_mode )
 
 
 # 成分項目の抽出
@@ -108,7 +77,7 @@ fct_item = ['ENERC_KCAL', 'PROT', 'FAT', 'NACL_EQ']
 
 
 #### mealからデータを抽出
-r = mariadb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
 meal_name = r.first['name']
 code = r.first['code']
 meal = r.first['meal'].split( "\t" )
@@ -128,7 +97,7 @@ animal_protein = BigDecimal( 0 )
 grain_energy = BigDecimal( 0 )
 recipe_code.each do |e|
 	# RECIPEからデータを抽出
-	r = mariadb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
+	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
 	recipe_name[rc] = r.first['name']
 	dish_num = r.first['dish'].to_i
 	dish_num = 1 if dish_num == 0
@@ -151,7 +120,7 @@ recipe_code.each do |e|
 			fct << '0'
 		else
 			if /P|U/ =~ ee
-				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{uname}' OR user='#{$GM}' );"
+				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{user.name}' OR user='#{$GM}' );"
 			else
 				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
 			end
@@ -296,7 +265,7 @@ food_no_list.size.times do |c|
 		g6 += food_weight_list[c]
 
 		# 緑黄色野菜の判定
-		r = mariadb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{food_no_list[c]}';", false )
+		r = mdb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{food_no_list[c]}';", false, @debug )
 		if r.first['gycv'] == 1
 			gycv += food_weight_list[c]
 		else
@@ -407,28 +376,28 @@ html = <<-"HTML"
 	<div class="row">
 		<div class='col-4' align='center'>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="menuReAnalysis_BWL2('#{code}')">#{lp[2]}
+    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{checked( frct_accu )} onchange="menuReAnalysis('#{code}')">#{lp[2]}
 			</div>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="menuReAnalysis_BWL2('#{code}')">#{lp[3]}
+    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{checked( ew_mode )} onchange="menuReAnalysis('#{code}')">#{lp[3]}
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="">#{lp[4]}</label>
 				</div>
-				<select class="form-control" id="frct_mode" onchange="menuReAnalysis_BWL2('#{code}')">
-					<option value="1"#{frct_select[0]}>#{lp[5]}</option>
-					<option value="2"#{frct_select[1]}>#{lp[6]}</option>
-					<option value="3"#{frct_select[2]}>#{lp[7]}</option>
+				<select class="form-control" id="frct_mode" onchange="menuReAnalysis('#{code}')">
+					<option value="1"#{selected( 1, frct_mode )}>#{lp[5]}</option>
+					<option value="2"#{selected( 2, frct_mode )}>#{lp[6]}</option>
+					<option value="3"#{selected( 3, frct_mode )}>#{lp[7]}</option>
 				</select>
 			</div>
 		</div>
 
-		<div class='col-4'></div>
+		<div class='col-3'></div>
 		<div class='col-2'>
-			<a href='plain-menu-analysis.cgi?uname=#{uname}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[8]}</button></a>
+			<a href='plain-menu-analysis.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[8]}</button></a>
 		</div>
     </div>
 </div>

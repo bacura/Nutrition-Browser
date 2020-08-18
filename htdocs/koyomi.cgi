@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi 0.00b
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20200603, 0.00b
+#Nutrition browser koyomi 0.03b
 
 
 #==============================================================================
@@ -17,6 +12,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
+script = 'koyomi'
 @debug = false
 @tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
@@ -214,7 +210,7 @@ html_init( nil )
 
 user = User.new( cgi )
 user.debug if @debug
-lp = user.language( 'koyomi' )
+lp = user.language( script )
 
 #### Guild member check
 if user.status < 3
@@ -312,7 +308,7 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 
 1.upto( calendar.ddl ) do |c|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-	if r.first
+	if r.first && r.first['koyomi'] != nil
 		calc = Nutrition_calc.new( user.name, [], [], [] )
 		some_set = ''
 		fzcode = r.first['fzcode']
@@ -327,7 +323,8 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 				if e['freeze'] == 1
 					freeze_flag = calc.load_freeze( fzcode )
 				else
-					a = e['koyomi'].split( "\t" )
+					a = []
+					a = e['koyomi'].split( "\t" ) if e['koyomi']
 					a.each do |ee|
 						( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( ':' )
 						code_set << koyomi_code
@@ -337,26 +334,18 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 					code_set.size.times do |cc|
 						code = code_set[cc]
 						rate = BigDecimal( rate_set[cc] )
-						unit = unit_set[cc]
+						unit = unit_set[cc].to_i
 
-	#### temporary ####
-						if unit == 'g'
-							unit = 0
-						elsif unit == '%'
-							unit = 99
-						else
-							unit = unit.to_i
-						end
-	#### temporary ####
 						if /\?/ =~ code
 							some_set << "+#{$SOMETHING[code]}&nbsp;"
 						elsif /\-f\-/ =~ code
 							rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
-							calc.load_fix( code )
+							if rr.first
+								calc.load_fix( code )
+							else
+							end
 						else
 							recipe_set = []
-							fn_set = []
-							weight_set = []
 							if /\-m\-/ =~ code
 								recipe_set = calc.expand_menu( code )
 							end
@@ -395,7 +384,7 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 			if rr.first && fzcode != ''
 				mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
 				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-			else
+			elsif rr.first && fzcode == ''
 				new_fzcode = generate_code( user.name, 'z' )
 				mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET user='#{user.name}', code='#{new_fzcode}', #{sub_query};", false, @debug )
 				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{new_fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
@@ -408,6 +397,7 @@ fc_items.each do |e| fc_names << $FCT_NAME[e] end
 		calc_html_set << calc_html
 	else
 		calc_html_set << ''
+		mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND koyomi='';", false, @debug ) if r.first
 	end
 end
 
@@ -509,10 +499,10 @@ html = <<-"HTML"
 			#{select_html}
 		</div>
 		<div class='col-2'>
-			<a href='#day#{calendar_td.dd}'><button class='btn btn-sm btn-outline-primary'>↓</button></a>&nbsp;
-			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_pm.yyyy}', '#{calendar_pm.mm}' )">←</button>
-			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_td.yyyy}', '#{calendar_td.mm}' )">今日</button>
-			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_nm.yyyy}', '#{calendar_nm.mm}' )">→</button>
+			<a href='#day#{calendar_td.dd}'><button class='btn btn-sm btn-outline-primary'>#{lp[28]}</button></a>&nbsp;
+			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_pm.yyyy}', '#{calendar_pm.mm}' )">#{lp[29]}</button>
+			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_td.yyyy}', '#{calendar_td.mm}' )">#{lp[18]}</button>
+			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_nm.yyyy}', '#{calendar_nm.mm}' )">#{lp[30]}</button>
 		</div>
 		<div class='col-3'>
 		</div>

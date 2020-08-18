@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser fctb meal monitor 0.00
+#Nutrition browser fctb meal monitor 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'mealm'
 
 
 #==============================================================================
@@ -29,10 +29,12 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status = login_check( cgi )
+user = User.new( cgi )
+user.debug if @debug
 
 
 #### Getting POST data
@@ -41,9 +43,9 @@ recipe_code = cgi['recipe_code']
 
 #### Updating MEAL and Reflashing
 unless recipe_code == ''
-	if uname
+	if user.name
 		recipe_num = 0
-		r = mariadb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+		r = mdb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
  		if r.first['meal']
 			a = r.first['meal'].split( "\t" )
 			recipe_num = a.size
@@ -55,22 +57,22 @@ unless recipe_code == ''
 		else
 			new_meal = recipe_code
  		end
-		mariadb( "UPDATE #{$MYSQL_TB_MEAL} SET meal='#{new_meal}' WHERE user='#{uname}';", false )
+		mdb( "UPDATE #{$MYSQL_TB_MEAL} SET meal='#{new_meal}' WHERE user='#{user.name}';", false, @debug )
 
 		recipe_num += 1
 		puts recipe_num
 	else
-		puts = '-'
+		puts '-'
 	end
 
 
 #### Reflashing
 else
-	if uname
-		r = mariadb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+	if user.name
+		r = mdb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
 		t = r.first['meal'].split( "\t" )
 		puts t.size
 	else
-		puts = '-'
+		puts '-'
 	end
 end

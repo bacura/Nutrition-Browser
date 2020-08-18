@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: UTF-8
-#Nutrition browser index page 0.00
+#Nutrition browser index page 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -18,35 +18,140 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
-
+script = 'index'
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+#### HTML top
+def html_top( user )
+  user_name = user.name
+  user_name = user.aliasu if user.aliasu != '' && user.aliasu != nil
+  uid = user.uid
+  mid = user.mid
+
+  case user.status
+  when 1
+    login_color = "primary"
+  when 3, 6
+    login_color = "warning"
+  when 2, 4
+    login_color = "info"
+  when 5
+    login_color = "success"
+  when 8, 9
+    login_color = "danger"
+  else
+    login_color = "secondary"
+  end
+
+  mom = ''
+  mom_a = ''
+  daughters = []
+  daughters_a = []
+  mom_flag = false
+
+  if user.mom == user.name
+    r = mdb( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6';", false, false )
+    r.each do |e|
+      if e['switch'] == 1
+        daughters << e['user']
+        daughters_a << e['aliasu'].to_s
+      end
+    end
+    mom = user.name
+    mom_a = user.aliasu
+  else
+    r = mdb( "SELECT * FROM user WHERE user='#{user.mom}';", false, false )
+    if r.first
+      if r.first['cookie_m'] == mid
+        mom = r.first['user']
+        mom_a = r.first['aliasu']
+        mom_a = mom if mom_a == ''
+
+        rr = mdb( "SELECT * FROM user WHERE mom='#{mom}' AND status='6';", false, false )
+        rr.each do |e|
+          if e['switch'] == 1
+            daughters << e['user']
+            daughters_a << e['aliasu'].to_s
+          end
+        end
+      end
+    end
+  end
+
+  login = ''
+  if daughters.size > 0 || mom_flag
+    login = "<div class='form-inline'>"
+    login << "<SELECT style='background-color:#343a40' id='login_mv' class='custom-select text-#{login_color}' onchange=\"chageAccountM( '#{mid}' )\">"
+    login << "<OPTION value='#{mom}'>#{mom_a}</OPTION>"
+    daughters.size.times do |c|
+      t = daughters[c]
+      t = daughters_a[c] unless daughters_a[c] == ''
+      if daughters[c] == user.name
+        login << "<OPTION value='#{daughters[c]}' SELECTED>#{t}</OPTION>"
+      else
+        login << "<OPTION value='#{daughters[c]}'>#{t}</OPTION>"
+      end
+    end
+    login << "</SELECT>"
+    login << "&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
+    login << "</div>"
+  else
+    login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
+  end
+  login = "<a href='login.cgi' class=\"text-#{login_color}\">ログイン</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">登録</a>" if user_name == nil
+
+  html = <<-"HTML"
+      <header class="navbar navbar-dark bg-dark" id="header">
+        <h4><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h4>
+        <span class="text-#{login_color} login_msg"><h5>#{login}</h5></span>
+        <a href='http://neg.bacura.jp/?p=523' target='manual'><span class="text-#{login_color} login_msg"><h5>手引き</h5></span></a>
+        <span class="form-inline form-inline-sm">
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <select class="form-control form-control-sm" id="qcate">
+                <option value='0'>食品</option>
+                <option value='1'>レシピ</option>
+                <option value='2'>記憶</option>
+              </select>
+            </div>
+            <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
+            <div class="input-group-append">
+              <button class="btn btn-outline-#{login_color} btn-sm" onclick="searchBWL1()">検索</button>
+            </div>
+          </div>
+        </span>
+      </header>
+HTML
+
+  puts html
+end
+
 #### HTML nav
-def html_nav( user_name, status, lp )
+def html_nav( user, lp )
   cb_num = ''
   meal_num = ''
   # まな板カウンター
-  if user_name
-    r = mariadb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user_name}';", false )
+  if user.name
+    r = mdb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
     if r.first
       t = []
       t = r.first['sum'].split( "\t" ) if r.first['sum']
       cb_num = t.size
     else
-      mariadb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user_name}';", false )
+      mdb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user.name}';", false, @debug )
       cb_num = 0
     end
     # 献立カウンター
-    r = mariadb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user_name}';", false )
+    r = mdb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
     if r.first
       t = []
       t = r.first['meal'].split( "\t" ) if r.first['meal']
       meal_num = t.size
     else
-      mariadb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user_name}';", false )
+      mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}';", false, @debug )
       meal_num = 0
     end
   else
@@ -54,17 +159,16 @@ def html_nav( user_name, status, lp )
     meal_num = '-'
   end
 
-
   # 履歴ボタンとまな板ボタンの設定
-  if status >= 1
+  if user.status >= 1
     cb = "#{lp[1]} <span class=\"badge badge-pill badge-warning\" id=\"cb_num\">#{cb_num}</span>"
     mb = "#{lp[2]} <span class=\"badge badge-pill badge-warning\" id=\"mb_num\">#{meal_num}</span>"
     special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonBWL1( 0 )\">#{lp[3]}</button>"
     his_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
     sum_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initCB_BWL1( '' )\">#{cb}</button>"
-    recipe_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"recipeList_BWL1( 'init' )\">#{lp[5]}</button>"
+    recipe_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
     menu_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
-    set_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"menuList_BWL1()\">#{lp[6]}</button>"
+    set_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"menuList()\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
   else
     cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{cb_num}</span>"
@@ -78,14 +182,14 @@ def html_nav( user_name, status, lp )
     config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[7]}</button>"
   end
 
-  if status >= 3
-    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{status}' )\">G</button>"
+  if user.status >= 3
+    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{user.status}' )\">G</button>"
   else
     g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVideo( '#{lp[9]}' )\">G</button>"
   end
 
   gm_account = ''
-  gm_account = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount_BWL1( 'init' )\">#{lp[34]}</button>" if status == 9
+  gm_account = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount_BWL1( 'init' )\">#{lp[34]}</button>" if user.status == 9
 
 	html = <<-"HTML"
       <nav class='container-fluid'>
@@ -128,7 +232,9 @@ def html_nav( user_name, status, lp )
       </nav>
       </nav>
       <nav class='container-fluid' id='gs_menu' style='display:none;'>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAccountM()">#{lp[48]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSchool()">#{lp[47]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[49]}</button>
       </nav>
       <nav class='container-fluid' id='gm_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnitc_BWLF( 'init' )">#{lp[29]}</button>
@@ -163,21 +269,44 @@ HTML
 
   puts html
 end
+
+
 #==============================================================================
 # Main
 #==============================================================================
+
 #### Getting Cookie
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-status = 0 unless uname
-lp = lp_init( 'index', language )
-
 html_init( nil )
-html_head( nil, status, nil )
+user = User.new( cgi )
+user.status = 0 unless user.name
 
-html_top( uname, status, aliasu )
-html_nav( uname, status, lp )
+lp = user.language( script )
+
+r = mdb( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false, @debug )
+ifix = r.first['ifix'].to_i if r.first
+
+html_head( nil, user.status, nil )
+
+puts "<div style='position:fixed; z-index:100; background-color:white'>" if ifix == 1
+
+html_top( user )
+html_nav( user, lp )
+
+if ifix == 1
+  puts '</div>'
+  puts '<header class="navbar navbar-dark bg-dark"><h4> </h4></header>'
+  puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
+  puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
+end
+if user.status >= 3 && ifix == 1
+  puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
+  puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
+  puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
+  puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
+end
+
 html_working( nil )
 
 html_foot

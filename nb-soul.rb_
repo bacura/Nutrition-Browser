@@ -12,14 +12,15 @@
 require 'cgi'
 require 'mysql2'
 require 'bigdecimal'
+require 'securerandom'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = ''
-$MYSQL_PW = ''
+$MYSQL_USER = 'nbu'
+$MYSQL_PW = 'sqlmouse'
 $MYSQL_DB = 'nutrition'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
@@ -46,13 +47,16 @@ $MYSQL_TB_FCS = 'fcs'
 $MYSQL_TB_FCZ = 'fcz'
 $MYSQL_TB_METS = 'mets'
 $MYSQL_TB_METST = 'metst'
+$MYSQL_TB_SCHOOLK = 'schoolk'
+$MYSQL_TB_SCHOOLM = 'schoolm'
+$MYSQL_TB_SCHOOLS = 'schools'
 
 $DEBUG = false
 
 $GM = ''
 
 #### 注意！！
-$HTDOCS_PATH = ''
+$HTDOCS_PATH = '/var/www/html'
 
 $PHOTO_PATH = "#{$HTDOCS_PATH}/photo"
 $PHOTO_PATH_TMP = "#{$HTDOCS_PATH}/photo_"
@@ -88,7 +92,7 @@ $ALLERGY = ['','えび','かに','小麦','そば','卵','乳','落花生','あ�
 $COLOR = ['未指定','赤','ピンク','オレンジ','黄','緑','青','紫','茶','白','黒','透明']
 
 #           0      1      2       3        4           5         6    7   8       9
-$ACCOUNT = ['退会','一般','ギルメン','guest', 'ギルメン・萌','ギルメン・旬','-','-','サブマス','ギルマス']
+$ACCOUNT = ['退会','一般','ギルメン','guest', 'ギルメン・萌','ギルメン・旬','娘','-','サブマス','ギルマス']
 
 #           0           1       2       3       4     5         6       7         8              9      10
 $KEX_ITEM = ['未設定', '独自→', '身長', '体重', 'BMI', '体脂肪率', '腹囲', '首回り', '骨盤上部周囲', '便通', 'METs']
@@ -107,19 +111,6 @@ $DEFAULT_LP = 'jp'
 #DEFINITION
 #==============================================================================
 
-#### Language init
-#### 将来的に廃止
-def lp_init( script, language_set )
-  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
-  lp = [nil]
-  f.each do |line|
-    lp << line.chomp.force_encoding( 'UTF-8' )
-  end
-  f.close
-
-  return lp
-end
-
 
 #### HTML init
 def html_init( cookie )
@@ -127,6 +118,14 @@ def html_init( cookie )
   puts "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
   puts "Cache-Control: post-check=0, pre-check=0, false\n"
   puts "Pragma: no-cache\n"
+  puts cookie unless cookie == nil
+  puts "\n"
+end
+
+
+#### HTML init with cache
+def html_init_cache( cookie )
+  puts "Content-type: text/html\n"
   puts cookie unless cookie == nil
   puts "\n"
 end
@@ -140,8 +139,12 @@ def html_head( interrupt, status, sub_title )
   js_guild = ''
   js_guild = "<script type='text/javascript' src='#{$JS_PATH}/guild.js'></script>" if status >= 3
 
+  js_shun = ''
+  js_shun = "<script type='text/javascript' src='#{$JS_PATH}/shun.js'></script>" if status >= 5
+
   js_master = ''
   js_master = "<script type='text/javascript' src='#{$JS_PATH}/master.js'></script>" if status >= 8
+
 
   html = <<-"HTML"
 <!DOCTYPE html>
@@ -165,6 +168,7 @@ def html_head( interrupt, status, sub_title )
   <script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
   <script type='text/javascript' src='#{$JS_PATH}/menu.js'></script>
   #{js_guild}
+  #{js_shun}
   #{js_master}
 </head>
 
@@ -192,63 +196,17 @@ HTML
 end
 
 
-#### HTML top
-def html_top( user_name, status, aliasu )
-  case status
-  when 1
-    login_color = "primary"
-  when 3
-    login_color = "warning"
-  when 2, 4
-    login_color = "info"
-  when 5
-    login_color = "success"
-  when 8, 9
-    login_color = "danger"
-  else
-    login_color = "secondary"
-  end
-
-  user_name =  aliasu if aliasu != '' && aliasu != nil
-  login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
-  login = "<a href='login.cgi' class=\"text-#{login_color}\">ログイン</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">登録</a>" if user_name == nil
-
-  html = <<-"HTML"
-      <header class="navbar navbar-dark bg-dark" id="header">
-        <h4><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h4>
-        <span class="text-#{login_color} login_msg"><h5>#{login}</h5></span>
-        <a href='http://neg.bacura.jp/?p=523' target='manual'><span class="text-#{login_color} login_msg"><h5>手引き</h5></span></a>
-        <span class="form-inline form-inline-sm">
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <select class="form-control form-control-sm" id="qcate">
-                <option value='0'>食品</option>
-                <option value='1'>レシピ</option>
-                <option value='2'>記憶</option>
-              </select>
-            </div>
-            <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
-            <div class="input-group-append">
-              <button class="btn btn-outline-#{login_color} btn-sm" onclick="searchBWL1()">検索</button>
-            </div>
-          </div>
-        </span>
-      </header>
-HTML
-
-  puts html
-end
-
-
 #### HTML footer
 def html_foot()
     html = <<-"HTML"
-    <footer class="footer">
-      <div align="center">
-        <a href="http://neg.bacura.jp">日本えいようギルド</a>
-        <a href="http://bacura.jp"><img src="http://bacura.jp/img/BKL_banner_h125.png" alt="ばきゅら京都Lab"></a>
-      </div>
-    </footer>
+    <br>
+      <footer class="footer">
+        <div align="center">
+          <a href="http://neg.bacura.jp">日本えいようギルド</a>
+          <a href="http://bacura.jp"><img src="http://bacura.jp/img/BKL_banner_h125.png" alt="ばきゅら京都Lab"></a>
+        </div>
+      </footer>
+    </span>
   </body>
 </html>
 HTML
@@ -272,32 +230,6 @@ def get_data()
 end
 
 
-#### 旧データベース処理
-#### 将来的に廃止
-def mariadb( query, html_opt )
-  begin
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    t = query.chop
-    if /\;/ =~ t
-        puts "[mariadb]データベース処理エラーが発生しました。処理を中止します。<br>#{query}<br>"
-        exit( 9 )
-    end
-
-    res = db.query( query )
-    db.close
-  rescue
-    if html_opt
-      html_init( nil )
-      html_head( nil )
-      html_top( nil )
-    end
-    puts "[mariadb]データベース処理エラーが発生しました。処理を中止します。<br>#{query}<br>"
-  end
-
-  return res
-end
-
-
 #### 新データベース処理
 def mdb( query, html_opt, debug )
   begin
@@ -316,26 +248,11 @@ def mdb( query, html_opt, debug )
     if html_opt
       html_init( nil )
       html_head( nil )
-      html_top( nil )
     end
       puts "<span class='error'>[mdb]ERROR!!<br>"
       puts "#{query_}</span><br>"
   end
   return res
-end
-
-
-#### ログインチェック
-#### 将来的に廃止
-def login_check( cgi )
-  cookie_name = cgi.cookies['NAME'].first
-  cookie_uid = cgi.cookies['UID'].first
-  r = mdb( "SELECT user, status, aliasu, language FROM #{$MYSQL_TB_USER} WHERE user='#{cookie_name}' and cookie='#{cookie_uid}' and status>0;", true, true )
-  if r.first
-    return cookie_name, cookie_uid, r.first['status'].to_i, r.first['aliasu'], $DEFAULT_LP
-  else
-    return nil, nil, nil, nil, $DEFAULT_LP
-  end
 end
 
 
@@ -613,7 +530,7 @@ def unit_weight( vol, uc, fn )
         a = r.first['unitc'].split( ':' )
         w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )  unless  a[uc.to_i] == ''
       rescue
-        puts "<span class='erro'>[unit_weight]ERROR!!<br>"
+        puts "<span class='error'>[unit_weight]ERROR!!<br>"
         puts "vol:#{vol}<br>"
         puts "uc:#{uc}<br>"
         puts "fn:#{fn}</span><br>"
@@ -625,30 +542,54 @@ def unit_weight( vol, uc, fn )
 end
 
 
+#### for checkbox
+def checked( bit )
+  s = ''
+  s = 'CHECKED' if bit == 1
+
+  return s
+end
+
+
+#### for select
+def selected( a, b )
+  s = ''
+  s = 'SELECTED' if a == b
+
+  return s
+end
+
 #==============================================================================
 # CLASS
 #==============================================================================
 
 class User
-  attr_reader :name, :uid, :status, :alias, :language
+  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :language, :switch
 
   def initialize( cgi )
     @name = cgi.cookies['NAME'].first
     @uid = cgi.cookies['UID'].first
+    @mid = cgi.cookies['MID'].first
 
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     res = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{@name}' and cookie='#{@uid}' and status>0;" )
     db.close
     if res.first
       @status = res.first['status'].to_i
-      @alias = res.first['aliasu']
+      @aliasu = res.first['aliasu']
+      @mom = res.first['mom']
+      @mom = @name if @mom == nil
       @language = $DEFAULT_LP
+      @switch = res.first['switch'].to_i
     else
       @name = nil
       @uid = nil
-      @status = nil
-      @alias = nil
+      @mom = nil
+      @mid = nil
+      @status = 0
+      @aliasu = nil
       @language = $DEFAULT_LP
+      @switch = 0
     end
   end
 
@@ -673,7 +614,7 @@ end
 
 
 class FCT
-  attr_reader :n
+  attr_accessor :n
 
   def initialize()
     @n = Hash.new
@@ -689,12 +630,9 @@ class FCT
 end
 
 
-
-
-
 ####
 class Calendar
-  attr_reader :yyyy, :yyyyf, :mm, :dd, :ddl, :wf, :wl
+  attr_accessor :yyyy, :yyyyf, :mm, :dd, :ddl, :wf, :wl
 
   def initialize( uname, yyyy, mm, dd )
     @yyyy = yyyy
@@ -718,8 +656,8 @@ class Calendar
 
     @yyyyf = $TIME_NOW.year
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-
     res = db.query( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';" )
+    db.close
     if res.first['koyomiy']
       a = res.first['koyomiy'].split( ':' )
       @yyyyf = a[0].to_i if a[0].to_i != 0
@@ -737,6 +675,11 @@ class Calendar
       @yyyy -= 1
       @mm = 12
     end
+
+    d = Date.new( @yyyy, @mm, @dd )
+    @wf = Date.new( d.year, d.month, 1 ).wday
+    @ddl = Date.new( d.year, d.month, -1 ).day
+    @wl = Date.new( d.year, d.month, @ddl ).wday
   end
 
   def debug()
@@ -752,7 +695,7 @@ end
 
 
 class Config
-  attr_reader :x
+  attr_accessor :x
 
   def initialize()
   end
@@ -822,24 +765,180 @@ end
 
 
 class Recipe
-  attr_reader :x
+  attr_accessor :code, :user, :branch, :root, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sun, :protocol, :fig1, :fig2, :fig3, :date
 
-  def initialize()
+  def initialize( user )
+    @code = nil
+    @user = user
+    @branch = ''
+    @root = ''
+    @public = 0
+    @protect = 0
+    @draft = 0
+    @name = nil
+    @dish = 1
+    @type = 0
+    @role = 0
+    @tech = 0
+    @time = 0
+    @cost = 0
+    @sum = ''
+    @protocol = ''
+    @fig1 = ''
+    @fig2 = ''
+    @fig3 = ''
+    @date = $DATETIME
+  end
+
+
+  def load_db( code )
+    @code = code
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';" )
+    db.close
+    if res.first
+      @user = res.first['user'].to_s
+      @branch = res.first['branch'].to_s
+      @root = res.first['root'].to_s
+      @public = res.first['public'].to_i
+      @protect = res.first['protect'].to_i
+      @draft = res.first['draft'].to_i
+      @name = res.first['name'].to_s
+      @dish = res.first['dish'].to_i
+      @type = res.first['type'].to_i
+      @role = res.first['role'].to_i
+      @tech = res.first['tech'].to_i
+      @time = res.first['time'].to_i
+      @cost = res.first['cost'].to_i
+      @sum = res.first['sum'].to_s
+      @protocol = res.first['protocol'].to_s
+      @fig1 = res.first['fig1'].to_i
+      @fig2 = res.first['fig1'].to_i
+      @fig3 = res.first['fig1'].to_i
+      @date = res.first['date']
+    else
+      puts "<span class='error'>[Recipe load]ERROR!!<br>"
+      puts "code:#{@code}</span><br>"
+    end
   end
 end
 
 
 class Meal
-  attr_reader :x
+  attr_accessor :user, :code, :name, :meal, :protect
 
-  def initialize()
+  def initialize( user )
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_MEAL} WHERE user='#{user}';" )
+    db.close
+    @user = user
+    @code = res.first['code'].to_s
+    @name = res.first['name'].to_s
+    @meal = res.first['meal'].to_s
+    @protect = res.first['protect'].to_i
   end
+
+  def load_menu( code )
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_MENU} WHERE code='#{code}';" )
+    db.close
+    @code = code
+    @name = res.first['name'].to_s
+    @user = res.first['user'].to_s
+    @name = res.first['name'].to_s
+    @meal = res.first['meal'].to_s
+    @protect = res.first['protect'].to_i
+  end
+
+  def update_db()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    db.query( "UPDATE #{$MYSQL_TB_MEAL} set code='#{@code}', name='#{@name}', meal='#{@meal}', protect='#{@protect}' WHERE user='#{@user}';" )
+    db.close
+  end
+
+  def debug()
+    puts "user:#{@user}<br>"
+    puts "code:#{@code}<br>"
+    puts "name:#{@name}<br>"
+    puts "meal:#{@meal}<br>"
+    puts "protect:#{@protect}<br>"
+    puts "<hr>"
+  end
+
 end
 
 
-class Memu
-  attr_reader :x
+class Menu
+  attr_accessor :user, :code, :name, :meal, :protect, :public, :label, :new_label, :fig, :memo
 
-  def initialize()
+  def initialize( user )
+    @code = nil
+    @user = user
+    @name = nil
+    @meal = nil
+    @protect = 0
+    @public = 0
+    @label = nil
+    @new_label = nil
+    @fig = 0
+    @memo = nil
+  end
+
+  def load_cgi( cgi )
+    @code = cgi['code'].to_s
+    @name = cgi['menu_name'].to_s
+    @protect = cgi['protect'].to_i
+    @public = cgi['public'].to_i
+    @label = cgi['label'].to_s
+    @new_label = cgi['new_label'].to_s
+    @fig = cgi['fig'].to_i
+    @memo = cgi['memo'].to_i
+  end
+
+ def load_db( code )
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_MENU} WHERE code='#{code}';" )
+    db.close
+    @code = code
+    @user = res.first['user'].to_s
+    @name = res.first['name'].to_s
+    @meal = res.first['meal'].to_s
+    @label = res.first['label'].to_s
+    @protect = res.first['protect'].to_i
+    @public = res.first['public'].to_i
+    @fig = res.first['fig'].to_i
+    @memo = res.first['memo'].to_i
+  end
+
+  def insert_db()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{@code}', user='#{@user}',public='#{@public}',protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', fig='#{@fig}', memo='#{@memo}';" )
+    db.close
+  end
+
+  def update_db()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "UPDATE #{$MYSQL_TB_MENU} SET public='#{@public}', protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', fig='#{@fig}', memo='#{@memo}' WHERE user='#{@user}' and code='#{@code}';" )
+    db.close
+  end
+
+  def delete_db()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "DELETE FROM #{$MYSQL_TB_MENU} WHERE user='#{@user}' and code='#{@code}';" )
+    db.close
+  end
+
+  def debug()
+    puts "code:#{@code}<br>"
+    puts "user:#{@user}<br>"
+    puts "name:#{@name}<br>"
+    puts "protect:#{@protect}<br>"
+    puts "public:#{@public}<br>"
+    puts "meal:#{@meal}<br>"
+    puts "label:#{@label}<br>"
+    puts "new_label:#{@new_label}<br>"
+    puts "fig:#{@fig}<br>"
+    puts "memo:#{@memo}<br>"
+    puts "<hr>"
   end
 end

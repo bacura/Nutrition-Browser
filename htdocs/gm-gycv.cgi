@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM yellow green color vegetable editor 0.00
+#Nutrition browser GM yellow green color vegetable editor 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'gm-gycv'
 
 
 #==============================================================================
@@ -29,23 +29,17 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'gm-gycv', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GM check
-if status < 9
+if user.status < 8
 	puts "GM error."
 	exit
 end
@@ -62,21 +56,21 @@ end
 
 case command
 when 'on'
-	mariadb( "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';", false )
+	mdb( "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';", false, @debug )
 when 'off'
-	mariadb( "UPDATE #{$MYSQL_TB_EXT} SET gycv ='0' WHERE FN='#{food_no}';", false )
+	mdb( "UPDATE #{$MYSQL_TB_EXT} SET gycv ='0' WHERE FN='#{food_no}';", false, @debug )
 end
 
 list_html = ''
-r = mariadb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE gycv ='1';", false )
+r = mdb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE gycv ='1';", false, @debug )
 if r.size != 0
 	food_no_list = []
 	r.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false )
+		rr = mdb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false, @debug )
 		food_no_list << rr.first['FN']
 	end
 	food_no_list.reverse.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
+		rr = mdb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-1'><button class='btn btn-sm btn-outline-danger' type='button' onclick=\"offGYCV_BWL1( '#{e}' )\">x</button></div>"
 		list_html << "<div class='col-2'>#{e}</div>"

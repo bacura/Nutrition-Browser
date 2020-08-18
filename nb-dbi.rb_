@@ -3,7 +3,7 @@
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
-#http://bacura.jp
+#http://bi.bacura.jp
 #yossy@bacura.jp
 
 #==============================================================================
@@ -470,7 +470,7 @@ def user_init()
 	puts 'ユーザーテーブルの作成'
 
 	# テーブル作成
-	query = 'CREATE TABLE user (user VARCHAR(32) NOT NULL PRIMARY KEY,pass VARCHAR(32),cookie VARCHAR(32),mail VARCHAR(64),aliasu VARCHAR(64),status TINYINT, date DATETIME, count INT, language VARCHAR(2));'
+	query = 'CREATE TABLE user (user VARCHAR(32) NOT NULL PRIMARY KEY, pass VARCHAR(32), cookie VARCHAR(32), cookie_m VARCHAR(32), mail VARCHAR(64), aliasu VARCHAR(64), status TINYINT, date DATETIME, count INT, language VARCHAR(2), umom VARCHAR(32), switch TINYINT(1));'
 	$db.query( query )
 end
 
@@ -549,7 +549,7 @@ def menu_init()
 	puts '献立テーブルの作成'
 
 	# テーブル作成
-	query = 'CREATE TABLE menu ( code VARCHAR(32) PRIMARY KEY, user VARCHAR(32) NOT NULL, public TINYINT(1), protect TINYINT(1), name VARCHAR(255) NOT NULL, meal VARCHAR(255), fig TINYINT(1), date DATETIME, label VARCHAR(255), root VARCHAR(16), branch VARCHAR(256));'
+	query = 'CREATE TABLE menu ( code VARCHAR(32) PRIMARY KEY, user VARCHAR(32) NOT NULL, public TINYINT(1), protect TINYINT(1), name VARCHAR(64) NOT NULL, meal VARCHAR(255), fig TINYINT(1), date DATETIME, label VARCHAR(64), memo VARCHAR(255), root VARCHAR(16), branch VARCHAR(256));'
 	$db.query( query )
 end
 
@@ -695,6 +695,22 @@ def mets_init()
 	$db.query( query )
 end
 
+#### 料理教室予約テーブルの作成
+def schoolk_init()
+	puts 'school koyomiテーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE schoolk (user VARCHAR(32), student VARCHAR(32), menu VARCHAR(32), ampam TINYINT(1), date DATE );'
+	$db.query( query )
+end
+
+#### 料理教室献立テーブルの作成
+def schoolm_init()
+	puts 'school koyomiテーブルの作成'
+	# テーブル作成
+	query = 'CREATE TABLE schoolm (user VARCHAR(32), code VARCHAR(32), course VARCHAR(64), orderm TINYINT);'
+	$db.query( query )
+end
+
 #==============================================================================
 puts "fctb2015_db_init.rb"
 #==============================================================================
@@ -727,5 +743,10 @@ $db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}
 #bio_init()
 #metst_init()
 #mets_init()
+
+#schoolm_init()
+#schoolk_init()
+#schools_init()
+
 
 $db.close

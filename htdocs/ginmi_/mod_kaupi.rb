@@ -1,4 +1,4 @@
-# Ginmi module for Kaup index 0.00
+# Ginmi module for Kaup index 0.00b
 #encoding: utf-8
 
 def ginmi_module( cgi, user )
@@ -11,14 +11,17 @@ def ginmi_module( cgi, user )
 	when 'form', 'koyomiex'
 		#importing from config
 
-		r = mdb( "SELECT age, height, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
 		age = 0.0
 		height = 0.0
 		weight = 0.0
+		r = mdb( "SELECT age, height, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
 		if r.first
 			age = r.first['age']
+			age = 0.0 unless r.first['age']
 			height = r.first['height'].to_f * 100
+			height = 0.0 unless r.first['height']
 			weight = r.first['weight'].to_f * 1000
+			weight = 0.0 unless r.first['weight']
 		end
 
 		# inporting from koyomiex

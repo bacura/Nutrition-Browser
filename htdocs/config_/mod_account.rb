@@ -1,7 +1,7 @@
-# Config module for FCTB acount 0.00
+# Config module for acount 0.00b
 #encoding: utf-8
 
-def config_module( cgi, user )
+def config_module( cgi, user, lp )
 	module_js()
 
 	step = cgi['step']
@@ -25,48 +25,48 @@ def config_module( cgi, user )
 				pass = new_password1 if new_password1 != '' && new_password1 != nil
 			end
 
-			# アカウント内容変更の保存
+			# Updating acount information
 			mdb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}' WHERE user='#{user.name}' AND cookie='#{uid}';", false, false )
 		else
-			puts "<span class='msg_small_red'>現在のパスワードが違うので、保存されませんでした。</span><br>"
+			puts "<span class='msg_small_red'>#{lp[12]}</span><br>"
 		end
 	end
 
 	html = <<-"HTML"
     <div class="container">
     	<div class='row'>
-	    	<div class='col-2'>二つ名</div>
-			<div class='col-4'><input type="text" maxlength="60" id="new_aliasu" class="form-control login_input" placeholder="二つ名" value="#{aliasu}"></div>
+	    	<div class='col-2'>#{lp[13]}</div>
+			<div class='col-4'><input type="text" maxlength="60" id="new_aliasu" class="form-control login_input" placeholder="#{lp[13]}" value="#{aliasu}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>メールアドレス</div>
-			<div class='col-4'><input type="email" maxlength="60" id="new_mail" class="form-control login_input" placeholder="メールアドレス" value="#{mail}"></div>
+	    	<div class='col-2'>#{lp[14]}</div>
+			<div class='col-4'><input type="email" maxlength="60" id="new_mail" class="form-control login_input" placeholder="#{lp[14]}" value="#{mail}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>新しいパスワード</div>
-			<div class='col-4'><input type="text" maxlength="30" id="new_password1" class="form-control login_input" placeholder="新しいパスワード (30文字まで)"></div>
+	    	<div class='col-2'>#{lp[15]}</div>
+			<div class='col-4'><input type="text" maxlength="30" id="new_password1" class="form-control login_input" placeholder="#{lp[16]}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>新しいパスワード(確認)</div>
-			<div class='col-4'><input type="text" maxlength="30" id="new_password2" class="form-control login_input" placeholder="新しいパスワード（確認）"></div>
+	    	<div class='col-2'>#{lp[17]}</div>
+			<div class='col-4'><input type="text" maxlength="30" id="new_password2" class="form-control login_input" placeholder="#{lp[17]}"></div>
 		</div>
 
 		<hr>
 
     	<div class='row'>
-    		現在のパスワードを入力して保存してください。<br>
+    		#{lp[18]}<br>
 		</div>
 		<br>
     	<div class='row'>
-	    	<div class='col-2'>現在のパスワード</div>
-			<div class='col-4'><input type="password" id="old_password" class="form-control login_input" placeholder="現在のパスワード" required></div>
+	    	<div class='col-2'>#{lp[15]}</div>
+			<div class='col-4'><input type="password" id="old_password" class="form-control login_input" placeholder="#{lp[15]}" required></div>
 		</div>
     	<div class='row'>
 	    	<div class='col-2'></div>
-			<div class='col-4'><button type="button" class="btn btn-outline-warning btn-sm nav_button" onclick="account_cfg( 'change' )">保存</button></div>
+			<div class='col-4'><button type="button" class="btn btn-outline-warning btn-sm nav_button" onclick="account_cfg( 'change' )">#{lp[19]}</button></div>
 		</div>
 	</div>
 HTML

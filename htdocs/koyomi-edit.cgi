@@ -1,22 +1,18 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20190516, 0.00, start
+#Nutrition browser koyomi edit 0.02b
 
 
 #==============================================================================
-#LIBRARY
+# LIBRARY
 #==============================================================================
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
-#STATIC
+# STATIC
 #==============================================================================
+script = 'koyomi-edit'
 @debug = false
 @tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
@@ -27,7 +23,7 @@ require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
-#DEFINITION
+# DEFINITION
 #==============================================================================
 def meals( e, lp, uname, freeze_flag )
 	mb_html = "<table class='table table-sm table-hover'>"
@@ -44,23 +40,15 @@ def meals( e, lp, uname, freeze_flag )
 	c = 0
 	a.each do |ee|
 		aa = ee.split( ':' )
-
-#### Temporary ####
-	if aa[2] == 'g'
-		aa[2] == 0
-	elsif aa[2] == '%'
-		aa[2] == 99
-	end
-#### Temporary ####
-
-	if aa[2].to_i == 99
-		unit = '%'
-	else
-		unit = $UNIT[aa[2].to_i]
-	end
+		if aa[2].to_i == 99
+			unit = '%'
+		else
+			unit = $UNIT[aa[2].to_i]
+		end
 
 		item_name = ''
 		onclick = ''
+		fix_copy_button = ''
 		if aa[0] == '?-'
 			item_name = lp[21]
 		elsif aa[0] == '?--'
@@ -79,7 +67,9 @@ def meals( e, lp, uname, freeze_flag )
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\"" if freeze_flag == 0
+				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
+				onclick = " onclick=\"modifysaveKoyomiFC( '#{aa[0]}', '#{origin}' )\"" if freeze_flag == 0
+				fix_copy_button = "<button class='btn btn-sm btn-primary' onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">編</button>&nbsp;"
 			else
 				item_name = "Error: #{aa[0]}"
 				onclick = ''
@@ -115,7 +105,10 @@ def meals( e, lp, uname, freeze_flag )
 		end
 
 		if freeze_flag == 0
-			mb_html << "<td><button class='btn btn-sm btn-outline-danger' onclick=\"deleteKoyomi_BW2( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">削除</button></td>"
+			mb_html << "<td>"
+			mb_html << fix_copy_button unless fix_copy_button == ''
+			mb_html << "<button class='btn btn-sm btn-outline-danger' onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">削除</button>"
+			mb_html << "</td>"
 		else
 			mb_html << "<td></td>"
 		end
@@ -153,17 +146,7 @@ def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items )
 			code_set.size.times do |c|
 				code = code_set[c]
 				rate = BigDecimal( rate_set[c] )
-				unit = unit_set[c]
-
-#### temporary ####
-				if unit == 'g'
-					unit = 0
-				elsif unit == '%'
-					unit = 99
-				else
-					unit = unit.to_i
-				end
-#### temporary ####
+				unit = unit_set[c].to_i
 
 				if /\?/ =~ code
 				elsif /\-f\-/ =~ code
@@ -277,20 +260,15 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliaseu, language = login_check( cgi )
-lp = lp_init( 'koyomi-edit', language )
-start_year, st_set = get_starty( uname )
-if @debug
-	puts "uname:#{uname}<br>\n"
-	puts "status:#{status}<br>\n"
-	puts "aliaseu:#{aliaseu}<br>\n"
-	puts "language:#{language}<br>\n"
-	puts "<hr>\n"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
+start_year, st_set = get_starty( user.name )
 
 #### Getting POST
 command = cgi['command']
@@ -321,7 +299,7 @@ end
 
 #### Delete
 if command == 'delete'
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 	a = r.first['koyomi'].split( "\t" )
 	new_meal = ''
 	a.size.times do |c|
@@ -329,18 +307,18 @@ if command == 'delete'
 	end
 	new_meal.chop!
 
-	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_meal}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-#	mdb( "DELETE FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug ) 	if /\-f\-/ =~ code
+	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_meal}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+#	mdb( "DELETE FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug ) 	if /\-f\-/ =~ code
 end
 
 
 #### Updating memo
 if command == 'memo'
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='4';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='4';", false, @debug )
 	if r.first
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{memo}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='4';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{memo}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='4';", false, @debug )
 	else
-		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET fzcode='', freeze='0', koyomi='#{memo}', user='#{uname}', date='#{yyyy}-#{mm}-#{dd}', tdiv='4';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET fzcode='', freeze='0', koyomi='#{memo}', user='#{user.name}', date='#{yyyy}-#{mm}-#{dd}', tdiv='4';", false, @debug )
 	end
 end
 
@@ -349,24 +327,24 @@ end
 if command == 'some'
 	hh = st_set[tdiv] if hh == 99
 	koyomi = "#{some}:100:99:#{hh}"
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	if r.first
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	else
-		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug)
+		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug)
 	end
 end
 
 
 #### Deleting empty entry
-mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND freeze=0 AND ( koyomi='' OR koyomi IS NULL OR DATE IS NULL );", false, @debug )
+mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=0 AND ( koyomi='' OR koyomi IS NULL OR DATE IS NULL );", false, @debug )
 
 
 ####
 freeze_flag = 0
 koyomi_html = []
 fc_items = []
-r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}' AND name='簡易表示用';", false, @debug )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
 if r.first
 	palette = r.first['palette']
 	palette.size.times do |c|
@@ -376,14 +354,14 @@ else
  	fc_items = ['ENERC_KCAL', 'PROT', 'FAT', 'CHO', 'NACL_EQ']
 end
 
-r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
 freeze_flag = r.first['freeze'].to_i if r.first
 r.each do |e|
 	if e['tdiv'] == 4
 		koyomi_html[e['tdiv']] = e['koyomi']
 	else
-		koyomi_html[e['tdiv']] = meals( e, lp, uname, freeze_flag )
-		koyomi_html[e['tdiv']] << multi_calc_sub(  uname, yyyy, mm, dd, e['tdiv'], fc_items )
+		koyomi_html[e['tdiv']] = meals( e, lp, user.name, freeze_flag )
+		koyomi_html[e['tdiv']] << multi_calc_sub(  user.name, yyyy, mm, dd, e['tdiv'], fc_items )
 	end
 end
 
@@ -469,7 +447,7 @@ html = <<-"HTML"
 		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
 		<div class='col-8'></div>
 		<div class='col-1'>
-			<button class='btn btn-sm btn-success' onclick="editKoyomiR_BW1( '#{yyyy}', '#{mm}' )">#{lp[7]}</button>
+			<button class='btn btn-sm btn-success' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</button>
 		</div>
 	</div>
 	<div class='row'>

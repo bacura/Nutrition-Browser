@@ -1,17 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser menu photo 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20171214, 0.00, start
+#Nutrition browser menu photo 0.00b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require '/var/www/nb-soul.rb'
+require 'rmagick'
 
 
 #==============================================================================
@@ -22,6 +18,7 @@ $TN_SIZE = 400
 $TNS_SIZE = 40
 $PHOTO_SIZE_MAX = 2000
 @debug = false
+script = 'menu-photo'
 
 
 #==============================================================================
@@ -32,21 +29,14 @@ $PHOTO_SIZE_MAX = 2000
 #==============================================================================
 # Main
 #==============================================================================
-cgi = CGI.new
-
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'menu-photo', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "<hr>"
-end
 
+cgi = CGI.new
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
-#### POSTデータの取得
+#### Geeting POST
 command = cgi['command']
 code = cgi['code']
 slot = cgi['slot']
@@ -60,28 +50,21 @@ if @debug
 end
 
 
-#### レシピのfigフラグ読み込み
-# 通常
-if code == ''
-	r = mariadb( "SELECT code FROM #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
-	code = r.first['code']
-end
+meal = Meal.new( user.name )
+menu = Menu.new( user.name )
 
 
 case command
 when 'form'
+
 	if slot == 'photo'
 		5.times do |c|
-			break if File.exist?( "#{$PHOTO_PATH}/#{code}-tn.jpg" )
+			break if File.exist?( "#{$PHOTO_PATH}/#{menu.code}-tn.jpg" )
 			sleep( 2 )
 		end
 	end
 
-	res = mariadb( "SELECT fig FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false )
-
-	if res.first
-		fig = res.first['fig']
-	else
+	if meal.code == ''
 		puts "No code."
 		exit
 	end
@@ -89,9 +72,9 @@ when 'form'
 	# 写真ファイルと削除ボタン
 	photo_file = "photo/no_image.png"
 	photo_del_button = ''
-	if fig == 1
-		photo_file = "photo/#{code}-tn.jpg"
-		photo_del_button = "<button class='btn btn-outline-danger' type='button' onclick=\"menu_photoDel_BWL3( '#{code}' )\">#{lp[1]}</button>"
+	if menu.fig == 1
+		photo_file = "photo/#{menu.code}-tn.jpg"
+		photo_del_button = "<button class='btn btn-outline-danger' type='button' onclick=\"menu_photoDel( '#{menu.code}' )\">#{lp[1]}</button>"
 	end
 
 	html = ''
@@ -100,7 +83,7 @@ when 'form'
 		<div class='col' align="center">
 			<div class="form-group">
 				<label for="photom">#{lp[2]}</label><br>
-				<input type="file" name="photo1" id="photom" class="custom-control-file" onchange="menu_photoSave_BWL3( '#{code}' )">
+				<input type="file" name="photo1" id="photom" class="custom-control-file" onchange="menu_photoSave( '#{menu.code}' )">
 			</div>
 			<img src="#{photo_file}" width="200px" class="img-thumbnail"><br>
 			<br>
@@ -110,7 +93,7 @@ when 'form'
 HTML
 	puts html
 
-#### 写真を保存
+
 when 'upload'
 	photo_name = cgi[slot].original_filename
 	photo_type = cgi[slot].content_type
@@ -118,16 +101,15 @@ when 'upload'
 	photo_size = photo_body.size.to_i
 
 	if photo_size < $SIZE_MAX && ( photo_type == 'image/jpeg' || photo_type == 'image/jpg' )
-		require 'rmagick'
 
-		# 一時ファイルを作る
+		# Creating tmo file
 		f =open( "#{$PHOTO_PATH_TMP}/#{photo_name}", 'w' )
 			f.puts photo_body
 		f.close
 
 		photo = Magick::ImageList.new( "#{$PHOTO_PATH_TMP}/#{photo_name}" )
 
-		# 写真のサイズを変更
+		# Changing photo size
 		photo_x = photo.columns.to_f
 		photo_y = photo.rows.to_f
 		photo_ratio = 1.0
@@ -144,29 +126,29 @@ when 'upload'
 		tn_file = photo.thumbnail( tn_ratio )
 		photo_file = photo.thumbnail( photo_ratio )
 
-		# 写真の保存
+		# Weiting photos
 		tns_file.write( "#{$PHOTO_PATH}/#{code}-tns.jpg" )
 		tn_file.write( "#{$PHOTO_PATH}/#{code}-tn.jpg" )
 		photo_file.write( "#{$PHOTO_PATH}/#{code}.jpg" )
 
-		#一時ファイルの削除
+		# Deleting tmp file
 		File.unlink "#{$PHOTO_PATH_TMP}/#{photo_name}"
 
-		# 献立更新
-		mariadb( "UPDATE #{$MYSQL_TB_MENU} SET fig=1 WHERE code='#{code}';", false )
+		# Updating menu
+		mdb( "UPDATE #{$MYSQL_TB_MENU} SET fig=1 WHERE code='#{code}';", false, @debug )
 	else
 	end
 
-#### 写真を削除
+
 when 'delete'
-	#写真ファイルの削除
+	# Deleting photo file
 	if File.exist?( "#{$PHOTO_PATH}/#{code}.jpg" )
 		File.unlink "#{$PHOTO_PATH}/#{code}-tns.jpg"
 		File.unlink "#{$PHOTO_PATH}/#{code}-tn.jpg"
 		File.unlink "#{$PHOTO_PATH}/#{code}.jpg"
 
-		# レシピデータベースの更新
-		mariadb( "UPDATE #{$MYSQL_TB_MENU} SET fig='0' WHERE code='#{code}';", false )
+		# Updating menu
+		mdb( "UPDATE #{$MYSQL_TB_MENU} SET fig='0' WHERE code='#{code}';", false, @debug )
 	end
 else
 end

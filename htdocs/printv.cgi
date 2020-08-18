@@ -1,12 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser print web page 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20180312, 0.00, start
-
+#Nutrition browser print web page 0.10b
 
 #==============================================================================
 #LIBRARY
@@ -24,6 +18,62 @@ fct_num = 14
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+#### html_header for printv
+def html_head_pv( code, recipe_name )
+	html = <<-"HTML"
+<!DOCTYPE html>
+<head>
+  <title>栄養ブラウザ レシピ</title>
+  <meta charset="UTF-8">
+  <meta name="keywords" content="栄養,nutrition, Nutritionist, food,検索,計算,解析,評価">
+  <meta name="description" content="食品成分表の検索,栄養計算,栄養評価, analysis, calculation">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="Shinji Yoshiyama">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@ho_meow" />
+  <meta name="twitter:title" content="栄養ブラウザ by ばきゅら京都Lab" />
+  <meta name="twitter:description" content="フリーの栄養計算・管理webサービス //// レシピ紹介 [#{recipe_name}]" />
+  <meta name="twitter:image" content="https://nb.bacura.jp/photo/#{code}-1tn.jpg" />
+  <meta name="twitter:image:alt" content="ばきゅら京都Labロゴ" />
+
+  <!-- bootstrap -->
+  <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
+
+<!-- Jquery -->
+  <script type="text/javascript" src="./jquery-3.2.1.min.js"></script>
+<!-- bootstrap -->
+  <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
+  <script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
+</head>
+
+<!-- Matomo -->
+<script type="text/javascript">
+  var _paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//bacura.jp/piwik/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '5']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
+
+<body class="body">
+  <span class="world_frame" id="world_frame">
+HTML
+
+  puts html
+end
+
 
 #### QRコード生成
 def makeQRcode( text, code )
@@ -72,10 +122,11 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 			return_foods << "<tr><td class='print_subtitle'>#{fi}</td></tr>\n"
 		else
 			# 人数分調整
+			z, fuv = food_weight_check( fuv ) if /\// =~ fuv
 			fuv = BigDecimal( fuv ) / dish_recipe * dish
 			fuv_v = fuv.to_f
 			fuv_v = fuv.to_i if fuv_v >= 10
-			few = BigDecimal( few ) / dish_recipe
+			few = BigDecimal( few ) / dish_recipe * dish
 			few_v = few.to_f
 			few_v = few.to_i if few_v >= 10
 
@@ -240,7 +291,6 @@ end
 #==============================================================================
 
 html_init( nil )
-html_head( nil, 0, '印刷表示' )
 
 #### GETデータの取得
 get_data = get_data()
@@ -254,6 +304,7 @@ frct_mode = get_data['fm'].to_i
 hr_image = get_data['hr'].to_i
 
 url = "http://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&hr=#{hr_image}"
+
 
 #### デバッグ用
 if @debug
@@ -290,6 +341,10 @@ if @debug
 	puts "fig3: #{fig3}<br>"
 	puts "<hr>"
 end
+
+
+#### HTMLヘッダ出力
+html_head_pv( code, recipe_name )
 
 
 #### 食材変換
@@ -515,7 +570,7 @@ html_foot = <<-"HTML"
 	<hr>
 	<div class='row'>
 		<div class='col-10'>
-			<a href='nb.bacura.jp/'>栄養ブラウザ</a>・<a href='http://neg.bacura.jp/'>日本えいようギルド</a>・<a href='http://bacura.jp'>ばきゅら京都Lab</a><br>
+			<a href='http://nb.bacura.jp/'>栄養ブラウザ</a><br>
 			#{url}
 		</div>
 		<div class='col-2'>

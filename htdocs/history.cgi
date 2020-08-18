@@ -11,7 +11,6 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 # STATIC
 #==============================================================================
 @debug = false
+script = 'history'
 $LIMIT = 100
 
 
@@ -28,7 +28,7 @@ $LIMIT = 100
 #### 履歴の取得
 def get_histry( uname, sub_fg, order_mode )
 	history = []
-	r = mariadb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{uname}';", false )
+	r = mdb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{uname}';", false, false )
 
 	t = r.first['his'].split( "\t" )
 	t.sort! if order_mode == 'food_no'
@@ -53,19 +53,13 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'history', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -105,7 +99,7 @@ frct_mode, frct_select = frct_check( frct_mode )
 
 
 #### 履歴の取得
-history = get_histry( uname, sub_fg, order_mode )
+history = get_histry( user.name, sub_fg, order_mode )
 puts "history: #{history}<br>" if @debug
 
 
@@ -118,7 +112,7 @@ db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}"
 history.each do |e|
 	# 栄養素の一部を取得
 	if /^P|U/ =~ e
-		q = "SELECT ENERC_KCAL, PROT, FAT, CHO, NACL_EQ FROM #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
+		q = "SELECT ENERC_KCAL, PROT, FAT, CHO, NACL_EQ FROM #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{user.name}' OR user='#{$GM}' );"
 	else
 		q = "SELECT ENERC_KCAL, PROT, FAT, CHO, NACL_EQ FROM #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
 	end
@@ -139,14 +133,14 @@ history.each do |e|
 	sub_components = "<td align='right'>#{kcal}</td><td align='right'>#{prot}</td><td align='right'>#{fat}</td><td align='right'>#{cho}</td><td align='right'>#{nacl_rq}</td>"
 
 	# 追加ボタンの設定
-	if uname
+	if user.name
 		add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"addingCB( '#{e}', 'weight' )\">#{lp[3]}</button>"
 	else
 		add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick='window.alert(\"#{lp[4]}\")'>#{lp[3]}</button>"
 	end
 
 	# Koyomi button
-	if status >= 2
+	if user.status >= 2
 		koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e}', 1 )\">#{lp[35]}</button>"
 	else
 		koyomi_button = ''

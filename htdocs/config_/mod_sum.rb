@@ -1,7 +1,7 @@
-# Config module for FCTB sum 0.00
+# Config module for sum 0.00b
 #encoding: utf-8
 
-def config_module( cgi, user )
+def config_module( cgi, user, lp )
 	module_js()
 
 	step = cgi['step']
@@ -14,9 +14,9 @@ def config_module( cgi, user )
 	html = <<-"HTML"
      <div class="container">
       	<div class='row'>
-    		まな板を初期化する場合は、まな板初期化ボタンを押してください。<br>
+    		#{lp[32]}<br>
     	</div><br>
-		<button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="sum_cfg( 'reset' )">まな板初期化</button>
+		<button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="sum_cfg( 'reset' )">#{lp[33]}</button>
 	</div>
 HTML
 	return html

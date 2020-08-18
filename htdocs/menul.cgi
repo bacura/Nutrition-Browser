@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser fctb menu list 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20190122, 0.00, start
+#Nutrition browser fctb menu list 0.00b
 
 
 #==============================================================================
@@ -19,15 +14,16 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 $PAGE_LIMIT = 20
 @debug = false
+script = 'menul'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
-### 表示範囲
+### HTML display range
 def range_html( range, lp )
 	range_select = []
-	0.upto( 2 ) do |i|
+	0.upto( 3 ) do |i|
 		if range == i
 			range_select[i] = 'SELECTED'
 		else
@@ -37,63 +33,55 @@ def range_html( range, lp )
 
 	html = '<select class="form-control form-control-sm" id="range">'
 	html << "<option value='0' #{range_select[0]}>#{lp[12]}</option>"
-	html << "<option value='1' #{range_select[1]}>#{lp[13]}</option>"
-	html << "<option value='2' #{range_select[2]}>#{lp[14]}</option>"
+	html << "<option value='1' #{range_select[1]}>#{lp[19]}</option>"
+	html << "<option value='2' #{range_select[2]}>#{lp[13]}</option>"
+	html << "<option value='3' #{range_select[3]}>#{lp[14]}</option>"
 	html << '</select>'
 
 	return html
 end
 
 
-#### ラベルパーツ
+#### HTML of label
 def label_html( uname, label, lp )
-	query = "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{uname}';"
-	db_err = 'MENU select'
-	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{uname}';", false, @debug )
+	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND name!='';", false, @debug )
 	label_list = []
 	r.each do |e| label_list << e['label'] end
 	label_list.uniq!
 
 	html = '<select class="form-control form-control-sm" id="label">'
-	label_list.each do |e|
-		if e == nil
-			html << "<option value='#{lp[15]}'>#{lp[15]}</option>"
-		elsif label == e
-			html << "<option value='#{e}' SELECTED>#{e}</option>"
-		else
-			html << "<option value='#{e}'>#{e}</option>"
-		end
-	end
+	html << "<option value=''>#{lp[12]}</option>"
+	label_list.each do |e| html << "<option value='#{e}' #{selected( e, label )}}>#{e}</option>" end
 	html << '</select>'
 
 	return html
 end
 
 
-#### ページングパーツ
+#### HTML of Paging
 def pageing_html( page, page_start, page_end, page_max, lp )
 	html = ''
 	html << '<ul class="pagination pagination-sm justify-content-end">'
 	if page == 1
 		html << "<li class='page-item disabled'><span class='page-link'>#{lp[16]}</span></li>"
 	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2_BWL1( #{page - 1} )\">#{lp[16]}</span></li>"
+		html << "<li class='page-item'><span class='page-link' onclick=\"menuList( #{page - 1} )\">#{lp[16]}</span></li>"
 	end
 	unless page_start == 1
-		html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2_BWL1( '1' )\">1…</a></li>"
+		html << "<li class='page-item'><a class='page-link' onclick=\"menuList( '1' )\">1…</a></li>"
 	end
 	page_start.upto( page_end ) do |c|
 		active = ''
 		active = ' active' if page == c
-		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeList2_BWL1( #{c} )\">#{c}</a></li>"
+		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"menuList( #{c} )\">#{c}</a></li>"
 	end
 	unless page_end == page_max
-		html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2_BWL1( '#{page_max}' )\">…#{page_max}</a></li>"
+		html << "<li class='page-item'><a class='page-link' onclick=\"menuList( '#{page_max}' )\">…#{page_max}</a></li>"
 	end
 	if page == page_max
 		html << "<li class='page-item disabled'><span class='page-link'>#{lp[17]}</span></li>"
 	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2_BWL1( #{page + 1} )\">#{lp[17]}</span></li>"
+		html << "<li class='page-item'><span class='page-link' onclick=\"menuList( #{page + 1} )\">#{lp[17]}</span></li>"
 	end
 	html << '  </ul>'
 
@@ -103,20 +91,15 @@ end
 # Main
 #==============================================================================
 cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'menul', language )
 
 html_init( nil )
 
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
-#### POSTデータの取得
+#### Getting POST data
 command = cgi['command']
 code = cgi['code']
 page = cgi['page']
@@ -129,7 +112,7 @@ end
 
 
 if command == 'view'
-	r = mdb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
+	r = mdb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first[0]
 		a = r.first['menul'].split( ':' )
 		page = a[0].to_i
@@ -143,6 +126,7 @@ if command == 'view'
 	end
 else
 	page = cgi['page'].to_i
+	page = 1 if page < 1
 	range = cgi['range'].to_i
 	label = cgi['label']
 end
@@ -154,15 +138,23 @@ if @debug
 end
 
 
-#### 献立の削除
+#### Deleting menu
 if command == 'delete'
 	# 写真の削除
 	File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-tns.jpg" )
 	File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-tn.jpg" )
 	File.unlink "#{$PHOTO_PATH}/#{code}-#{c + 1}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}.jpg" )
-
 	#レシピデータベースのの更新（削除）
-	mdb( "delete FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' and code='#{code}';", false, @debug )
+	menu = Menu.new( user.name )
+	menu.code = code
+	menu.delete_db
+
+	meal = Meal.new( user.name )
+	if meal.code == code
+		meal.code = ''
+		meal.name = ''
+		meal.update_db
+	end
 end
 
 
@@ -174,27 +166,38 @@ if command == 'import'
 
 	if r.first
 		#レシピデータベースのの更新(新規)
-		new_code = generate_code( uname, 'm' )
-#		mariadb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{uname}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{$DATETIME}';", false )
+		new_code = generate_code( user.name, 'm' )
+#		mdb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{user.name}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{$DATETIME}';", false, @debug )
 	end
 
 end
 
 
 #### WHERE setting
-sql_where = "WHERE user='#{uname}'"
+sql_where = "WHERE "
+case range
+when 1
+	sql_where << "user='#{user.name}' AND name!='' AND protect=1"
+when 2
+	sql_where << "user='#{user.name}' AND name!='' AND public=1"
+when 3
+	sql_where << "user!='#{user.name}' AND name!='' AND public=1"
+else
+	sql_where << "user='#{user.name}' AND name!=''"
+end
+sql_where << " AND label='#{label}'" unless label == ''
 
 
 #### 表示範囲
 html_range = range_html( range, lp )
 
 
-#### ラベルhtml
-html_label = label_html( uname, label, lp )
+#### HTML label
+html_label = label_html( user.name, label, lp )
 
 
 #### レシピ一覧ページ
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_MENU} #{sql_where} ORDER BY name;", false )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} #{sql_where} ORDER BY name;", false, @debug )
 menu_num = r.size
 page_max = menu_num / $PAGE_LIMIT + 1
 
@@ -243,23 +246,22 @@ r.each do |e|
 		else
 			menu_html << "<td>><a href='photo/#{e['code']}-tn.jpg' target='photo'><img src='photo/#{e['code']}-tns.jpg'></a></td>"
 		end
-		menu_html << "<td onclick=\"initMeal_BWL1( 'load', '#{e['code']}' )\">#{e['name']}</td>"
 
+		menu_html << "<td onclick=\"initMeal_BWL1( 'load', '#{e['code']}' )\">#{e['name']}</td>"
 		menu_html << "<td>#{e['label']}</td>"
 		menu_html << "<td>-</td>"
 
-
 		menu_html << "<td>"
-		if status >= 2
+		if user.status >= 2
 			menu_html << "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[18]}</button>&nbsp;&nbsp;"
 		end
+		menu_html << "</td>"
 
-
-
-		if e['user'] == uname
-			menu_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"menuDelete_BWL1( '#{e['code']}', '#{e['name']}' )\">#{lp[1]}</button>"
+		menu_html << "<td>"
+		if e['user'] == user.name
+			menu_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"menuDelete( '#{e['code']}', '#{e['name']}' )\">#{lp[1]}</button>"
 		else
-			menu_html << "<button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport_BWL1( '#{e['code']}' )\">#{lp[2]}</button>"
+			menu_html << "<button class='btn btn-outline-primary btn-sm' type='button' onclick=\"menuImport( '#{e['code']}' )\">#{lp[2]}</button>"
 		end
 		menu_html << "</td>"
 
@@ -276,7 +278,7 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<div class="input-group-prepend">
 					<label class="input-group-text" for="range">#{lp[4]}</label>
@@ -293,7 +295,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col-2'>
-			<button class="btn btn-outline-warning btn-sm" type="button" onclick="menuList_BWL1( '#{page}' )">#{lp[6]}</button>
+			<button class="btn btn-outline-primary btn-sm" type="button" onclick="menuList2( '#{page}' )">#{lp[6]}</button>
 		</div>
 	</div>
 	<br>
@@ -305,6 +307,7 @@ html = <<-"HTML"
 			<td>#{lp[9]}</td>
 			<td>#{lp[10]}</td>
 			<td>#{lp[11]}</td>
+			<td></td>
 		</tr>
 	</thead>
 	#{menu_html}
@@ -320,4 +323,4 @@ puts html
 
 #### 検索設定の保存
 menul = "#{page}:#{range}:#{label}"
-mariadb( "UPDATE #{$MYSQL_TB_CFG} SET menul='#{menul}' WHERE user='#{uname}';", false )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET menul='#{menul}' WHERE user='#{user.name}';", false, @debug )

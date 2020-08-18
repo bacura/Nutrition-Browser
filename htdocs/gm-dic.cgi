@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM food alias dictionary editor 0.00
+#Nutrition browser GM food alias dictionary editor 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -18,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'gm-dic'
 
 
 #==============================================================================
@@ -30,22 +31,15 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'gm-dic', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GM check
-if status < 8
+if user.status < 8
 	puts "GM error."
 	exit
 end
@@ -76,7 +70,7 @@ when 'save'
 
 	a.each do |e|
 		unless e == org_name
-			mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET tn='0', org_name='#{org_name}', alias='#{e}', user='#{uname}';", false, @debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET tn='0', org_name='#{org_name}', alias='#{e}', user='#{user.name}';", false, @debug )
 		end
 	end
 	list_html = 'ok'

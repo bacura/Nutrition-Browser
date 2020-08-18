@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser regist 0.00
+#Nutrition browser regist 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -11,13 +11,13 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+script='regist'
 @debug = false
 
 
@@ -25,15 +25,60 @@ require '/var/www/nb-soul.rb'
 #DEFINITION
 #==============================================================================
 
+#### HTML top
+def html_top_regist()
+  login_color = "secondary"
+  login = "<a href='login.cgi' class=\"text-#{login_color}\">ログイン</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">登録</a>"
+
+  html = <<-"HTML"
+      <header class="navbar navbar-dark bg-dark" id="header">
+        <h4><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h4>
+        <span class="text-#{login_color} login_msg"><h5>#{login}</h5></span>
+        <a href='http://neg.bacura.jp/?p=523' target='manual'><span class="text-#{login_color} login_msg"><h5>手引き</h5></span></a>
+        <span class="form-inline form-inline-sm">
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <select class="form-control form-control-sm" id="qcate">
+                <option value='0'>食品</option>
+                <option value='1'>レシピ</option>
+                <option value='2'>記憶</option>
+              </select>
+            </div>
+            <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
+            <div class="input-group-append">
+              <button class="btn btn-outline-#{login_color} btn-sm" onclick="searchBWL1()">検索</button>
+            </div>
+          </div>
+        </span>
+      </header>
+HTML
+
+  puts html
+end
+
+
+#### Language init
+def lp_init( script, language_set )
+  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
+  f.each do |line|
+    lp << line.chomp.force_encoding( 'UTF-8' )
+  end
+  f.close
+
+  return lp
+end
+
+
 #### HTML regist
 def html_regist_form( id, mail, pass, msg, aliasu, lp )
     html = <<-"HTML"
       <div class="container">
-        <form action="#{$SCRIPT}?mode=confirm" method="post" class="form-signin login_form">
+        <form action="regist.cgi?mode=confirm" method="post" class="form-signin login_form">
           #{msg}
           <p class="msg_small">#{lp[4]}</p>
           <input type="text" name="id" value="#{id}" maxlength="30" id="inputID" class="form-control login_input" placeholder="#{lp[5]}" required autofocus>
-          <input type="text" name="alias" value="#{aliasu}" maxlength="60" id="inputAlias" class="form-control login_input" placeholder="#{lp[6]}">
+          <input type="text" name="aliasu" value="#{aliasu}" maxlength="60" id="inputAlias" class="form-control login_input" placeholder="#{lp[6]}">
           <input type="email" name="mail" value="#{mail}" maxlength="60" id="inputMail" class="form-control login_input" placeholder="#{lp[7]}">
           <input type="text" name="pass" value="#{pass}" maxlength="30" id="inputPassword" class="form-control login_input" placeholder="#{lp[8]}" required>
           <input type="submit" value="#{lp[9]}" class="btn btn-lg btn-success btn-block"></input>
@@ -78,6 +123,7 @@ def html_regist_confirm( id, mail, pass, aliasu, lp )
           <input type="hidden" name="mail" value="#{mail}" id="inputMail" class="form-control login_input" placeholder="#{lp[13]}">
           <input type="hidden" name="pass" value="#{pass}" id="inputPassword" class="form-control login_input" placeholder="#{lp[14]}">
           <input type="submit" value="#{lp[15]}" class="btn btn-lg btn-warning btn-block"></input>
+          <input type="button" value="#{lp[19]}" class="btn btn-lg btn-secondary btn-block" onclick="history.back()"></input>
         </form>
       </div>
 HTML
@@ -105,38 +151,35 @@ html_init( nil )
 
 lp = lp_init( 'regist', $DEFAULT_LP )
 
-#### GETデータの取得
+#### Getting GET data
 get_data = get_data()
 
-#### POSTデータの取得
+#### Getting POST data
 post_data = CGI.new
 
 html_head( nil, 0, nil )
-html_top( nil, nil, nil )
+html_top_regist()
 
 case get_data['mode']
-#### 入力内容の確認
+# Confomation of user data
 when 'confirm'
 
-  # 入力されたIDは英数字以外があるか？
+  # Checking improper characters
   if /[^0-9a-zA-Z\-\_]/ =~ post_data['id']
     msg = '<p class="msg_small_red">#{lp[1]}</p>'
     html_regist_form( nil, post_data['mail'], nil, msg, post_data['aliasu'], lp )
 
-  # 入力されたIDは文字制限を超えているか？
+  # Checking character limit
   elsif post_data['id'].size > 30
     msg = '<p class="msg_small_red">#{lp[2]}</p>'
     html_regist_form( nil, post_data['mail'], nil, msg, post_data['aliasu'], lp )
 
-  # 入力されたIDでユーザーテーブルから抽出
+  # OK
   else
-    r = mariadb( "SELECT user FROM #{$MYSQL_TB_USER} WHERE user='#{post_data['id']}';", false )
-
-    #### データベースに同じIDが存在するか？
-    # 存在しない
+    # Checking same ID
+    r = mdb( "SELECT user FROM #{$MYSQL_TB_USER} WHERE user='#{post_data['id']}';", false, @debug )
     unless r.first
       html_regist_confirm( post_data['id'], post_data['mail'], post_data['pass'], post_data['aliasu'], lp )
-    # 存在する
     else
       msg = '<p class="msg_small_red">#{lp[3]}</p>'
       html_regist_form( nil, post_data['mail'], nil, msg, post_data['aliasu'], lp )
@@ -144,35 +187,35 @@ when 'confirm'
   end
 
 
-#### 入力内容の登録
+#### Finishing registration of new user
 when 'finish'
-  #ユーザーテーブルの登録
+  # Inserting user information
   aliasu = post_data['alias']
   aliasu = post_data['id'] if aliasu == ''
 
-  mariadb( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{post_data['id']}', pass='#{post_data['pass']}', mail='#{post_data['mail']}',aliasu='#{aliasu}', status=1, reg_date='#{$DATETIME}', count=0;", false )
+  mdb( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{post_data['id']}', pass='#{post_data['pass']}', mail='#{post_data['mail']}',aliasu='#{aliasu}', status=1, reg_date='#{$DATETIME}', count=0;", false, @debug )
 
-  #パレットテーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='簡易表示用', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
-  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='基本の5成分', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false )
-  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='基本の14成分', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false )
-  mariadb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='全て', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false )
+  # Inserting standard palettes
+  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='#{lp[20]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
+  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='#{lp[21]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
+  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='#{lp[22]}', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
+  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{post_data['id']}', name='#{lp[23]}', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
 
-  #履歴テーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{post_data['id']}', his='';", false )
+  # Inserting new history
+  mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{post_data['id']}', his='';", false, @debug )
 
-  #合計テーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{post_data['id']}', sum='';", false )
+  # Inserting new SUM
+  mdb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{post_data['id']}', sum='';", false, @debug )
 
-  #食事テーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{post_data['id']}', meal='';", false )
+  # Inserting new meal
+  mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{post_data['id']}', meal='';", false, @debug )
 
-  #コンフィグテーブルの登録
-  mariadb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{post_data['id']}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false )
+  # Inserting new config
+  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{post_data['id']}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
 
   html_regist_finish( lp )
 
-#### 初期入力フォーム
+#### Input form
 else
   html_regist_form( nil, nil, nil, nil, nil, lp )
 end

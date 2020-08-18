@@ -1,0 +1,44 @@
+#Nutrition browser account-mom 0.00b
+
+#==============================================================================
+# OVERVIEW
+#==============================================================================
+栄養ブラウザの娘アカウントの管理スクリプト。
+
+
+#==============================================================================
+# DEPENDENCE
+#==============================================================================
+nb-soul.rb
+
+
+#==============================================================================
+# ITEM FROM GET / POST
+#==============================================================================
+#POST
+command.to_i	#コマンド
+uid_d = cgi['uid_d']
+pass_d = cgi['target_d']
+mail_d = cgi['mail_d']
+aliasu_d = cgi['aliasu_d']
+status_d = cgi['status_d']
+language_d = cgi['language_d']
+switch_d = cgi['switch_d']
+
+
+
+#==============================================================================
+# TRANSITION
+#==============================================================================
+shun.js/newAccountM()						-> account-mom.cgi{ command:"new" }
+shun.js/saveAccountM()						-> account-mom.cgi"{ command:"save", uid_d:uid_d, mail_d:mail_d, pass_d:pass_d, aliasu_d:aliasu_d, language_d:language_d }
+shun.js/updateAccountM( uid_d )				-> account-mom.cgi{ command:"update", uid_d:uid_d, mail_d:mail_d, pass_d:pass_d, aliasu_d:aliasu_d, language_d:language_d }
+shun.js/editAccountM( uid_d )				-> account-mom.cgi{ command:"edit", uid_d:uid_d }
+shun.js/deleteAccountM( uid_d )				-> account-mom.cgi{ command:"delete", uid_d:uid_d }
+shun.js/switchAccountM( switch_id, uid_d )	-> account-mom.cgi{ command:"switch", uid_d:uid_d, switch_d:switch_d }
+
+
+#==============================================================================
+#CHANGE LOG
+#==============================================================================
+20200805	0.00b	βスタート

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM Shun editor 0.00
+#Nutrition browser GM Shun editor 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'gm-shun'
 
 
 #==============================================================================
@@ -29,23 +29,17 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+cgi = CGI.new
+
 html_init( nil )
 
-cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'gm-shun', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GM check
-if status < 9
+if user.status < 8
 	puts "GM error."
 	exit
 end
@@ -75,31 +69,31 @@ when 'on'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /\d\d\d\d\d/ =~ e
-			mariadb( "UPDATE #{$MYSQL_TB_EXT} SET shun1s='#{shun1s}', shun1e='#{shun1e}', shun2s='#{shun2s}', shun2e='#{shun2e}' WHERE FN='#{code}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_EXT} SET shun1s='#{shun1s}', shun1e='#{shun1e}', shun2s='#{shun2s}', shun2e='#{shun2e}' WHERE FN='#{code}';", false, @debug )
 		end
 	end
 when 'off'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /\d\d\d\d\d/ =~ e
-			mariadb( "UPDATE #{$MYSQL_TB_EXT} SET shun1s='0', shun1e='0', shun2s='0', shun2e='0' WHERE FN='#{code}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_EXT} SET shun1s='0', shun1e='0', shun2s='0', shun2e='0' WHERE FN='#{code}';", false, @debug )
 		end
 	end
 end
 
 food_name = ''
 unless code == ''
-	r = mariadb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false )
+	r = mdb( "SELECT name from #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false, @debug )
 	food_name = r.first['name']
 end
 
 list_html = ''
-r = mariadb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE shun1s>='1' and shun1s<='12';", false )
+r = mdb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE shun1s>='1' and shun1s<='12';", false, @debug )
 if r.size != 0
 	code_list = []
 	name_tag_list = []
 	r.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false )
+		rr = mdb( "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false, @debug )
 		code_list << rr.first['FN']
 		name_tag_list << "#{rr.first['name']}・#{rr.first['tag1']} #{rr.first['tag2']} #{rr.first['tag3']} #{rr.first['tag4']} #{rr.first['tag5']}"
 	end
@@ -108,7 +102,7 @@ if r.size != 0
 
 	c = 0
 	code_list.each do |e|
-		rr = mariadb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{e}';", false )
+		rr = mdb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{e}';", false, @debug )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-1'><button class='btn btn-sm btn-outline-danger' type='button' onclick=\"offShun_BWL1( '#{e}' )\">x</button></div>"
 		list_html << "<div class='col-2'>#{e}</div>"

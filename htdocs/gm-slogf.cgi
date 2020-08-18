@@ -1,7 +1,7 @@
 #! /usr/bin/ruby
 #encoding: utf-8
 #fct
-#Nutrition browser GM slogf viewer 0.00
+#Nutrition browser GM slogf viewer 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -19,6 +19,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'gm-slogf'
 
 
 #==============================================================================
@@ -31,22 +32,15 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'gm-slogf', language )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GM check
-if status < 8
+if user.status < 8
 	puts "GM error."
 	exit
 end
@@ -61,7 +55,7 @@ end
 
 
 if command == 'edit'
-#	mdb( "UPDATE #{$MYSQL_TB_USER} SET;", false )
+#	mdb( "UPDATE #{$MYSQL_TB_USER} SET;", false, @debug )
 end
 
 

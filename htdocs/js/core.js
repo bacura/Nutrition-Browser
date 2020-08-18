@@ -66,10 +66,9 @@ var changeMenu = function( user_status ){
 	switch( menu_status ){
 		case 0:
 			document.getElementById( "guild_menu" ).style.display = 'inline';
-			displayVideo( 'Guild menu');
-			if( user_status >= 5 ){
+			displayVideo( 'Guild menu' );
+			if( user_status >= 5 && user_status != 6 ){
 				menu_status = 1;
-
 			}else{
 				menu_status = 3;
 			}
@@ -77,10 +76,9 @@ var changeMenu = function( user_status ){
 		case 1:
 			document.getElementById( "guild_menu" ).style.display = 'none';
 			document.getElementById( "gs_menu" ).style.display = 'inline';
-			displayVideo( 'GS menu');
+			displayVideo( 'Guild Shun menu' );
 			if( user_status >= 8 ){
 				menu_status = 2;
-
 			}else{
 				menu_status = 3;
 			}
@@ -88,7 +86,7 @@ var changeMenu = function( user_status ){
 		case 2:
 			document.getElementById( "gs_menu" ).style.display = 'none';
 			document.getElementById( "gm_menu" ).style.display = 'inline';
-			displayVideo( 'GM menu');
+			displayVideo( 'GM menu' );
 			menu_status = 3;
 			break;
 		case 3:
@@ -100,6 +98,15 @@ var changeMenu = function( user_status ){
 			break;
 	}
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Account /////////////////////////////////////////////////////////////////////////
+// Changing Account
+var chageAccountM = function( mid ){
+	var login_mv = document.getElementById( "login_mv" ).value;
+	location.href = "login.cgi?mode=daughter" + "&login_mv=" + login_mv + "&mid=" + mid;
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////

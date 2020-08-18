@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////
-// 献立 ////////////////////////////////////////////////////////////////////////
+// Set menu ////////////////////////////////////////////////////////////////////////
 
 // 献立追加ボタンを押してmealにレシピを追加して、まな献立カウンタを増やす
 var addingMeal = function( recipe_code ){
@@ -27,14 +27,14 @@ var initMeal_BWL1 = function( com, code ){
 };
 
 // 献立クリアボタンを押してL1にリストを更新、そしてまな献立カウンターの更新
-var clear_meal_BWL1 = function( order, code ){
+var clear_meal = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'meal_all_check' ).checked ){
 			$.post( "meal.cgi", { command:'clear', order:'all', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 			displayVideo( '献立を初期化' );
 			closeBroseWindows( 1 );
 		} else{
-			displayVideo( 'チェックが必要' );
+			displayVideo( 'Check! (>_<)' );
 		}
 	} else{
 		$.post( "meal.cgi", { command:'clear', order:order, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
@@ -47,13 +47,13 @@ var clear_meal_BWL1 = function( order, code ){
 
 
 // 献立上ボタンを押してL1に献立リストを更新
-var upper_meal_BWL1 = function( order, code ){
+var upper_meal = function( order, code ){
 	$.post( "meal.cgi", { command:'upper', order:order, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 };
 
 
 // 献立下ボタンを押してL1に献立リストを更新
-var lower_meal_BWL1 = function( order, code ){
+var lower_meal = function( order, code ){
 	$.post( "meal.cgi", { command:'lower', order:order, code:code }, function( data ){ $( "#bw_level1" ).html( data );});
 };
 
@@ -61,7 +61,7 @@ var lower_meal_BWL1 = function( order, code ){
 // セットメニュー ////////////////////////////////////////////////////////////////////////
 
 // 献立編集のレシピボタンを押してL2にレシピを表示
-var menuEdit_BWL2 = function( com, code ){
+var menuEdit = function( com, code ){
 	closeBroseWindows( 2 );
 	$.post( "menu.cgi", { command:com, code:code }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
@@ -71,7 +71,7 @@ var menuEdit_BWL2 = function( com, code ){
 
 
 // メニュー編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
-var menuSave_BWL2 = function( code ){
+var menuSave = function( code ){
 	var menu_name = document.getElementById( "menu_name" ).value;
 	if( menu_name == '' ){
 		displayVideo( '献立名が必要' );
@@ -86,6 +86,7 @@ var menuSave_BWL2 = function( code ){
 		displayVideo( menu_name + 'を保存' );
 		var fx = function(){
 			$.post( "meal.cgi", { command:'init', code:code }, function( data ){ $( '#bw_level1' ).html( data );});
+			$.post( "menu-photo.cgi", { command:'form', code:code }, function( data ){ $( "#bw_level3" ).html( data );});
 		};
 		setTimeout( fx , 1000 );
 	}
@@ -93,7 +94,7 @@ var menuSave_BWL2 = function( code ){
 
 
 // メニュー編集の写真をアップロードして保存、そしてL2にリストを再表示
-var menu_photoSave_BWL3 = function( code ){
+var menu_photoSave = function( code ){
 	$form = $( '#photo_form' );
 	form_data = new FormData( $form[0] );
 	form_data.append( 'command', 'upload' );
@@ -119,9 +120,9 @@ var menu_photoSave_BWL3 = function( code ){
 };
 
 
-// メニュー編集の写真を削除、そしてL2にリストを再表示
-var menu_photoDel_BWL2 = function( code ){
-	$.post( "menu-photo.cgi", { command:'delete', code:code, slot:'photo' }, function( data ){ displayVideo( '写真を削除' );});
+// Deleting photo of set menu
+var menu_photoDel = function( code ){
+	$.post( "menu-photo.cgi", { command:'delete', code:code, slot:'photo' }, function( data ){ displayVideo( 'Deleted' );});
 	var fx = function(){
 		$.post( 'menu-photo.cgi', { command:'view', code:code }, function( data ){ $( '#bw_level2' ).html( data );});
 	};
@@ -130,10 +131,10 @@ var menu_photoDel_BWL2 = function( code ){
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-// 献立一覧 ////////////////////////////////////////////////////////////////////////
+// Set menu list ////////////////////////////////////////////////////////////////////////
 
 // まな板のレシピ読み込みボタンを押してL1に献立リストを表示
-var menuList_BWL1 = function( page ){
+var menuList = function( page ){
 	closeBroseWindows( 1 );
 	$.post( "menul.cgi", { command:'view', page:page }, function( data ){ $( "#bw_level1" ).html( data );});
 	document.getElementById( "bw_level1" ).style.display = 'block';
@@ -143,21 +144,30 @@ var menuList_BWL1 = function( page ){
 };
 
 
+// まな板のレシピ読み込みボタンを押してL1に献立リストを表示
+var menuList2 = function( page ){
+	var range = document.getElementById( "range" ).value;
+	var label = document.getElementById( "label" ).value;
+
+	$.post( "menul.cgi", { command:'view2', page:page, range:range, label:label }, function( data ){ $( "#bw_level1" ).html( data );});
+};
+
+
 // まな板の削除ボタンを押してレシピを削除し、L1にリストを再表示
-var menuDelete_BWL1 = function( code, menu_name ){
+var menuDelete = function( code, menu_name ){
 	if( document.getElementById( code ).checked ){
 		$.post( "menul.cgi", { command:'delete', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
-		displayVideo( menu_name + 'を削除' );
+		displayVideo( menu_name + 'deleted' );
 	} else{
-		displayVideo( 'チェックが必要' );
+		displayVideo( 'Check! (>_<)' );
 	}
 };
 
 
 // まな板のインポートボタンを押してレシピをインポートし、L1にリストを再表示
-var menuImport_BWL1 = function( code ){
+var menuImport = function( code ){
 	$.post( "menul.cgi", { command:'import', code:code }, function( data ){ $( "#bw_level1" ).html( data );});
-	displayVideo( 'レシピをインポート' );
+	displayVideo( code + 'imported' );
 };
 
 
@@ -165,7 +175,7 @@ var menuImport_BWL1 = function( code ){
 // 献立の成分計算 ////////////////////////////////////////////////////////////////////////
 
 // 献立の成分計算表ボタンを押してL2にリストを表示
-var menuCalcView_BWL2 = function( code ){
+var menuCalcView = function( code ){
 	closeBroseWindows( 2 );
 	$.post( "menu-calc.cgi", { command:'view', code:code }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
@@ -174,19 +184,11 @@ var menuCalcView_BWL2 = function( code ){
 };
 
 // 献立の成分計算表の再計算ボタンを押してL2にリストを表示
-var menuRecalcView_BWL2 = function( code ){
+var menuRecalcView = function( code ){
 	var palette = document.getElementById( "palette" ).value;
 	var frct_mode = document.getElementById( "frct_mode" ).value;
-	if( document.getElementById( "frct_accu" ).checked ){
-		var frct_accu = 1;
-	}else{
-		var frct_accu = 0;
-	}
-	if( document.getElementById( "ew_mode" ).checked ){
-		var ew_mode = 1;
-	}else{
-		var ew_mode = 0;
-	}
+	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
+	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
 	$.post( "menu-calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#bw_level2" ).html( data );});
 	displayVideo( '再計算' );
 };
@@ -196,22 +198,17 @@ var menuRecalcView_BWL2 = function( code ){
 var menuCalcExpand_NW = function( uname, code ){
 	var palette = document.getElementById( "palette" ).value;
 	var fraction = document.getElementById( "fraction" ).value;
-	var t = document.getElementById( "frct_accu" );
-	if( t.checked ){
-		var frct_accu = 0;
-	}else{
-		var frct_accu = 1;
-	}
+	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 0; }else{ var frct_accu = 1; }
 	url = 'menu-calcex.cgi?uname=' + uname + '&code=' + code + '&frct_mode=' + fraction + '&frct_accu=' + frct_accu + '&palette=' + palette;
 	window.open( url, 'calc-ex' );
 	displayVideo( '拡張ページ' );
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
-// 献立の単純解析 ////////////////////////////////////////////////////////////////////////
+// Analysis of menu ////////////////////////////////////////////////////////////////////////
 
-// 献立の単純解析ボタンを押してL2にリストを表示
-var menuAnalysis_BWL2 = function( code ){
+// Analysis of menu
+var menuAnalysis = function( code ){
 	closeBroseWindows( 2 );
 	$.post( "menu-analysis.cgi", { command:'', code:code }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
@@ -219,19 +216,11 @@ var menuAnalysis_BWL2 = function( code ){
 	bw_level2_status = 'block';
 };
 
-// 献立の単純解析ボタンを押して再解析しL2にリストを表示
-var menuReAnalysis_BWL2 = function( code ){
+// Reanalysis of menu
+var menuReAnalysis = function( code ){
 	var frct_mode = document.getElementById( "frct_mode" ).value;
-	if( document.getElementById( "frct_accu" ).checked ){
-		var frct_accu = 1;
-	}else{
-		var frct_accu = 0;
-	}
-	if( document.getElementById( "ew_mode" ).checked ){
-		var ew_mode = 1;
-	}else{
-		var ew_mode = 0;
-	}
+	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
+	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
 	$.post( "menu-analysis.cgi", { command:'', code:code, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#bw_level2" ).html( data );});
-	displayVideo( '再解析' );
+	displayVideo( 'Reanalysis' );
 };
