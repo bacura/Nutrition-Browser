@@ -67,10 +67,8 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">代謝的性別</label>
-					</div>
-					<select class="custom-select" id="sex">
+					<label class="input-group-text">代謝的性別</label>
+					<select class="form-select form-select-sm" id="sex">
 						<option value='0' #{sex_select[0]}>男性</option>
 						<option value='1' #{sex_select[1]}>女性</option>
 					</select>
@@ -79,28 +77,22 @@ html = <<-"HTML"
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>年齢</span>
-					</div>
+					<span class='input-group-text'>年齢</span>
 					<input type='number' class='form-control' id='age' min='0' value='#{age}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>身長(cm)</span>
-					</div>
+					<span class='input-group-text'>身長(cm)</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>体重(kg)</span>
-					</div>
-				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
+					<span class='input-group-text'>体重(kg)</span>
+					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
 		</div>
@@ -109,10 +101,8 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">活動係数</label>
-					</div>
-					<select class="custom-select" id="active">
+					<label class="input-group-text">活動係数</label>
+					<select class="form-select form-select-sm" id="active">
 						<option value='1.0'>寝たきり・意識低下 (1.0)</option>
 						<option value='1.1'>寝たきり・覚醒 (1.1)</option>
 						<option value='1.2'>ベッド上・安静 (1.2)</option>
@@ -129,10 +119,8 @@ html = <<-"HTML"
 			</div>
 			<div class='col-4'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">ストレス係数</label>
-					</div>
-					<select class="custom-select" id="stress">
+					<label class="input-group-text">ストレス係数</label>
+					<select class="form-select form-select-sm" id="stress">
 						<option value='0.6'>飢餓L2 (0.6)</option>
 						<option value='0.8'>飢餓L1 (0.8)</option>
 						<option value='1.0' SELECTED>なし (1.0)</option>
@@ -147,10 +135,8 @@ html = <<-"HTML"
 			</div>
 			<div class='col-2'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">体温(℃)</label>
-					</div>
-					<select class="custom-select" id="btm">
+					<label class="input-group-text">体温(℃)</label>
+					<select class="form-select form-select-sm" id="btm">
 						<option value='-0.05'>35.5</option>
 						<option value='0.00' SELECTED>36.0</option>
 						<option value='0.05'>36.5</option>

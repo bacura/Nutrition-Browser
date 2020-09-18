@@ -320,15 +320,13 @@ html = <<-"HTML"
 	<div class="row">
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="palette">#{lp[2]}</label>
-				</div>
-				<select class="form-control" id="palette" onchange="recalcView('#{code}')">
+				<label class="input-group-text" for="palette">#{lp[2]}</label>
+				<select class="form-select form-select-sm" id="palette" onchange="recalcView('#{code}')">
 					#{palette_html}
 				</select>
 			</div>
 		</div>
-		<div class='col-2' align='left'>
+		<div class='col-3' align='left'>
 			<div class="form-check form-check-inline">
     			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="recalcView('#{code}')">#{lp[3]}
 			</div>
@@ -336,25 +334,24 @@ html = <<-"HTML"
     			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="recalcView('#{code}')">#{lp[4]}
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="frct_mode">#{lp[5]}</label>
-				</div>
-				<select class="form-control" id="frct_mode" onchange="recalcView('#{code}')">
+				<label class="input-group-text" for="frct_mode">#{lp[5]}</label>
+				<select class="form-select form-select-sm" id="frct_mode" onchange="recalcView('#{code}')">
 					<option value="1"#{frct_select[0]}>#{lp[6]}</option>
 					<option value="2"#{frct_select[1]}>#{lp[7]}</option>
 					<option value="3"#{frct_select[2]}>#{lp[8]}</option>
 				</select>
+				<span onclick="recalcView('#{code}')">#{lp[9]}</span>&nbsp;
 			</div>
 		</div>
 
+		<div class='col-1'></div>
 		<div class='col-1'>
-			<button class="btn btn-outline-primary btn-sm" onclick="recalcView('#{code}')">#{lp[9]}</button>&nbsp;
+			<a href='plain-calc.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[11]}</a>
 		</div>
-		<div class='col-4'>
-			<a href='calcex.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' target='calc-ex'><button type='button' class='btn btn-primary btn-sm'>#{lp[10]}</button></a>&nbsp;
-			<a href='plain-calc.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-outline-primary btn-sm'>#{lp[11]}</button></a>
+		<div class='col-1'>
+			<a href='calcex.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' target='calc-ex'>#{lp[10]}</a>&nbsp;
 		</div>
     </div>
 </div>

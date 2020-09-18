@@ -79,10 +79,8 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-2'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">年齢</label>
-					</div>
-					<select class="custom-select" id="age">
+					<label class="input-group-text">年齢</label>
+					<select class="form-select form-select-sm" id="age">
 						<option value='0.3' #{age_select[0]}>3ヶ月-1歳</option>
 						<option value='1' #{age_select[1]}>満1歳</option>
 						<option value='1.6' #{age_select[2]}>1歳6ヶ月</option>
@@ -96,19 +94,15 @@ html = <<-"HTML"
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>身長(cm)</span>
-					</div>
+					<span class='input-group-text'>身長(cm)</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>体重(g)</span>
-					</div>
-				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
+					<span class='input-group-text'>体重(g)</span>
+					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
 		</div>

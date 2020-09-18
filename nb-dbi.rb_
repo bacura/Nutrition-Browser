@@ -33,9 +33,19 @@ require './nb-soul.rb'
 
 #【特定のデータベースにアクセスするユーザーの追加】
 #CREATE USER '****'@'localhost' IDENTIFIED BY '****';
-#GRANT ALL PRIVILEGES ON nutrition.* TO '****'@'localhost';
+#GRANT ALL PRIVILEGES ON nutrition.* TO 'nbu'@'localhost';
 #FLUSH PRIVILEGES;
 
+#### Ruby-R用データベース初期化（オプション）
+#管理者権限で
+#【データベースの作成】
+#CREATE DATABASE rr;
+
+#【特定のデータベースにアクセスするユーザーの追加】
+#CREATE USER '****'@'localhost';
+#GRANT ALL PRIVILEGES ON rr.* TO '****'@'localhost';
+#GRANT ALL PRIVILEGES ON rr.* TO '****'@'localhost';
+#FLUSH PRIVILEGES;
 
 #==============================================================================
 #DEFINITION
@@ -490,7 +500,7 @@ def cfg_init()
 	puts 'コンフィグテーブルの作成'
 
 	# テーブル作成
-	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(128), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8)), koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
+	query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), reciperr VARCHAR(128), menul VARCHAR(32), his_max SMALLINT(6), calcc VARCHAR(8)), koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED, schooll VARCHAR(512));'
 	$db.query( query )
 end
 

@@ -40,6 +40,10 @@ nav {
 }
 
 /* グローバル */
+a {
+  text-decoration: none;
+}
+
 .link_cursor{
   cursor: pointer;
 }

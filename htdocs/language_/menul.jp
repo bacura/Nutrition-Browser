@@ -1,5 +1,5 @@
-削除
-インポート
+<img src='bootstrap-dist/icons/trash.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/box-arrow-in-down.svg' style='height:1.2em; width:1.2em;'>
 献立一覧
 表示範囲
 ラベル
@@ -15,5 +15,5 @@
 常食
 前頁
 次頁
-暦+
+<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>
 保護

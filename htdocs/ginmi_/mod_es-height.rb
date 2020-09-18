@@ -30,10 +30,8 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">身体的性別</label>
-					</div>
-					<select class="custom-select" id="sex">
+					<label class="input-group-text">身体的性別</label>
+					<select class="form-select form-select-sm" id="sex">
 						<option value='0' #{sex_select[0]}>男性</option>
 						<option value='1' #{sex_select[1]}>女性</option>
 					</select>
@@ -42,18 +40,14 @@ html = <<-"HTML"
 
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>年齢</span>
-					</div>
+					<span class='input-group-text'>年齢</span>
 					<input type='number' class='form-control' id='age' min='18' value='#{age}'>
 				</div>
 			</div>
 
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>膝下高(cm)</span>
-					</div>
+					<span class='input-group-text'>膝下高(cm)</span>
 					<input type='text' class='form-control' id='knee_height' value='#{knee_height}'>
 				</div>
 			</div>

@@ -34,7 +34,7 @@ user.debug if @debug
 lp = user.language( script )
 
 #### Guild member check
-if user.status < 5
+if user.status < 5 && user.status != 6
 	puts "Guild member shun error."
 	exit
 end
@@ -48,51 +48,48 @@ if @debug
 end
 
 
-#### HTML school menu
-html_school_menu = "<table class='table table-hover table-sm'>"
-		html_school_menu << "<thead><tr>"
-		html_school_menu << "<th>#{lp[5]}</th>"
-		html_school_menu << "<th>#{lp[6]}</th>"
-		html_school_menu << "<th>#{lp[7]}</th>"
-		html_school_menu << "<th>#{lp[8]}</th>"
-		html_school_menu << "</tr></thead>"
-r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND label='#{label_school}';", false, @debug)
-menu_list = []
-r.each do |e|
-	html_school_menu << "<tr>"
-	html_school_menu << "<td>#{e['name']}</td>"
-	html_school_menu << "<td>#{e['memo']}</td>"
-
-	rr = mdb( "SELECT * FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}' AND code='#{e['code']}';", false, @debug)
-	if rr.first
-		html_school_menu << "<td>#{rr.first['course']}</td>"
-	else
-		html_school_menu << "<td>#{lp[9]}</td>"
+####
+label_set = []
+r = mdb( "SELECT schooll FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	a =  r.first['schooll'].split( ':' )
+	a.each do |e|
+		label_set << e if e != '' &&  e != nil
 	end
-	html_school_menu << '</tr>'
+end
 
+
+html_school_menu = ""
+#### HTML school menu
+html_school_menu << "<table class='table table-hover table-sm'>"
+html_school_menu << "<thead><tr>"
+html_school_menu << "<th>#{lp[2]}</th>"
+html_school_menu << "<th>#{lp[7]}</th>"
+html_school_menu << "<th>#{lp[5]}</th>"
+html_school_menu << "<th>#{lp[6]}</th>"
+html_school_menu << "<th>#{lp[8]}</th>"
+html_school_menu << "</tr></thead>"
+label_set.each do |e|
+	html_school_menu << "<tr><td>#{e}</td></tr>"
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND label='#{e}';", false, @debug)
+	r.each do |ee|
+		html_school_menu << "<tr>"
+		html_school_menu << "<td></td>"
+		html_school_menu << "<td>-</td>"
+		html_school_menu << "<td>#{ee['name']}</td>"
+		html_school_menu << "<td>#{ee['memo']}</td>"
+		html_school_menu << "<td></td>"
+		html_school_menu << "<td></td>"
+		html_school_menu << '</tr>'
+	end
 end
 html_school_menu << '</table>'
 
-
 html = <<-"HTML"
 <div class='container-fluid'>
-	<div class='row'>
-		<div class='col-3'><h5>#{lp[1]}</h5></div>
-	</div>
-	<div class='row'>
-		<div class='col-3'><h6>#{lp[2]}</h6></div>
-	</div>
-	<hr>
-	<div class='row'>
-		<div class='col-3'><h6>#{lp[3]}</h6></div>
-	</div>
-	<hr>
-	<div class='row'>
-		<div class='col-3'><h6>#{lp[4]}</h6></div>
-	</div>
-	#{html_school_menu}
 
+	#{html_school_menu}
+</div>
 HTML
 
 puts html

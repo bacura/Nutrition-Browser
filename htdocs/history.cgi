@@ -133,18 +133,12 @@ history.each do |e|
 	sub_components = "<td align='right'>#{kcal}</td><td align='right'>#{prot}</td><td align='right'>#{fat}</td><td align='right'>#{cho}</td><td align='right'>#{nacl_rq}</td>"
 
 	# 追加ボタンの設定
-	if user.name
-		add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"addingCB( '#{e}', 'weight' )\">#{lp[3]}</button>"
-	else
-		add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick='window.alert(\"#{lp[4]}\")'>#{lp[3]}</button>"
-	end
+	add_button = ""
+	add_button = "<span onclick=\"addingCB( '#{e}', 'weight' )\">#{lp[3]}</span>" if user.name
 
 	# Koyomi button
-	if user.status >= 2
-		koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e}', 1 )\">#{lp[35]}</button>"
-	else
-		koyomi_button = ''
-	end
+	koyomi_button = ''
+	koyomi_button = "<span onclick=\"addKoyomi_BWF( '#{e}', 1 )\">#{lp[35]}</span>" if user.status >= 2
 
 	# ソートボタン
 	if order_mode == 'recent'
@@ -191,10 +185,8 @@ html = <<-"HTML"
   		<div class="col-3"><h5>#{food_weight.to_f} g </h5></div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="fraction">#{lp[28]}</label>
-				</div>
-				<select class="form-control" id="fraction">
+				<label class="input-group-text" for="fraction">#{lp[28]}</label>
+				<select class="form-select form-select-sm" id="fraction">
 					<option value="1"#{frct_select[1]}>#{lp[29]}</option>
 					<option value="2"#{frct_select[2]}>#{lp[30]}</option>
 					<option value="3"#{frct_select[3]}>#{lp[31]}</option>
@@ -203,13 +195,9 @@ html = <<-"HTML"
 		</div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="weight">#{lp[32]}</label>
-				</div>
+				<label class="input-group-text" for="weight">#{lp[32]}</label>
 				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
-				<div class="input-group-append">
-					<button class="btn btn-outline-primary" onclick="history_changeWeight( '#{order_mode}', '#{food_no}', '#{sub_fg}' )">g</button>
-				</div>
+				<button class="btn btn-outline-primary" onclick="history_changeWeight( '#{order_mode}', '#{food_no}', '#{sub_fg}' )">g</button>
 			</div>
 		</div>
 	</div>

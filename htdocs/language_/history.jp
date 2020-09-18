@@ -1,6 +1,6 @@
 全部
 特殊
-板+
+<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>
 ログインしてください
 食品番号順
 最近使った順
@@ -32,4 +32,4 @@
 重量
 食品番号
 食品名
-暦+
+<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>

@@ -136,13 +136,9 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-12'>
 			<div class='input-group input-group-sm'>
-				<div class="input-group-prepend">
-					<label class="input-group-text">#{lp[2]}</label>
-				</div>
+				<label class="input-group-text">#{lp[2]}</label>
   				<input type="text" class="form-control" id="food_no" value="#{code}">
-  				<div class="input-group-prepend">
-					<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"initUnitc_BWLF()\">#{lp[3]}</button>
-        		</div>
+				<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"initUnitc_BWLF()\">#{lp[3]}</button>
 			</div>
 		</div>
 	</div><br>

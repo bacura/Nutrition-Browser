@@ -104,7 +104,7 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-10'><h5>#{lp[1]}: #{meal.name}</h5></div>
-		<div class='col-2'>
+		<div class='col-2' align='right'>
 			<input type='checkbox' id='meal_all_check'>&nbsp;
 			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_meal( 'all', '#{meal.code}' )\">#{lp[2]}</button>
 		</div>
@@ -112,7 +112,7 @@ html = <<-"HTML"
 	<hr>
 
 	<div class='row'>
-		<div class='col-2 meal_header'>#{lp[3]}</div>
+		<div class='col-1 meal_header'>#{lp[3]}</div>
 		<div class='col-1 meal_header'>#{lp[4]}</div>
 		<div class='col-4 meal_header'>#{lp[5]}</div>
 		<div class='col-2 meal_header'>#{lp[6]}</div>
@@ -123,10 +123,9 @@ HTML
 c = 0
 recipe_list.each do |e|
 	html << "	<div class='row'>"
- 	html << "		<div class='col-2'>"
- 	html << "			<button type='button' class='btn btn-outline-danger btn-sm del_button' onclick=\"clear_meal( '#{c}', '#{e.code}' )\">X</button>&nbsp;&nbsp;"
- 	html << "			<button type='button' class='btn btn-outline-primary btn-sm ctl_button' onclick=\"upper_meal( '#{c}', '#{e.code}' )\">↑</button>"
- 	html << "			<button type='button' class='btn btn-outline-primary btn-sm ctl_button' onclick=\"lower_meal( '#{c}', '#{e.code}' )\">↓</button>"
+ 	html << "		<div class='col-1'>"
+ 	html << "			<span onclick=\"upper_meal( '#{c}', '#{e.code}' )\">#{lp[10]}</span>"
+ 	html << "			<span onclick=\"lower_meal( '#{c}', '#{e.code}' )\">#{lp[11]}</span>"
  	html << "		</div>"
   	if e.fig1 == 0
   		html << "		<div class='col-1' align='center'>-</div>"
@@ -140,13 +139,10 @@ recipe_list.each do |e|
   	html << "		<div class='col-1'>"
   	html << "			#{$RECIPE_ROLE[e.role]}&nbsp;" unless e.role == 0
   	html << "		</div>"
-  	html << "		<div class='col-1'>"
+  	html << "		<div class='col-3'>"
   	html << "			#{$RECIPE_TECH[e.tech]}&nbsp;" unless e.tech == 0
   	html << "		</div>"
-  	html << "		<div class='col-1'>"
-  	html << "		</div>"
-  	html << "		<div class='col-1'>"
-  	html << "		</div>"
+  	html << "		<div class='col-1' align='right'><span onclick=\"clear_meal( '#{c}', '#{e.code}' )\">#{lp[12]}</span></div>"
 	html << "	</div>"
 	c += 1
 end

@@ -63,28 +63,22 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>体重(kg)</span>
-					</div>
-				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
+					<span class='input-group-text'>体重(kg)</span>
+					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>体脂肪率(%)</span>
-					</div>
-				<input type='text' class='form-control' id='body_fat' maxlength='6' value='#{body_fat}'>
+					<span class='input-group-text'>体脂肪率(%)</span>
+					<input type='text' class='form-control' id='body_fat' maxlength='6' value='#{body_fat}'>
 				</div>
 			</div>
 
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">期間</label>
-					</div>
-					<select class="custom-select" id="period">
+					<label class="input-group-text">期間</label>
+					<select class="form-select form-select-sm" id="period">
 						<option value='0'>オフ</option>
 						<option value='1' SELECTED>トレーニング</option>
 						<option value='2'>試合</option>
@@ -94,10 +88,8 @@ html = <<-"HTML"
 
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">種目</label>
-					</div>
-					<select class="custom-select" id="event">
+					<label class="input-group-text">種目</label>
+					<select class="form-select form-select-sm" id="event">
 						<option value='0'>持久系</option>
 						<option value='1'>筋力系</option>
 						<option value='2'>瞬発系</option>

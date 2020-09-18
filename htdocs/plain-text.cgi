@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,11 +18,24 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'plain-text'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+#### Language init
+def lp_init( script, language_set )
+  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
+  f.each do |line|
+    lp << line.chomp.force_encoding( 'UTF-8' )
+  end
+  f.close
+
+  return lp
+end
 
 
 #==============================================================================
@@ -32,6 +44,7 @@ require '/var/www/nb-soul.rb'
 puts "Content-type: text/text\n\n"
 
 lp = lp_init( 'plain-text', $DEFAULT_LP )
+
 
 #### GETデータの取得
 get_data = get_data()
@@ -45,7 +58,7 @@ food_weight = 100 if food_weight == nil || food_weight == ''
 food_weight = food_weight.to_i
 
 
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false, @debug )
 
 fct_opt = Hash.new
 # 全ての栄養素を取得

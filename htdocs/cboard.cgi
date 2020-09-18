@@ -559,13 +559,9 @@ db.close
 seasoning_html = ''
 r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100';", false, @debug )
 seasoning_html << "<div class='input-group input-group-sm'>"
-seasoning_html << "<div class='input-group-prepend'>"
 seasoning_html << "<label class='input-group-text' for='seasoning'>#{lp[6]}</label>"
-seasoning_html << "</div>"
-seasoning_html << "<select class='form-control form-control-sm' id='seasoning'>"
-r.each do |e|
-	seasoning_html << "<option value='#{e['code']}'>#{e['name']}</option>"
-end
+seasoning_html << "<select class='form-select' id='seasoning'>"
+r.each do |e| seasoning_html << "<option value='#{e['code']}'>#{e['name']}</option>" end
 seasoning_html << "</select>"
 seasoning_html << "<div class='input-group-append'>"
 seasoning_html << "<button type='button' class='btn btn-outline-primary btn-sm' onclick=\"seasoningAdd_BWL1( '#{code}' )\">#{lp[7]}</button>"
@@ -582,19 +578,8 @@ html_sasshi = "<button class='btn btn-outline-light btn-sm' type='button' onclic
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-8'>
+		<div class='col-10'>
 			<h5>#{lp[1]}: #{update}#{recipe_name}</h5>
-		</div>
-		<div class='col-2'>
-			<div class='input-group input-group-sm'>
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="dish_num">#{lp[2]}</label>
-				</div>
-  				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
-				<div class="input-group-append">
-	        		<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{lp[3]}</button>
-	        	</div>
-			</div>
 		</div>
 		<div class='col-2' align='center'>
 			<input type='checkbox' id='all_check'>&nbsp;
@@ -605,13 +590,9 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="food_add">#{lp[4]}</label>
-				</div>
+				<label class="input-group-text" for="food_add">#{lp[4]}</label>
   				<input type="text" class="form-control" maxlength='12' placeholder="00000 100" id="food_add">
-				<div class="input-group-append">
-	        		<button class='btn btn-outline-primary' type='button' onclick=\"recipeAdd_BWL1( '#{code}' )\">#{lp[5]}</button>
-        		</div>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"recipeAdd_BWL1( '#{code}' )\">#{lp[5]}</button>
 			</div>
 		</div>
 		<div class='col-5'>
@@ -622,40 +603,36 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
-				</div>
+				<label class="input-group-text" for="dish_num">#{lp[2]}</label>
+  				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{lp[3]}</button>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
   				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl}">
-				<div class="input-group-append">
-	        		<button class='btn btn-outline-primary' type='button' onclick=\"weightAdj( '#{code}' )\">#{lp[27]}</button>
-	        	</div>
+	        	<span onclick=\"weightAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
-				</div>
+				<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
   				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl}">
-				<div class="input-group-append">
-	        		<button class='btn btn-outline-primary' type='button' onclick=\"energyAdj( '#{code}' )\">#{lp[27]}</button>
-	        	</div>
+	        	<span onclick=\"energyAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="energy_ctrl">#{lp[29]}</label>
-				</div>
+				<label class="input-group-text" for="energy_ctrl">#{lp[29]}</label>
   				<input type="number" min='0' class="form-control" id="loss_adj" value="0">
-				<div class="input-group-append">
-	        		<button class='btn btn-outline-primary' type='button' onclick=\"lossAdj( '#{code}' )\">#{lp[27]}</button>
-	        	</div>
+	        	<span onclick=\"lossAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-1'>
+		<div class='col-1'></div>
+		<div class='col-1' align='right'>
 	        #{html_sasshi}
 		</div>
 		<div class='col-2'>
@@ -666,8 +643,7 @@ html = <<-"HTML"
 	<hr>
 
 <div class='row cb_header'>
-	<div class='col-2'>#{lp[9]}</div>
-	<div class='col-1'><input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[10]}</div>
+	<div class='col-2'>#{lp[9]}&nbsp;&nbsp;&nbsp;<input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[10]}</div>
 	<div class='col-3'>#{lp[11]}</div>
 	<div class='col-3'>
   		<div class='row'>
@@ -676,7 +652,7 @@ html = <<-"HTML"
 			<div class='col-3'>#{lp[14]}</div>
 		</div>
 	</div>
-	<div class='col-3'>
+	<div class='col-4'>
   		<div class='row'>
 			<div class='col-3'>#{lp[15]}</div>
 			<div class='col-4'>#{lp[16]}</div>
@@ -747,41 +723,39 @@ food_list.each do |e|
 
 	html << "<div class='row'>"
  	html << "	<div class='col-2'>"
- 	html << " 		<button type='button' class='btn btn-outline-danger btn-sm del_button' onclick=\"clear_BWL1( '#{c}', '#{code}' )\">X</button>&nbsp;&nbsp;"
- 	html << "		<button type='button' class='btn btn-outline-primary btn-sm ctl_button' onclick=\"upper_BWL1( '#{c}', '#{code}' )\">↑</button>"
- 	html << "		<button type='button' class='btn btn-outline-primary btn-sm ctl_button' onclick=\"lower_BWL1( '#{c}', '#{code}' )\">↓</button>"
- 	html << "	</div>"
-
+ 	html << "		<span onclick=\"upper_BWL1( '#{c}', '#{code}' )\">#{lp[31]}</span>"
+ 	html << "		<span onclick=\"lower_BWL1( '#{c}', '#{code}' )\">#{lp[32]}</span>"
  	if e.no == '-'
-		html << "<div class='col-10'><hr></div>"
+		html << "</div><div class='col-10'><hr></div>"
  	elsif e.no == '+'
-		html << "<div class='col-3 text-secondary cb_food_label'>#{e.init}</div>"
+		html << "</div><div class='col-3 text-secondary cb_food_label'>#{e.init}</div>"
 		html << "<div class='col-7'><hr></div>"
   	else
 
-	  	html << "	<div class='col-1 fct_value'><input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>#{e.no}</div>"
+	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>&nbsp;#{e.no}</div>"
   		html << "	<div class='col-3 fct_value' onclick=\"cb_summonBWL5( '#{food_key}', '#{e.weight}', '#{e.no}' )\">#{food_tag[c]}</div>"
   		html << "	<div class='col-3'>"
-  		html << "		<div class='form-group form-row cb_form'>"
+  		html << "		<div class='row cb_form'>"
   		html << "			<div class='col-6'><input type='text'  maxlength='8' class='form-control form-control-sm' id='food_init_#{c}' value='#{e.init}' onchange=\"initCB_SS( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
   		html << "			<div align='right' class='col-3 fct_value'>#{e.weight.to_f}</div>"
   		html << "			<div align='right' class='col-3 fct_value'>#{e.ew.to_f}</div>"
 		html << "		</div>"
 		html << "	</div>"
-  		html << "	<div class='col-3'>"
-  		html << "		<div class='form-group form-row cb_form'>"
+  		html << "	<div class='col-4'>"
+  		html << "		<div class='row cb_form'>"
   		if /\// =~ e.unitv.to_s
   			html << "			<div class='col-3'><input type='text' maxlength='5' class='form-control form-control-sm' id='unitv_#{c}' value='#{e.unitv}' onchange=\"weightCB_BWL1( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
   		else
   			html << "			<div class='col-3'><input type='text' maxlength='5' class='form-control form-control-sm' id='unitv_#{c}' value='#{e.unitv.to_f}' onchange=\"weightCB_BWL1( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
   		end
-  		html << "			<div class='col-4'><select class='form-control form-control-sm' id='unit_#{c}' onchange=\"weightCB_BWL1( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\">"
+  		html << "			<div class='col-4'><select class='form-select form-select-sm' id='unit_#{c}' onchange=\"weightCB_BWL1( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\">"
   		unit_set.size.times do |cc|
   			html << "				<option value='#{unit_set[cc]}' #{unit_select[cc]}>#{$UNIT[unit_set[cc]]}</option>"
   		end
 		html << "				</select>"
 		html << "			</div>"
-  		html << "			<div class='col-3'><input type='text' maxlength='3' class='form-control form-control-sm' id='food_rr_#{c}' value='#{e.rr}' onchange=\"weightCB_BWL1( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
+  		html << "			<div class='col-2'><input type='text' maxlength='3' class='form-control form-control-sm' id='food_rr_#{c}' value='#{e.rr}' onchange=\"weightCB_BWL1( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
+  		html << "			<div class='col-1'><span onclick=\"clear_BWL1( '#{c}', '#{code}' )\">#{lp[33]}</span></div>"
 		html << "		</div>"
 		html << "	</div>"
 	end

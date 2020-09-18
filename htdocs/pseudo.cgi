@@ -335,9 +335,7 @@ html = <<-"HTML"
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="food_group">#{lp[4]}</label>
-				</div>
+				<label class="input-group-text" for="food_group">#{lp[4]}</label>
 				<select class="form-control" id="food_group">
 					#{food_group_option}
 				</select>
@@ -345,9 +343,7 @@ html = <<-"HTML"
 		</div>
 		<div class="col-2">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="food_weight">#{lp[5]}</label>
-				</div>
+				<label class="input-group-text" for="food_weight">#{lp[5]}</label>
 				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}">&nbsp;g
 			</div>
 

@@ -465,7 +465,7 @@ end
 ####
 select_html = ''
 select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='yyyy' class='custom-select' onChange=\"changeKoyomi( '', '' )\">"
+select_html << "<select id='yyyy' class='form-select form-select-sm' onChange=\"changeKoyomi( '', '' )\">"
 calendar.yyyyf.upto( calendar_td.yyyy + 1 ) do |c|
 	if c == calendar.yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -474,11 +474,9 @@ calendar.yyyyf.upto( calendar_td.yyyy + 1 ) do |c|
 	end
 end
 select_html << "</select>"
-select_html << "<div class='input-group-append'><label class='input-group-text'>#{lp[9]}</label></div>"
-select_html << "</div>"
+select_html << "<label class='input-group-text'>#{lp[9]}</label>"
 
-select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=\"changeKoyomi( '', '' )\">"
+select_html << "<select id='mm' class='form-select form-select-sm' onChange=\"changeKoyomi( '', '' )\">"
 1.upto( 12 ) do |c|
 	if c == calendar.mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -487,7 +485,7 @@ select_html << "<select id='mm' class='custom-select custom-select-sm' onChange=
 	end
 end
 select_html << "</select>"
-select_html << "<div class='input-group-append'><label class='input-group-text'>#{lp[10]}</label></div>"
+select_html << "<label class='input-group-text'>#{lp[10]}</label>"
 select_html << "</div>"
 
 

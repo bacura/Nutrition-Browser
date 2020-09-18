@@ -89,13 +89,9 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="weight">#{lp[2]}</label>
-				</div>
+				<label class="input-group-text" for="weight">#{lp[2]}</label>
 				<input type="text" maxlength="5" class="form-control" id="food_no" value="#{food_no}" onchange="onGYCV_BWL1()">
-				<div class="input-group-append">
-					<button class="btn btn-outline-primary" type="button" onclick="onGYCV_BWL1()">#{lp[3]}</button>
-				</div>
+				<button class="btn btn-outline-primary" type="button" onclick="onGYCV_BWL1()">#{lp[3]}</button>
 			</div>
 		</div>
 	</div>

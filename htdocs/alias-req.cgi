@@ -18,7 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
-
+script = 'alias-req'
 
 #==============================================================================
 #DEFINITION
@@ -28,17 +28,13 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 # Main
 #==============================================================================
+html_init( nil )
+
 cgi = CGI.new
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
-html_init( nil ) if @debug
-
-uname, uid, status = login_check( cgi )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "<hr>"
-end
 
 #### Geeting POST
 food_no = cgi['food_no']
@@ -51,5 +47,5 @@ end
 
 #### Update alias
 if request_alias != '' && request_alias != nil
-	mariadb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET code='#{food_no}', user='#{uname}', words='#{request_alias}', date='#{$DATETIME}';", false )
+	mdb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET code='#{food_no}', user='#{user.name}', words='#{request_alias}', date='#{$DATETIME}';", false, @debug )
 end

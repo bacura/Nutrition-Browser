@@ -58,19 +58,15 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>身長(m)</span>
-					</div>
+					<span class='input-group-text'>身長(m)</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>体重(kg)</span>
-					</div>
-				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
+					<span class='input-group-text'>体重(kg)</span>
+					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
 		</div>

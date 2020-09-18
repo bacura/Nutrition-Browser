@@ -1,14 +1,14 @@
 検索条件にあるレシピは見つかりませんでした
-公
-護
-仮
+<img src='bootstrap-dist/icons/globe.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/cone-striped.svg' style='height:1.2em; width:1.2em;'>
 枝
 根
 　
-膳+
-印
-削除
-輸入
+<img src='bootstrap-dist/icons/journal-plus.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/printer.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/trash.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/box-arrow-in-down.svg' style='height:1.2em; width:1.2em;'>
 レシピ一覧
 絞り込み
 条件クリア
@@ -17,8 +17,8 @@
 ステータス
 操作
 #
-亜
-暦+
+<img src='bootstrap-dist/icons/subtract.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>
 表示範囲
 全て
 下書き
@@ -31,5 +31,5 @@
 調理区分
 目安時間(分)
 目安費用(円)
-前頁
-次頁
+<img src='bootstrap-dist/icons/chevron-left.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/chevron-right.svg' style='height:1.2em; width:1.2em;'>

@@ -27,7 +27,7 @@ def config_module( cgi, user, lp )
      	<div class='row'>
 			<div class='col-2'>#{his_max} #{lp[31]}</div>
 			<div class='col-1' align='right'>200</div>
-			<div class='col-8'>
+			<div class='col-2'>
 				<input type="range" class="custom-range" min="200" max="1000" step="100" value='#{his_max}' id="his_max" onclick="history_cfg( 'max' )">
 			</div>
 			<div class='col-1'>1000</div>

@@ -21,18 +21,14 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>上腕周囲長(cm)</span>
-					</div>
+					<span class='input-group-text'>上腕周囲長(cm)</span>
 					<input type='text' class='form-control' id='ac' maxlength='6' value='#{ac}'>
 				</div>
 			</div>
 
 			<div class='col-4'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>上腕三頭筋皮下脂肪厚(cm)</span>
-					</div>
+					<span class='input-group-text'>上腕三頭筋皮下脂肪厚(cm)</span>
 					<input type='text' class='form-control' id='tsf' maxlength='6' value='#{tsf}'>
 				</div>
 			</div>

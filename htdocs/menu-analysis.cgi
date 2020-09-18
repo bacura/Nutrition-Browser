@@ -384,10 +384,8 @@ html = <<-"HTML"
 		</div>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="">#{lp[4]}</label>
-				</div>
-				<select class="form-control" id="frct_mode" onchange="menuReAnalysis('#{code}')">
+				<label class="input-group-text" for="">#{lp[4]}</label>
+				<select class="form-select" id="frct_mode" onchange="menuReAnalysis('#{code}')">
 					<option value="1"#{selected( 1, frct_mode )}>#{lp[5]}</option>
 					<option value="2"#{selected( 2, frct_mode )}>#{lp[6]}</option>
 					<option value="3"#{selected( 3, frct_mode )}>#{lp[7]}</option>
@@ -395,9 +393,9 @@ html = <<-"HTML"
 			</div>
 		</div>
 
-		<div class='col-3'></div>
-		<div class='col-2'>
-			<a href='plain-menu-analysis.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[8]}</button></a>
+		<div class='col-4'></div>
+		<div class='col-1'>
+			<a href='plain-menu-analysis.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[8]}</a>
 		</div>
     </div>
 </div>

@@ -1,10 +1,10 @@
-まな板
-お膳
+<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>&nbsp;まな板
+<img src='bootstrap-dist/icons/journal.svg' style='height:1.2em; width:1.2em;'>&nbsp;お膳
 0.特 殊
-履 歴
+<img src='bootstrap-dist/icons/inbox-fill.svg' style='height:1.2em; width:1.2em;'>&nbsp;履 歴
 レシピ帳
 献立帳
-設 定
+<img src='bootstrap-dist/icons/gear-fill.svg' style='height:1.2em; width:1.2em;'>
 ログインが必要
 ギルドメンバー専用
 1.穀 類
@@ -25,7 +25,7 @@
 16.し好飲料類
 17.調味料・香辛料類
 18.調理加工食品類
-本 棚
+<img src='bootstrap-dist/icons/book.svg' style='height:1.2em; width:1.2em;'>
 単位登録
 色登録
 アレルギー登録
@@ -47,3 +47,6 @@
 料理教室
 娘アカウント管理
 カスタム表示
+統計(R)
+<img src='bootstrap-dist/icons/question-circle.svg' style='height:3em; width:3em;'>
+<img src='bootstrap-dist/icons/search.svg' style='height:1.5em; width:1.5em;'>

@@ -11,7 +11,6 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,6 +18,7 @@ require '/var/www/nb-soul.rb'
 # STATIC
 #==============================================================================
 @debug = false
+script = 'detail'
 
 
 #==============================================================================
@@ -52,7 +52,7 @@ def sid_skip( sid, dir )
 			sid = sid.to_i - 1
 			sid = 2198 if sid < 1
 		end
-		r = mariadb( "SELECT FN, SID FROM #{$MYSQL_TB_TAG} WHERE SID='#{sid}';", false )
+		r = mdb( "SELECT FN, SID FROM #{$MYSQL_TB_TAG} WHERE SID='#{sid}';", false, @debug )
 		c += 1
 		break if c > 10
 	end
@@ -64,20 +64,13 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+
 html_init( nil )
 
 cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-status = 0 if status == nil
-lp = lp_init( 'detail', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### GETデータの取得
@@ -112,35 +105,32 @@ food_no = sid_skip( sid, dir ) if sid
 
 #### 全ての栄養素を取得
 fct_opt = Hash.new
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false, @debug )
 sid = r.first['SID']
 food_no = r.first['FN']
 $FCT_ITEM.each do |e| fct_opt[e] = num_opt( r.first[e], food_weight, frct_mode, $FCT_FRCT[e] ) end
 
 
 #### 追加ボタンの生成
-if uname
-	add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"addingCB( '#{food_no}', 'detail_weight' )\">#{lp[1]}</button>"
-else
-	add_button = "<button type='button' class='btn btn btn-dark btn-sm text-secondary' onclick=\"displayVideo( '#{lp[2]}' )\">#{lp[1]}</button>"
-end
+add_button = ''
+add_button = "<spqn onclick=\"addingCB( '#{food_no}', 'detail_weight' )\">#{lp[1]}</span>" if user.name
 
 
 #### 検索キーの生成
 search_key = ''
-r = mariadb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}';", false )
+r = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}';", false, @debug )
 food_name = r.first['name']
 
-r = mariadb( "SELECT alias FROM #{$MYSQL_TB_DIC} WHERE org_name='#{food_name}';", false )
+r = mdb( "SELECT alias FROM #{$MYSQL_TB_DIC} WHERE org_name='#{food_name}';", false, @debug )
 r.each do |e| search_key << "#{e['alias']}," end
 search_key.chop!
 
 
 #### 別名リクエストボタンの生成
 alias_button = ''
-if status.to_i > 0
+if user.status > 0
 	alias_button << '<div class="input-group input-group-sm">'
-	alias_button << "<div class='input-group-prepend'><label class='input-group-text' for='alias'>#{lp[3]}</label></div>"
+	alias_button << "<label class='input-group-text' for='alias'>#{lp[3]}</label>"
 	alias_button <<	'<input type="text" class="form-control" id="alias">'
 	alias_button <<	"<div class='input-group-prepend'><button class='btn btn-outline-primary' type='button' onclick=\"aliasRequest( '#{food_no}' )\">#{lp[4]}</button></div>"
 	alias_button << '</div>'
@@ -151,34 +141,40 @@ end
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
-		<div class="col-2"><h6>#{lp[5]}：#{food_no}<br>#{lp[6]}：#{sid}</h6></div>
-		<div class="col-2">
-			<button class="btn btn-outline-primary btn-sm" type="button" onclick="detailPage( 'rev', '#{sid}' )">#{lp[7]}</button>
-			<button class="btn btn-outline-primary btn-sm" type="button" onclick="detailPage( 'fwd', '#{sid}' )">#{lp[8]}</button>
+		<div class="col-2" align='center'>
+			<span class='h6'>#{lp[5]}：#{food_no}<br>
+			<span onclick="detailPage( 'rev', '#{sid}' )">#{lp[7]}</span>
+			#{lp[6]}：#{sid}</span>
+			<span onclick="detailPage( 'fwd', '#{sid}' )">#{lp[8]}</span>
 		</div>
 	  	<div class="col-2"><h5>#{food_weight.to_f} g</h5></div>
-		<div class="col-3">
+		<div class="col-2">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="detail_fraction">#{lp[9]}</label>
-				</div>
-				<select class="form-control" id="detail_fraction" onchange="detailWeight( '#{food_no}' )">
+				<label class="input-group-text" for="detail_fraction">#{lp[9]}</label>
+				<select class="form-select form-select-sm" id="detail_fraction" onchange="detailWeight( '#{food_no}' )">
 					<option value="1"#{frct_select[1]}>#{lp[10]}</option>
 					<option value="2"#{frct_select[2]}>#{lp[11]}</option>
 					<option value="3"#{frct_select[3]}>#{lp[12]}</option>
 				</select>
 			</div>
 		</div>
-		<div class="col-3">
+		<div class="col-2">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="weight">#{lp[13]}</label>
-				</div>
+				<label class="input-group-text" for="weight">#{lp[13]}</label>
 				<input type="number" min='0' class="form-control" id="detail_weight" value="#{food_weight.to_f}" onchange="detailWeight( '#{food_no}' )">
-				<div class="input-group-append">
-					<button class="btn btn-outline-primary" type="button" onclick="detailWeight( '#{food_no}' )">g</button>
-				</div>
+				<button class="btn btn-outline-primary" type="button" onclick="detailWeight( '#{food_no}' )">g</button>
 			</div>
+		</div>
+		<div class="col-1">
+		</div>
+		<div class="col-1">
+			#{add_button}
+		</div>
+		<div class="col-1">
+			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}' download='detail_#{fct_opt['FN']}.txt'><span>#{lp[14]}</span></a>
+		</div>
+		<div class="col-1" align='right'>
+			<span onclick='detailReturn()'>#{lp[15]}</span>
 		</div>
 	</div>
 </div>
@@ -187,13 +183,6 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col-7"><h5 onclick='detailReturn()'>#{fct_opt['Tagnames']}</h5></div>
-		<div class="col-3" align='right'>
-			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}' download='detail_#{fct_opt['FN']}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[14]}</button></a>
-			#{add_button}
-		</div>
-		<div class="col-2" align='right'>
-			<button class='btn btn-success' onclick='detailReturn()'>#{lp[15]}</button>
-		</div>
 	</div>
 	<br>
 
@@ -318,4 +307,4 @@ puts html
 
 
 #### 登録ユーザーで直接参照の場合は履歴に追加
-add_his( uname, food_no ) unless sid_flag || status.to_i == 0
+add_his( user.name, food_no ) unless sid_flag || user.status == 0

@@ -18,6 +18,7 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'search-food'
 
 
 #==============================================================================
@@ -27,9 +28,9 @@ require '/var/www/nb-soul.rb'
 #### getting gycv result
 def gycv_result()
 	h = Hash.new
-	r = mariadb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE gycv='1';", false )
+	r = mdb( "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE gycv='1';", false, @debug )
 	r.each do |e|
-		rr = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false )
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false, @debug )
 		h["#{rr.first['FG']}:#{rr.first['class1']}:#{rr.first['class2']}:#{rr.first['class3']}:#{rr.first['name']}"] = 1
 	end
 
@@ -49,7 +50,7 @@ def shun_result( words )
 	end
 
 	h = Hash.new
-	r = mariadb( "SELECT FN, shun1s, shun1e, shun2s, shun2e FROM #{$MYSQL_TB_EXT} WHERE ( shun1s IS NOT NULL ) AND shun1s!=0;", false )
+	r = mdb( "SELECT FN, shun1s, shun1e, shun2s, shun2e FROM #{$MYSQL_TB_EXT} WHERE ( shun1s IS NOT NULL ) AND shun1s!=0;", false, @debug )
 	r.each do |e|
 		flag = false
 		sm_ = sm
@@ -73,7 +74,7 @@ def shun_result( words )
 		end
 
 		if flag
-			rr = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false )
+			rr = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e['FN']}';", false, @debug )
 			h["#{rr.first['FG']}:#{rr.first['class1']}:#{rr.first['class2']}:#{rr.first['class3']}:#{rr.first['name']}"] = 1
 		end
 	end
@@ -87,13 +88,10 @@ end
 html_init( nil )
 
 cgi = CGI.new
-uname, uid, status = login_check( cgi )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+
 
 #### POSTデータの取得
 words = cgi['words']
@@ -126,10 +124,10 @@ else
 	result_keys = []
 	query_word.each do |e|
 		# 記録
-		mariadb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET user='#{uname}', words='#{e}', date='#{$DATETIME}';", false )
+		mdb( "INSERT INTO #{$MYSQL_TB_SLOGF} SET user='#{user.name}', words='#{e}', date='#{$DATETIME}';", false, @debug )
 
 		# 変換
-		r = mariadb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false, @debug )
 		true_query << r.first['org_name'] if r.first
 	end
 
@@ -138,19 +136,19 @@ else
 	if true_query.size > 0
 		true_query.each do |e|
 			# 名前で検索
-			r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE name='#{e}';", false )
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE name='#{e}';", false, @debug )
 			r.each do |ee| result_keys << "#{ee['FG']}:#{ee['class1']}:#{ee['class2']}:#{ee['class3']}:#{ee['name']}" end
 
 			# クラス3で検索
-			r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class3='#{e}';", false )
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class3='#{e}';", false, @debug )
 			r.each do |ee| result_keys << "#{ee['FG']}:#{ee['class1']}:#{ee['class2']}:#{ee['class3']}:#{ee['name']}" end
 
 			# クラス2で検索
-			r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class2='#{e}';", false )
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class2='#{e}';", false, @debug )
 			r.each do |ee| result_keys << "#{ee['FG']}:#{ee['class1']}:#{ee['class2']}:#{ee['class3']}:#{ee['name']}" end
 
 			# クラス1で検索
-			r = mariadb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class1='#{e}';", false )
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class1='#{e}';", false, @debug )
 			r.each do |ee| result_keys << "#{ee['FG']}:#{ee['class1']}:#{ee['class2']}:#{ee['class3']}:#{ee['name']}" end
 
 			# 食品キーのカウント
@@ -161,12 +159,12 @@ else
 			end
 
 			# 検索結果コードの記録
-			mariadb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='#{result_keys.size}' WHERE user='#{uname}' AND words='#{query_word[words_count]}' AND date='#{$DATETIME}';", false )
+			mdb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='#{result_keys.size}' WHERE user='#{user.name}' AND words='#{query_word[words_count]}' AND date='#{$DATETIME}';", false, @debug )
 			words_count += 1
 		end
 	else
 		# 検索結果無しコードの記録
-		query_word.each do |e| mariadb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='0' WHERE user='#{uname}' AND words='#{e}' AND date='#{$DATETIME}';", false ) end
+		query_word.each do |e| mdb( "UPDATE #{$MYSQL_TB_SLOGF} SET code='0' WHERE user='#{user.name}' AND words='#{e}' AND date='#{$DATETIME}';", false, @debug ) end
 	end
 end
 

@@ -262,8 +262,8 @@ end
 select_html = ''
 onchange = "onChange=\"changeKoyomi_BWF( '#{code}', '#{origin}' )\""
 onchange = "onChange=\"modifychangeKoyomi( '#{code}', '#{origin}' )\"" if command == 'modify'
-
-select_html << "<select id='yyyy_add' class='custom-select custom-select-sm' #{onchange}>"
+select_html << "<div class='input-group mb-3'>"
+select_html << "<select id='yyyy_add' class='form-select form-select-sm' #{onchange}>"
 calendar.yyyyf.upto( 2020 ) do |c|
 	if c == calendar.yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -273,7 +273,7 @@ calendar.yyyyf.upto( 2020 ) do |c|
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='mm_add' class='custom-select custom-select-sm' #{onchange}>"
+select_html << "<select id='mm_add' class='form-select form-select-sm' #{onchange}>"
 1.upto( 12 ) do |c|
 	if c == calendar.mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -283,7 +283,7 @@ select_html << "<select id='mm_add' class='custom-select custom-select-sm' #{onc
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='dd' class='custom-select custom-select-sm'>"
+select_html << "<select id='dd' class='form-select form-select-sm'>"
 1.upto( calendar.ddl ) do |c|
 	if c == calendar.dd
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -294,7 +294,7 @@ end
 select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
 
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
-select_html << "<select id='tdiv' class='custom-select custom-select-sm'>"
+select_html << "<select id='tdiv' class='form-select form-select-sm'>"
 0.upto( 3 ) do |c|
 	if tdiv == c
 		select_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
@@ -304,7 +304,7 @@ select_html << "<select id='tdiv' class='custom-select custom-select-sm'>"
 end
 select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
 
-select_html << "<select id='hh' class='custom-select custom-select-sm'>"
+select_html << "<select id='hh' class='form-select form-select-sm'>"
 select_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if c == hh
@@ -315,6 +315,7 @@ select_html << "<option value='99'>時刻</option>"
 end
 select_html << "</select>"
 #select_html << "<button class='btn btn-sm btn-outline-success' type='button' onclick=\"nowKoyomi()\">#{lp[11]}</button>"
+select_html << "</div>"
 
 
 #### Rate HTML
@@ -324,20 +325,16 @@ if command != 'move_fix'
 	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 	rate_html = ''
 	rate_html << "<div class='input-group input-group-sm'>"
-	rate_html << "	<div class='input-group-prepend'>"
-	rate_html << "		<span class='input-group-text'>#{lp[22]}</span>"
-	rate_html << "	</div>"
+	rate_html << "	<span class='input-group-text'>#{lp[22]}</span>"
 	rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
-	rate_html << "  <div class='input-group-append'>"
-	rate_html << "		<select id='eu' class='custom-select custom-select-sm'>"
+	rate_html << "	<select id='eu' class='form-select form-select-sm'>"
 	if /^[UP]?\d{5}/ =~ code
 		rate_html << unit_select_html( code, eu )
 	else
-		rate_html << "			<option value='99'>%</option>"
-		rate_html << "			<option value='0' #{rate_selected}>g</option>"
+		rate_html << "		<option value='99'>%</option>"
+		rate_html << "		<option value='0' #{rate_selected}>g</option>"
 	end
-	rate_html << "		</select>"
-	rate_html << "	</div>"
+	rate_html << "	</select>"
 	rate_html << "</div>"
 else
 	rate_html = '<input type="hidden" id="ev" value="100">'

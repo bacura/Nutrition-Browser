@@ -261,7 +261,7 @@ check_draft = 'CHECKED' if recipe.draft == 1
 
 # HTML SELECT Recipe type
 html_type = lp[1]
-html_type << '<select class="form-control form-control-sm" id="type">'
+html_type << '<select class="form-select form-select-sm" id="type">'
 $RECIPE_TYPE.size.times do |c|
 	if recipe.type == c
 		html_type << "<option value='#{c}' SELECTED>#{$RECIPE_TYPE[c]}</option>"
@@ -274,7 +274,7 @@ html_type << '</select>'
 
 # HTML SELECT Recipe role
 html_role = lp[2]
-html_role << '<select class="form-control form-control-sm" id="role">'
+html_role << '<select class="form-select form-select-sm" id="role">'
 $RECIPE_ROLE.size.times do |c|
 	if recipe.role == c
 		html_role << "<option value='#{c}' SELECTED>#{$RECIPE_ROLE[c]}</option>"
@@ -292,7 +292,7 @@ html_role << '</select>'
 
 # HTML SELECT Recipe technique
 html_tech = lp[3]
-html_tech << '<select class="form-control form-control-sm" id="tech">'
+html_tech << '<select class="form-select form-select-sm" id="tech">'
 $RECIPE_TECH.size.times do |c|
 	if recipe.tech == c
 		html_tech << "<option value='#{c}' SELECTED>#{$RECIPE_TECH[c]}</option>"
@@ -305,7 +305,7 @@ html_tech << '</select>'
 
 # HTML SELECT Recipe time
 html_time = lp[4]
-html_time << '<select class="form-control form-control-sm" id="time">'
+html_time << '<select class="form-select form-select-sm" id="time">'
 $RECIPE_TIME.size.times do |c|
 	if recipe.time == c
 		html_time << "<option value='#{c}' SELECTED>#{$RECIPE_TIME[c]}</option>"
@@ -318,7 +318,7 @@ html_time << '</select>'
 
 # HTML SELECT Recipe cost
 html_cost = lp[5]
-html_cost << '<select class="form-control form-control-sm" id="cost">'
+html_cost << '<select class="form-select form-select-sm" id="cost">'
 $RECIPE_COST.size.times do |c|
 	if recipe.cost == c
 		html_cost << "<option value='#{c}' SELECTED>#{$RECIPE_COST[c]}</option>"
@@ -355,13 +355,9 @@ html = <<-"HTML"
     	</div>
   		<div class="col-5">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="recipe_name">#{lp[10]}</label>
-				</div>
+				<label class="input-group-text" for="recipe_name">#{lp[10]}</label>
       			<input type="text" class="form-control" id="recipe_name" value="#{recipe.name}" required>
-				<div class="input-group-append">
-      				<button class="btn btn-outline-primary" type="button" onclick="recipeSave_BWL2( '#{recipe.code}' )">#{lp[11]}</button>
-				</div>
+      			<button class="btn btn-outline-primary" type="button" onclick="recipeSave_BWL2( '#{recipe.code}' )">#{lp[11]}</button>
     		</div>
     	</div>
     </div>

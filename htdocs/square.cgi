@@ -237,7 +237,7 @@ when 'fctb'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"pseudoAdd_BWLF( 'init', '#{@fg}::::', '' )\">＋</button>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd_BWLF( 'init', '#{@fg}::::', '' )\">#{lp[15]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{category}.#{$CATEGORY[category]}</h6>
@@ -307,7 +307,7 @@ when 'fctb_l2'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -359,7 +359,7 @@ when 'fctb_l3'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if user.status > 0
+ 	pseudo_button = "<span onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
 
   html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -388,7 +388,7 @@ when 'fctb_l4'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">＋</button>\n" if user.status > 0
+ 	pseudo_button = "<span onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -496,14 +496,14 @@ when 'fctb_l5'
 		if user.name && base == 'cb'
 			add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{lp[1]}</button>"
 		elsif user.name
-			add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"addingCB( '#{food_no_list[c]}', 'weight' )\">#{lp[2]}</button>"
+			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight' )\">#{lp[2]}</span>"
 		else
 			add_button = ""
 		end
 
 		# Koyomi button
 		if user.status >= 2
-			koyomi_button = "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{food_no_list[c]}', -5 )\">#{lp[3]}</button>"
+			koyomi_button = "<span onclick=\"addKoyomi_BWF( '#{food_no_list[c]}', -5 )\">#{lp[3]}</span>"
 		else
 			koyomi_button = ''
 		end
@@ -535,7 +535,7 @@ when 'fctb_l5'
 	db.close
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">＋</button>\n" if user.status > 0
+ 	pseudo_button = "<apan onclick=\"pseudoAdd_BWLF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{lp[15]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<div class='container-fluid'><div class="row">
@@ -543,10 +543,8 @@ when 'fctb_l5'
   		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="fraction">#{lp[8]}</label>
-				</div>
-				<select class="form-control" id="fraction" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
+				<label class="input-group-text" for="fraction">#{lp[8]}</label>
+				<select class="form-select" id="fraction" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
 					<option value="1"#{frct_select[1]}>#{lp[9]}</option>
 					<option value="2"#{frct_select[2]}>#{lp[10]}</option>
 					<option value="3"#{frct_select[3]}>#{lp[11]}</option>
@@ -555,13 +553,9 @@ when 'fctb_l5'
 		</div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="weight">#{lp[12]}</label>
-				</div>
+				<label class="input-group-text" for="weight">#{lp[12]}</label>
 				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
-				<div class="input-group-append">
-					<button class="btn btn-outline-primary" type="button" onclick="changeWeight( '#{food_key}', '#{food_no}' )">g</button>
-				</div>
+				<button class="btn btn-outline-primary" type="button" onclick="changeWeight( '#{food_key}', '#{food_no}' )">g</button>
 			</div>
 		</div>
 	</div></div>

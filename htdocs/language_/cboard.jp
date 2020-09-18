@@ -23,8 +23,11 @@ Lucky☆入力
 Quick保存
 食品化
 目安g
-目安kcal
-調整
+目安E
+<img src='bootstrap-dist/icons/calculator.svg' style='height:2em; width:2em;'>
 名探偵
 残食g
 選択
+<img src='bootstrap-dist/icons/chevron-up.svg' style='height:1.5em; width:1.5em;'>
+<img src='bootstrap-dist/icons/chevron-down.svg' style='height:1.5em; width:1.5em;'>
+<img src='bootstrap-dist/icons/x-circle-fill.svg' style='height:1.5em; width:1.5em;'>

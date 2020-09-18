@@ -479,25 +479,25 @@ recipe_solid.each do |e|
 		recipe_html << "</td>"
 		recipe_html << "<td>"
 		if user.status >= 2 && e['user'] == user.name
-			recipe_html << "	<button class='btn btn-dark btn-sm' type='button' onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</button>&nbsp;"
+			recipe_html << "	<span onclick=\"addingMeal( '#{e['code']}' )\">#{lp[8]}</span>&nbsp;"
 		end
 		if user.status >= 2 && e['user'] == user.name
-			recipe_html << "&nbsp;<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}' )\">#{lp[21]}</button>"
+			recipe_html << "&nbsp;<span onclick=\"addKoyomi_BWF( '#{e['code']}' )\">#{lp[21]}</span>"
 		end
-		recipe_html << "	<button class='btn btn-success btn-sm' type='button' onclick=\"print_templateSelect( '#{e['code']}' )\">#{lp[9]}</button>"
+		recipe_html << "	<span onclick=\"print_templateSelect( '#{e['code']}' )\">#{lp[9]}</span>"
 		if user.status >= 2 && e['user'] == user.name && ( e['root'] == nil || e['root'] == '' )
-			recipe_html << "	<button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport( 'subspecies', '#{e['code']}', '#{page}' )\">#{lp[20]}</button>&nbsp;"
+			recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e['code']}', '#{page}' )\">#{lp[20]}</span>&nbsp;"
 		end
 		recipe_html << "</td>"
 
 		if e['user'] == user.name
 			if e['protect'] == 0
-				recipe_html << "<td><input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"recipeDelete( '#{e['code']}', #{page} )\">#{lp[10]}</button></td>"
+				recipe_html << "<td><input type='checkbox' id='#{e['code']}'>&nbsp;<span onclick=\"recipeDelete( '#{e['code']}', #{page} )\">#{lp[10]}</span></td>"
 			else
 				recipe_html << "<td></td>"
 			end
 		else
-			recipe_html << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick=\"recipeImport( 'import', '#{e['code']}', '#{page}' )\">#{lp[11]}</button></td>"
+			recipe_html << "<td><span onclick=\"recipeImport( 'import', '#{e['code']}', '#{page}' )\">#{lp[11]}</span></td>"
 		end
 		recipe_html << '</tr>'
 	end

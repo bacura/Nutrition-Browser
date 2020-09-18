@@ -14,7 +14,6 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 @debug = false
 script = 'menu'
-school = '[料理教室]'
 
 
 #==============================================================================
@@ -71,7 +70,6 @@ when 'view'
 when 'save'
 	menu.load_cgi( cgi )
 	menu.label = menu.new_label unless menu.new_label == ''
-	menu.protect = 1 if menu.label == school
 	menu.protect = 1 if menu.public == 1
 
 	menu_old = Menu.new( user.name )
@@ -111,9 +109,17 @@ label_list.uniq!
 html_label = '<select class="form-control form-control-sm" id="label">'
 html_label << "<option value='#{lp[2]}'>#{lp[2]}</option>"
 label_list.each do |e|
-	html_label << "<option value='#{e}' #{selected( menu.label, e )}>#{e}</option>" unless e == lp[2] || e == school
+	html_label << "<option value='#{e}' #{selected( menu.label, e )}>#{e}</option>" unless e == lp[2]
 end
-html_label << "<option value='#{school}' #{selected( menu.label, school )}>#{school}</option>" if user.status >= 5 && user.status != 6
+if user.status >= 5 && user.status != 6
+	r = mdb( "SELECT schooll FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	if r.first
+		a =  r.first['schooll'].split( ':' )
+		a.each do |e|
+			html_label << "<option value='#{e}' #{selected( menu.label, e )}>[#{e}]</option>" if e != '' &&  e != nil
+		end
+	end
+end
 html_label << '</select>'
 
 
@@ -136,13 +142,9 @@ html = <<-"HTML"
 		</div>
 		<div class="col-6">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="menu_name">#{lp[6]}</label>
-				</div>
+				<label class="input-group-text" for="menu_name">#{lp[6]}</label>
       			<input type="text" class="form-control" id="menu_name" value="#{menu.name}" required>
-				<div class="input-group-append">
-      				<button class="btn btn-outline-primary" type="button" onclick="menuSave( '#{menu.code}' )">#{lp[7]}</button>
-				</div>
+      			<button class="btn btn-outline-primary" type="button" onclick="menuSave( '#{menu.code}' )">#{lp[7]}</button>
     		</div>
     	</div>
     </div>
@@ -150,17 +152,13 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="menu_name">#{lp[9]}</label>
-				</div>
+				<label class="input-group-text" for="menu_name">#{lp[9]}</label>
 				#{html_label}
 			</div>
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="menu_name">#{lp[10]}</label>
-				</div>
+				<label class="input-group-text" for="menu_name">#{lp[10]}</label>
       			<input type="text" class="form-control" id="new_label" value="">
 	   		</div>
     	</div>

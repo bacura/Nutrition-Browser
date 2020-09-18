@@ -253,15 +253,15 @@ r.each do |e|
 
 		menu_html << "<td>"
 		if user.status >= 2
-			menu_html << "<button type='button' class='btn btn btn-info btn-sm' onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[18]}</button>&nbsp;&nbsp;"
+			menu_html << "<span onclick=\"addKoyomi_BWF( '#{e['code']}', 1 )\">#{lp[18]}</span>&nbsp;&nbsp;"
 		end
 		menu_html << "</td>"
 
 		menu_html << "<td>"
 		if e['user'] == user.name
-			menu_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"menuDelete( '#{e['code']}', '#{e['name']}' )\">#{lp[1]}</button>"
+			menu_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;<span onclick=\"menuDelete( '#{e['code']}', '#{e['name']}' )\">#{lp[1]}</span>"
 		else
-			menu_html << "<button class='btn btn-outline-primary btn-sm' type='button' onclick=\"menuImport( '#{e['code']}' )\">#{lp[2]}</button>"
+			menu_html << "<span onclick=\"menuImport( '#{e['code']}' )\">#{lp[2]}</span>"
 		end
 		menu_html << "</td>"
 
@@ -280,17 +280,13 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="range">#{lp[4]}</label>
-				</div>
+				<label class="input-group-text" for="range">#{lp[4]}</label>
 				#{html_range}
 			</div>
 		</div>
 		<div class='col-4'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="menu_name">#{lp[5]}</label>
-				</div>
+				<label class="input-group-text" for="menu_name">#{lp[5]}</label>
 				#{html_label}
 			</div>
 		</div>

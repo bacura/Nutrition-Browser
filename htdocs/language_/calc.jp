@@ -6,9 +6,9 @@
 四捨五入
 切り上げ
 切り捨て
-再計算
-拡張ページ
-ダウンロード
+<img src='bootstrap-dist/icons/calculator.svg' style='height:2em; width:2em;'>
+<img src='bootstrap-dist/icons/map.svg' style='height:2em; width:2em;'>
+<img src='bootstrap-dist/icons/download.svg' style='height:2em; width:2em;'>
 食品化
 食品番号
 食品名

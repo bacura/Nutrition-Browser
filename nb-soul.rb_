@@ -19,9 +19,11 @@ require 'securerandom'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'nbu'
-$MYSQL_PW = 'sqlmouse'
+$MYSQL_USER = ''
+$MYSQL_USERR = ''
+$MYSQL_PW = ''
 $MYSQL_DB = 'nutrition'
+$MYSQL_DBR = 'rr'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
 $MYSQL_TB_CFG = 'cfg'
@@ -56,7 +58,7 @@ $DEBUG = false
 $GM = ''
 
 #### 注意！！
-$HTDOCS_PATH = '/var/www/html'
+$HTDOCS_PATH = '/var/www/htdocs_nb'
 
 $PHOTO_PATH = "#{$HTDOCS_PATH}/photo"
 $PHOTO_PATH_TMP = "#{$HTDOCS_PATH}/photo_"
@@ -230,7 +232,7 @@ def get_data()
 end
 
 
-#### 新データベース処理
+#### データベース処理
 def mdb( query, html_opt, debug )
   begin
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -250,6 +252,31 @@ def mdb( query, html_opt, debug )
       html_head( nil )
     end
       puts "<span class='error'>[mdb]ERROR!!<br>"
+      puts "#{query_}</span><br>"
+  end
+  return res
+end
+
+
+#### R用データベース処理
+def mdbr( query, html_opt, debug )
+  begin
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USERR}", :password => "", :database => "#{$MYSQL_DBR}", :encoding => "utf8" )
+    t = query.chop
+    query_ = ''
+    query_ = query if debug
+    if /\;/ =~ t
+        puts "<span class='error'>[mdbr]ERROR!! #{query_}</span><br>"
+        exit( 9 )
+    end
+    res = db.query( query )
+    db.close
+  rescue
+    if html_opt
+      html_init( nil )
+      html_head( nil )
+    end
+      puts "<span class='error'>[mdbr]ERROR!!<br>"
       puts "#{query_}</span><br>"
   end
   return res

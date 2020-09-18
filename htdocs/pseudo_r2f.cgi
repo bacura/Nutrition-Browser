@@ -131,18 +131,14 @@ if command == 'form'
 	<div class="row">
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="food_name">#{lp[1]}</label>
-				</div>
+				<label class="input-group-text" for="food_name">#{lp[1]}</label>
 				<input type="text" class="form-control form-control-sm" id="food_name" value="#{food_name}">
 			</div>
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="food_group">#{lp[2]}</label>
-				</div>
-				<select class="form-control" id="food_group">
+				<label class="input-group-text" for="food_group">#{lp[2]}</label>
+				<select class="form-select form-select-sm" id="food_group">
 					#{food_group_option}
 				</select>
 			</div>

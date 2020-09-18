@@ -11,20 +11,19 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-$SCRIPT = 'price.cgi'
+@debug = false
+script = 'price'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
-@debug = false
 
 
 #==============================================================================
@@ -33,16 +32,9 @@ $SCRIPT = 'price.cgi'
 html_init( nil )
 
 cgi = CGI.new
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'price', language )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-end
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
 
 
 #### POSTデータの取得
@@ -68,7 +60,7 @@ price_code = []
 food_use = []
 
 # レシピデータの読み込み
-r = mariadb( "SELECT name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false )
+r = mdb( "SELECT name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 recipe_name = r.first['name']
 dish_num = r.first['dish'].to_i
 recipe_protect = r.first['protect'].to_i
@@ -89,7 +81,7 @@ food_no = []
 food_price = []
 food_volume = []
 
-r = mariadb( "SELECT * FROM #{$MYSQL_TB_PRICE} WHERE code='#{code}';", false )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_PRICE} WHERE code='#{code}';", false, @debug )
 
 # レシピデータに存在する食品番号を抽出
 if r.first
@@ -112,7 +104,7 @@ else
 		new_price << "#{e}::\t"
 	end
 	new_price.chop!
-	mariadb( "INSERT INTO #{$MYSQL_TB_PRICE} SET code='#{code}', user='#{uname}', price='#{new_price}';", false )
+	mdb( "INSERT INTO #{$MYSQL_TB_PRICE} SET code='#{code}', user='#{user.name}', price='#{new_price}';", false, @debug )
 end
 
 
@@ -142,7 +134,7 @@ when 'clearCT'
 # マスター価格適応
 when 'adpt_master'
 	food_no.size.times do |c|
-		r = mariadb( "SELECT volume, price FROM #{$MYSQL_TB_PRICEM} WHERE FN='#{food_no[c]}' AND user='#{uname}';", false )
+		r = mdb( "SELECT volume, price FROM #{$MYSQL_TB_PRICEM} WHERE FN='#{food_no[c]}' AND user='#{user.name}';", false, @debug )
 		if r.first
 			food_volume[c] = r.first['volume']
 			food_price[c] = r.first['price']
@@ -152,17 +144,17 @@ when 'adpt_master'
 when 'reg_master'
 	food_no.size.times do |c|
 		if food_volume[c].to_i != 0 && food_price[c].to_i != 0
-			r = mariadb( "SELECT FN FROM #{$MYSQL_TB_PRICEM} WHERE FN='#{food_no[c]}' AND user='#{uname}';", false )
+			r = mdb( "SELECT FN FROM #{$MYSQL_TB_PRICEM} WHERE FN='#{food_no[c]}' AND user='#{user.name}';", false, @debug )
 
 			# マスター価格の登録、または更新
 			if r.first
-				mariadb( "UPDATE TABLE #{$MYSQL_TB_PRICEM} SET volume='#{food_volume[c]}', price='#{food_price[c]}' WHERE FN='#{food_no[c]}' AND user='#{uname}';", false )
+				mdb( "UPDATE TABLE #{$MYSQL_TB_PRICEM} SET volume='#{food_volume[c]}', price='#{food_price[c]}' WHERE FN='#{food_no[c]}' AND user='#{user.name}';", false, @debug )
 			else
-				mariadb( "INSERT INTO #{$MYSQL_TB_PRICEM} SET volume='#{food_volume[c]}', price='#{food_price[c]}', FN='#{food_no[c]}', user='#{uname}';", false )
+				mdb( "INSERT INTO #{$MYSQL_TB_PRICEM} SET volume='#{food_volume[c]}', price='#{food_price[c]}', FN='#{food_no[c]}', user='#{user.name}';", false, @debug )
 			end
 		else
 			# 未設定のマスター価格の削除
-			mariadb( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE FN='#{food_no[c]}' AND user='#{uname}';", false )
+			mdb( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE FN='#{food_no[c]}' AND user='#{user.name}';", false, @debug )
 		end
 	end
 end
@@ -220,7 +212,7 @@ if command == 'ref_recipe'
 		cost = 11
 	end
 
-	mariadb( "UPDATE #{$MYSQL_TB_RECIPE} SET cost='#{cost}' WHERE user='#{uname}' and code='#{code}';", false )
+	mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET cost='#{cost}' WHERE user='#{user.name}' and code='#{code}';", false, @debug )
 end
 
 
@@ -292,4 +284,4 @@ new_price = ''
 food_no.size.times do |c| new_price << "#{food_no[c]}:#{food_volume[c]}:#{food_price[c]}\t" end
 new_price.chop!
 
-mariadb( "UPDATE #{$MYSQL_TB_PRICE} SET price='#{new_price}' WHERE code='#{code}' AND user='#{uname}';", false )
+mdb( "UPDATE #{$MYSQL_TB_PRICE} SET price='#{new_price}' WHERE code='#{code}' AND user='#{user.name}';", false, @debug )

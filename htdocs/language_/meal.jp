@@ -7,6 +7,6 @@
 献立編集
 栄養計算
 基本解析
-印
-PDF
-暦+
+<img src='bootstrap-dist/icons/chevron-up.svg' style='height:1.5em; width:1.5em;'>
+<img src='bootstrap-dist/icons/chevron-down.svg' style='height:1.5em; width:1.5em;'>
+<img src='bootstrap-dist/icons/x-circle-fill.svg' style='height:1.5em; width:1.5em;'>

@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -24,6 +23,20 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+#### Language init
+def lp_init( script, language_set )
+  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
+  f.each do |line|
+    lp << line.chomp.force_encoding( 'UTF-8' )
+  end
+  f.close
+
+  return lp
+end
+
+
 #### 端数処理の選択
 def frct_select( frct_mode, lp )
 	frct_select = ''
@@ -103,17 +116,19 @@ accu_check = accu_check( frct_accu, lp )
 ew_check = ew_check( ew_mode, lp )
 
 
-#### パレット
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+#### Setting palette
+palette_sets = []
+palette_name = []
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
 		a.map! do |x| x.to_i end
-		$PALETTE << a
-		$PALETTE_NAME << e['name']
+		palette_sets << a
+		palette_name << e['name']
 	end
 end
-palette_set = $PALETTE[palette]
+palette_set = palette_sets[palette]
 
 
 # 成分項目の抽出
@@ -124,7 +139,7 @@ end
 
 
 #### mealからデータを抽出
-r = mariadb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false, @debug )
 meal_name = r.first['name']
 code = r.first['code']
 meal = r.first['meal'].split( "\t" )
@@ -144,7 +159,7 @@ total_total_weight = 0
 
 #### RECIPEからデータを抽出
 recipe_code.each do |e|
-	r = mariadb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
+	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
 	recipe_name[rc] = r.first['name']
 	dish_num = r.first['dish'].to_i
 	dish_num = 1 if dish_num == 0

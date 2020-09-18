@@ -371,7 +371,7 @@ some_html = [ '', '', '', '' ]
 if freeze_flag == 0
 	0.upto( 3 ) do |c|
 		some_html[c] = <<-"SOME"
-		<select class='custom-select custom-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
+		<select class='form-select form-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
 			<option value='' selected>#{lp[20]}</option>
 			<option value='?--'>#{lp[15]}</option>
 			<option value='?-'>#{lp[12]}</option>
@@ -406,15 +406,9 @@ photo_html = [ '', '', '', '' ]
 if freeze_flag == 0
 	0.upto( 3 ) do |c|
 		photo_html[c] = <<-"PHOTO"
-		<form class='row' method="post" enctype="multipart/form-data" id='photo_form'>
-			<div class='col'>
-				<div class="form-group">
-					<label for="photom">####</label>
-					<input type="file" name="photo1" id="photom" class="custom-control-file" onchange="">
-				</div>
-				<img src="" width="100px" class="img-thumbnail"><br>
-				<br>
-			</div>
+		<form method="post" enctype="multipart/form-data" id='photo_form'>
+			<label for="photom">&nbsp;&nbsp;#{lp[26]}</label>
+			<input type="file" name="photo1" id="photom" class="custom-control-file" onchange="">
 		</form>
 PHOTO
 	end
@@ -455,20 +449,20 @@ html = <<-"HTML"
 			<h5>#{lp[1]}</h5>
 			#{koyomi_html[0]}
 			<br><br>
-			<div class="form-inline">
+			<div class="input-group">
 				#{cmm_html[0]}
 				#{some_html[0]}
+				#{photo_html[0]}
 			</div>
-			<br><br>
-			#{photo_html[0]}
 		</div>
 		<div class='col-6'>
 			<h5>#{lp[2]}</h5>
 			#{koyomi_html[1]}
 			<br><br>
-			<div class="form-inline">
+			<div class="input-group">
 				#{cmm_html[1]}
 				#{some_html[1]}
+				#{photo_html[1]}
 			</div>
 		</div>
 	</div>
@@ -478,18 +472,20 @@ html = <<-"HTML"
 			<h5>#{lp[3]}</h5>
 			#{koyomi_html[2]}
 			<br><br>
-			<div class="form-inline">
+			<div class="input-group">
 				#{cmm_html[2]}
 				#{some_html[2]}
+				#{photo_html[2]}
 			</div>
 		</div>
 		<div class='col-6'>
 			<h5>#{lp[4]}</h5>
 			#{koyomi_html[3]}
 			<br><br>
-			<div class="form-inline">
+			<div class="input-group">
 				#{cmm_html[3]}
 				#{some_html[3]}
+				#{photo_html[3]}
 			</div>
 		</div>
 	</div>

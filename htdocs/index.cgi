@@ -20,12 +20,13 @@ require '/var/www/nb-soul.rb'
 @debug = false
 script = 'index'
 
+
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
 #### HTML top
-def html_top( user )
+def html_top( user, lp )
   user_name = user.name
   user_name = user.aliasu if user.aliasu != '' && user.aliasu != nil
   uid = user.uid
@@ -105,24 +106,24 @@ def html_top( user )
 
   html = <<-"HTML"
       <header class="navbar navbar-dark bg-dark" id="header">
-        <h4><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h4>
-        <span class="text-#{login_color} login_msg"><h5>#{login}</h5></span>
-        <a href='http://neg.bacura.jp/?p=523' target='manual'><span class="text-#{login_color} login_msg"><h5>手引き</h5></span></a>
-        <span class="form-inline form-inline-sm">
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <select class="form-control form-control-sm" id="qcate">
-                <option value='0'>食品</option>
-                <option value='1'>レシピ</option>
-                <option value='2'>記憶</option>
-              </select>
-            </div>
-            <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
-            <div class="input-group-append">
-              <button class="btn btn-outline-#{login_color} btn-sm" onclick="searchBWL1()">検索</button>
+        <div class='row'>
+          <div class='col-3'><h2><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h2></div>
+          <div class='col-4'><span class="text-#{login_color} login_msg"><h3>#{login}</h3></span></div>
+          <div class='col-1'><a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a></div>
+          <div class='col-1'>
+            <select class="form-select form-select-sm" id="qcate">
+              <option value='0'>食品</option>
+              <option value='1'>レシピ</option>
+              <option value='2'>記憶</option>
+            </select>
+          </div>
+          <div class='col-3'>
+            <div class="input-group mb-3">
+              <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
+              <span class='btn btn-sm' onclick="searchBWL1()">#{lp[52]}</span>
             </div>
           </div>
-        </span>
+        </div>
       </header>
 HTML
 
@@ -161,15 +162,15 @@ def html_nav( user, lp )
 
   # 履歴ボタンとまな板ボタンの設定
   if user.status >= 1
-    cb = "#{lp[1]} <span class=\"badge badge-pill badge-warning\" id=\"cb_num\">#{cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge badge-pill badge-warning\" id=\"mb_num\">#{meal_num}</span>"
+    cb = "#{lp[1]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"cb_num\">#{cb_num}</span>"
+    mb = "#{lp[2]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"mb_num\">#{meal_num}</span>"
     special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonBWL1( 0 )\">#{lp[3]}</button>"
-    his_button = "<button type=\"button\" class=\"btn btn-dark btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
-    sum_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initCB_BWL1( '' )\">#{cb}</button>"
-    recipe_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
-    menu_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
-    set_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"menuList()\">#{lp[6]}</button>"
-    config_button = "<button type='button' class='btn btn-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
+    his_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
+    sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB_BWL1( '' )\">#{cb}</button>"
+    recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
+    menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
+    set_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"menuList()\">#{lp[6]}</button>"
+    config_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
   else
     cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{cb_num}</span>"
     mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"mb_num\">#{meal_num}</span>"
@@ -224,11 +225,12 @@ def html_nav( user, lp )
       <nav class='container-fluid' id='guild_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[42]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[43]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[44]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[45]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[46]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[42]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[43]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[44]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[45]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[46]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initToker()">#{lp[50]}</button>
       </nav>
       </nav>
       <nav class='container-fluid' id='gs_menu' style='display:none;'>
@@ -291,7 +293,7 @@ html_head( nil, user.status, nil )
 
 puts "<div style='position:fixed; z-index:100; background-color:white'>" if ifix == 1
 
-html_top( user )
+html_top( user, lp )
 html_nav( user, lp )
 
 if ifix == 1

@@ -57,10 +57,8 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">代謝的性別</label>
-					</div>
-					<select class="custom-select" id="sex">
+					<label class="input-group-text">代謝的性別</label>
+					<select class="form-select form-select-sm" id="sex">
 						<option value='0' #{sex_select[0]}>男性</option>
 						<option value='1' #{sex_select[1]}>女性</option>
 					</select>
@@ -69,28 +67,22 @@ html = <<-"HTML"
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>年齢</span>
-					</div>
+					<span class='input-group-text'>年齢</span>
 					<input type='number' class='form-control' id='age' min='0' value='#{age}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<div class='input-group-prepend'>
-						<span class='input-group-text'>体重(kg)</span>
-					</div>
-				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight.to_f}'>
+					<span class='input-group-text'>体重(kg)</span>
+					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight.to_f}'>
 				</div>
 			</div>
 
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">身体活動レベル</label>
-					</div>
-					<select class="custom-select" id="pal">
+					<label class="input-group-text">身体活動レベル</label>
+					<select class="form-select form-select-sm" id="pal">
 						<option value='1.50'>I (1.50)</option>
 						<option value='1.75' SELECTED>II (1.75)</option>
 						<option value='2.00'>III (2.00</option>
@@ -103,10 +95,8 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<div class="input-group-prepend">
-						<label class="input-group-text">妊婦・授乳婦</label>
-					</div>
-					<select class="custom-select" id="pregnancy">
+					<label class="input-group-text">妊婦・授乳婦</label>
+					<select class="form-select form-select-sm" id="pregnancy">
 						<option value='0'>-</option>
 						<option value='1'>妊娠・初期</option>
 						<option value='2'>妊娠・中期</option>

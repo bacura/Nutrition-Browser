@@ -79,7 +79,7 @@ def config_module( cgi, user, lp )
 		<div class="row">
 			<div class="col-6">
 				<div class="input-group mb-3">
-  					<div class="input-group-prepend"><span class="input-group-text">#{lp[49]}</span></div>
+  					<span class="input-group-text">#{lp[49]}</span>
   					<input type="text" class="form-control" id="palette_name" value="#{cgi['palette_name']}" maxlength="60">
   				</div>
 			</div>

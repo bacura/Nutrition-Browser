@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -24,6 +23,20 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+#### Language init
+def lp_init( script, language_set )
+  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
+  f.each do |line|
+    lp << line.chomp.force_encoding( 'UTF-8' )
+  end
+  f.close
+
+  return lp
+end
+
+
 #### 端数処理の選択
 def frct_select( frct_mode, lp )
 	frct_select = ''
@@ -85,7 +98,7 @@ palette = palette.to_i
 
 
 ##### SUMからデータを抽出
-r = mariadb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{uname}';", false, @debug )
 recipe_name = r.first['name']
 code = r.first['code']
 dish_num = r.first['dish'].to_i
@@ -98,17 +111,19 @@ accu_check = accu_check( frct_accu, lp )
 ew_check = ew_check( ew_mode, lp )
 
 
-#### パレット
-r = mariadb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false )
+#### Setting palette
+palette_sets = []
+palette_name = []
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 if r.first
 	r.each do |e|
 		a = e['palette'].split( '' )
 		a.map! do |x| x.to_i end
-		$PALETTE << a
-		$PALETTE_NAME << e['name']
+		palette_sets << a
+		palette_name << e['name']
 	end
 end
-palette_set = $PALETTE[palette]
+palette_set = palette_sets[palette]
 
 
 #### 成分項目の抽出

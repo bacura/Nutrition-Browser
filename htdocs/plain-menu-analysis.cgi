@@ -11,7 +11,6 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'cgi'
 require '/var/www/nb-soul.rb'
 
 
@@ -19,11 +18,26 @@ require '/var/www/nb-soul.rb'
 #STATIC
 #==============================================================================
 @debug = false
+script = 'plain-menu-analysis'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+#### Language init
+def lp_init( script, language_set )
+  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+  lp = [nil]
+  f.each do |line|
+    lp << line.chomp.force_encoding( 'UTF-8' )
+  end
+  f.close
+
+  return lp
+end
+
+
 #### 端数処理の選択
 def frct_select( frct_mode, lp )
 	frct_select = ''
@@ -92,7 +106,7 @@ fct_item = ['ENERC_KCAL', 'PROT', 'FAT', 'NACL_EQ']
 
 
 #### mealからデータを抽出
-r = mariadb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false )
+r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false, @debug )
 meal_name = r.first['name']
 code = r.first['code']
 meal = r.first['meal'].split( "\t" )
@@ -112,7 +126,7 @@ animal_protein = BigDecimal( 0 )
 grain_energy = BigDecimal( 0 )
 recipe_code.each do |e|
 	# RECIPEからデータを抽出
-	r = mariadb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
+	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
 	recipe_name[rc] = r.first['name']
 	dish_num = r.first['dish'].to_i
 	dish_num = 1 if dish_num == 0
@@ -280,7 +294,7 @@ food_no_list.size.times do |c|
 		g6 += food_weight_list[c]
 
 		# 緑黄色野菜の判定
-		r = mariadb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{food_no_list[c]}';", false )
+		r = mdb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{food_no_list[c]}';", false, @debug )
 		if r.first['gycv'] == 1
 			gycv += food_weight_list[c]
 		else

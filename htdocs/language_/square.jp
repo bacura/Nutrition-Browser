@@ -1,6 +1,6 @@
 板変
-板+
-暦+
+<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>
 単
 色
 ア
@@ -12,3 +12,4 @@
 重量
 食品番号
 食品名
+<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>

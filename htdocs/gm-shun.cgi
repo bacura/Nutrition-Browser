@@ -126,9 +126,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-10'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="weight">#{lp[2]}</label>
-				</div>
+				<label class="input-group-text" for="weight">#{lp[2]}</label>
 				<input type="text" maxlength="5" class="form-control" id="code" value="#{code}">
 			</div>
 		</div>
@@ -141,10 +139,8 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-5'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="shun1s">#{lp[4]}</label>
-				</div>
-				<select class="custom-select custom-select-sm" id="shun1s">
+				<label class="input-group-text" for="shun1s">#{lp[4]}</label>
+				<select class="form-select form-select-sm" id="shun1s">
 					<option value="1">1</option>
 					<option value="2">2</option>
 					<option value="3">3</option>
@@ -159,10 +155,8 @@ html = <<-"HTML"
 					<option value="12">12</option>
 				</select>
 				　～　
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="shun1e">#{lp[5]}</label>
-				</div>
-				<select class="custom-select custom-select-sm" id="shun1e">
+				<label class="input-group-text" for="shun1e">#{lp[5]}</label>
+				<select class="form-select form-select-sm" id="shun1e">
 					<option value="1">1</option>
 					<option value="2">2</option>
 					<option value="3">3</option>
@@ -181,10 +175,8 @@ html = <<-"HTML"
 		<div class='col-1'></div>
 		<div class='col-5'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="shun1s">#{lp[6]}</label>
-				</div>
-				<select class="custom-select custom-select-sm" id="shun2s">
+				<label class="input-group-text" for="shun1s">#{lp[6]}</label>
+				<select class="form-select form-select-sm" id="shun2s">
 					<option value="0">-</option>
 					<option value="1">1</option>
 					<option value="2">2</option>
@@ -200,10 +192,8 @@ html = <<-"HTML"
 					<option value="12">12</option>
 				</select>
 				　～　
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="shun1e">#{lp[7]}</label>
-				</div>
-				<select class="custom-select custom-select-sm" id="shun2e">
+				<label class="input-group-text" for="shun1e">#{lp[7]}</label>
+				<select class="form-select form-select-sm" id="shun2e">
 					<option value="0">-</option>
 					<option value="1">1</option>
 					<option value="2">2</option>

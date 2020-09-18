@@ -215,9 +215,7 @@ RESULT_HTML
 	<div class='row'>
 		<div class='col-4'>
 			<div class='input-group input-group-sm'>
-				<div class='input-group-prepend'>
-					<span class='input-group-text'>体重(kg)</span>
-				</div>
+				<span class='input-group-text'>体重(kg)</span>
 				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 			</div>
 		</div>
@@ -230,10 +228,8 @@ RESULT_HTML
 	<div class='row'>
 		<div class='col-6'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="heading">　大項目</label>
-				</div>
-				<select class="custom-select" id="heading" onchange="ginmiEnergyMETs( 'heading' )">
+				<label class="input-group-text" for="heading">　大項目</label>
+				<select class="form-select form-select-sm" id="heading" onchange="ginmiEnergyMETs( 'heading' )">
 					#{heading_select}
 				</select>
 			</div>
@@ -242,10 +238,8 @@ RESULT_HTML
 	<div class='row'>
 		<div class='col-6'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="sub_heading">　副項目</label>
-				</div>
-				<select class="custom-select" id="sub_heading" onchange="ginmiEnergyMETs( 'sub_heading' )">
+				<label class="input-group-text" for="sub_heading">　副項目</label>
+				<select class="form-select form-select-sm" id="sub_heading" onchange="ginmiEnergyMETs( 'sub_heading' )">
 					#{sub_heading_select}
 				</select>
 			</div>
@@ -254,10 +248,8 @@ RESULT_HTML
 	<div class='row'>
 		<div class='col-6'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="active">個別活動</label>
-				</div>
-				<select class="custom-select" id="active" onchange="ginmiEnergyMETs( 'active' )">
+				<label class="input-group-text" for="active">個別活動</label>
+				<select class="form-select form-select-sm" id="active" onchange="ginmiEnergyMETs( 'active' )">
 					#{active_select}
 				</select>
 			</div>
@@ -268,10 +260,8 @@ RESULT_HTML
 	<div class='row'>
 		<div class='col-6'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="inputGroupSelect01">履　　歴</label>
-				</div>
-				<select class="custom-select" id="history">
+				<label class="input-group-text" for="inputGroupSelect01">履　　歴</label>
+				<select class="form-select form-select-sm" id="history">
 				#{history_select}
 			</select>
 		</div>
@@ -282,25 +272,19 @@ RESULT_HTML
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<input type='number' class='form-control' value="#{mets_value}" DISABLED>
-				<div class='input-group-prepend'>
-					<span class='input-group-text'>METs</span>
-				</div>
+				<span class='input-group-text'>METs</span>
 			</div>
 		</div>
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<input type='number' min='0' max='24' class='form-control' id='hh' maxlength='2' value='0'>
-				<div class='input-group-prepend'>
-					<span class='input-group-text'>時間</span>
-				</div>
+				<span class='input-group-text'>時間</span>
 			</div>
 		</div>
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<input type='number' min='0' max='59' step='5' class='form-control' id='mm' maxlength='2' value='0'>
-				<div class='input-group-prepend'>
-					<span class='input-group-text'>分間</span>
-				</div>
+				<span class='input-group-text'>分間</span>
 			</div>
 		</div>
 		<div class='col-3'>

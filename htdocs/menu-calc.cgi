@@ -357,10 +357,8 @@ html = <<-"HTML"
 	<div class="row">
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="palette">#{lp[6]}</label>
-				</div>
-				<select class="form-control" id="palette" onchange="menuRecalcView('#{code}')">
+				<label class="input-group-text" for="palette">#{lp[6]}</label>
+				<select class="form-select" id="palette" onchange="menuRecalcView('#{code}')">
 					#{palette_html}
 				</select>
 			</div>
@@ -373,25 +371,23 @@ html = <<-"HTML"
     			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="menuRecalcView('#{code}')">#{lp[8]}
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text" for="">#{lp[9]}</label>
-				</div>
-				<select class="form-control" id="frct_mode" onchange="menuRecalcView('#{code}')">
+				<label class="input-group-text" for="">#{lp[9]}</label>
+				<select class="form-select" id="frct_mode" onchange="menuRecalcView('#{code}')">
 					<option value="1"#{frct_select[0]}>#{lp[10]}</option>
 					<option value="2"#{frct_select[1]}>#{lp[11]}</option>
 					<option value="3"#{frct_select[2]}>#{lp[12]}</option>
 				</select>
+				<span onclick="menuRecalcView('#{code}')">#{lp[13]}</span>&nbsp;
 			</div>
 		</div>
-
+		<div class='col-1'></div>
 		<div class='col-1'>
-			<button class="btn btn-outline-primary btn-sm" onclick="menuRecalcView('#{code}')">#{lp[13]}</button>&nbsp;
+			<a href='plain-menu-calc.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[15]}</a>
 		</div>
-		<div class='col-3'>
-			<a href='menu-calcex.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' target='menu-calc-ex'><button type='button' class='btn btn-primary btn-sm'>#{lp[14]}</button></a>&nbsp;
-			<a href='plain-menu-calc.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'><button type='button' class='btn btn-primary btn-sm'>#{lp[15]}</button></a>
+		<div class='col-1'>
+			<a href='menu-calcex.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' target='menu-calc-ex'>#{lp[14]}</a>
 		</div>
     </div>
 </div>
