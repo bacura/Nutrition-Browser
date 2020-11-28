@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser nutrition assessment tools 0.00
+#Nutrition browser statistics tools 0.00
 
 #==============================================================================
 #CHANGE LOG
@@ -17,7 +17,7 @@ require '/var/www/nb-soul.rb'
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'ginmi'
+script = 'toker'
 @debug = false
 
 
@@ -25,23 +25,11 @@ script = 'ginmi'
 #DEFINITION
 #==============================================================================
 
-#### 初期画面
+
+#### Initial screen menu
 def init( lp )
 	html = <<-"HTML"
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'bmi' )">#{lp[1]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'laureli' )">#{lp[3]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="ginmiForm( 'obesity' )">#{lp[4]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ref' )">#{lp[5]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hn' )">#{lp[6]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'es-height' )">#{lp[10]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'es-muscle' )">#{lp[11]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[12]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[13]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[14]}</button>
+	<button class='btn btn-sm btn-outline-info nav_button' onclick="tokerForm( 'test' )">#{lp[1]}</button>
 HTML
 
 	return html
@@ -73,8 +61,8 @@ html = "<div class='container-fluid'>"
 if mod == ''
 	html = init( lp )
 else
-	require "#{$HTDOCS_PATH}/ginmi_/mod_#{mod}.rb"
-	html = ginmi_module( cgi, user )
+	require "#{$HTDOCS_PATH}/toker_/mod_#{mod}.rb"
+	html = toker_module( cgi, user )
 end
 html << "</div>"
 

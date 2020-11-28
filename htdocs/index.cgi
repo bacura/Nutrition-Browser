@@ -165,7 +165,7 @@ def html_nav( user, lp )
     cb = "#{lp[1]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"cb_num\">#{cb_num}</span>"
     mb = "#{lp[2]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"mb_num\">#{meal_num}</span>"
     special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonBWL1( 0 )\">#{lp[3]}</button>"
-    his_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
+    his_button = "<button type=\"button\" class=\"btn btn-primary btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
     sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB_BWL1( '' )\">#{cb}</button>"
     recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
     menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
@@ -192,7 +192,7 @@ def html_nav( user, lp )
   gm_account = ''
   gm_account = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount_BWL1( 'init' )\">#{lp[34]}</button>" if user.status == 9
 
-	html = <<-"HTML"
+  html = <<-"HTML"
       <nav class='container-fluid'>
           #{g_button}
           <button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonBWL1( 1 )">#{lp[10]}</button>
@@ -210,7 +210,7 @@ def html_nav( user, lp )
           <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="summonBWL1( 13 )">#{lp[22]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="summonBWL1( 14 )">#{lp[23]}</button>
           <button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="summonBWL1( 15 )">#{lp[24]}</button>
-          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category16" onclick="summonBWL1( 16 )">#{lp[25]}</button>
+          <button type="button" class="btn btn-primary btn-sm nav_button" id="category16" onclick="summonBWL1( 16 )">#{lp[25]}</button>
           <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="summonBWL1( 17 )">#{lp[26]}</button>
           <button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="summonBWL1( 18 )">#{lp[27]}</button>
           #{special_button}

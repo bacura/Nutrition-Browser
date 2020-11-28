@@ -110,7 +110,7 @@ end
 #### Pointer editor
 def new_pointer( category, pointer, memory, rank, category_set, post_process )
 	rank_select_html = ''
-	rank_select_html << "<select class='custom-select custom-select-sm' id='rank'>"
+	rank_select_html << "<select class='form-select form-select-sm' id='rank'>"
 	1.upto( 5 ) do |c|
 		if c == rank
 			rank_select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -121,7 +121,7 @@ def new_pointer( category, pointer, memory, rank, category_set, post_process )
 	rank_select_html << "</select>"
 
 	category_select_html = ''
-	category_select_html << "<select class='custom-select custom-select-sm' id='mvcategory'>"
+	category_select_html << "<select class='form-select form-select-sm' id='mvcategory'>"
 	category_set.each do |e|
 		if e == category
 			category_select_html << "<option value='#{e}' SELECTED>#{e}</option>"
@@ -135,25 +135,19 @@ def new_pointer( category, pointer, memory, rank, category_set, post_process )
 	<div class='row'>
 		<div class='col-6'>
 			<div class='input-group input-group-sm'>
-				<div class='input-group-prepend'>
-					<span class='input-group-text' id='inputGroup-sizing-sm'>キー</span>
-				</div>
+				<span class='input-group-text' id='inputGroup-sizing-sm'>キー</span>
 				<input type='text' class='form-control' id='pointer' value='#{pointer}'>
 			</div>
 		</div>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
- 				<div class='input-group-prepend'>
-					<label class='input-group-text' for='rank'>ランク</label>
-				</div>
+				<label class='input-group-text' for='rank'>ランク</label>
 				#{rank_select_html}
 			</div>
 		</div>
 		<div class='col-4'>
 			<div class='input-group input-group-sm'>
- 				<div class='input-group-prepend'>
-					<label class='input-group-text' for='mvcategory'>カテゴリー</label>
-				</div>
+				<label class='input-group-text' for='mvcategory'>カテゴリー</label>
 				#{category_select_html}
 				<button type='button' class='btn btn-success btn-sm' onclick="movePMemory( '#{category}', '#{pointer}', '#{post_process}' )">移動</button>
 			</div>

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi adding panel 0.00b
+#Nutrition browser koyomi adding panel 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -169,6 +169,15 @@ if command == 'save' || command == 'move'
 	hh = st_set[tdiv] if hh == 99
 	hh = $TIME_NOW.hour if hh == nil || hh == ''
 
+	if /\-f\-/ =~ code && copy == 1
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
+		copy_name = r.first['name']
+		set_sql = ''
+		5.upto( 65 ) do |c| set_sql << ", #{$FCT_ITEM[c]}='#{r.first[$FCT_ITEM[c]]}'" end
+		code = generate_code( user.name, 'f' )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{code}', name='#{copy_name}', user='#{user.name}' #{set_sql};", false, @debug )
+	end
+
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		koyomi = r.first['koyomi']
@@ -237,19 +246,20 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
 			onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move' || command == 'move_fix'
+
 			if rr.first
 				if rr.first['koyomi'] == ''
-					date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+					date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 				else
 					koyomi_c = rr.first['koyomi'].split( "\t" ).size
-					date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+					date_html << "<td class='table-info' align='center' #{onclick}>#{koyomi_c}</td>"
 				end
 			else
-				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+				date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
 		end
 	else
-		4.times do date_html << "<td class='btn-secondary'></td>" end
+		4.times do date_html << "<td class='table-secondary'></td>" end
 	end
 
 	date_html << "</tr>"
@@ -321,7 +331,7 @@ select_html << "</div>"
 #### Rate HTML
 rate_selected = ''
 rate_html = ''
-if command != 'move_fix'
+if command != 'move_fix' && /\-f\-/ !~ code
 	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 	rate_html = ''
 	rate_html << "<div class='input-group input-group-sm'>"
@@ -337,8 +347,8 @@ if command != 'move_fix'
 	rate_html << "	</select>"
 	rate_html << "</div>"
 else
-	rate_html = '<input type="hidden" id="ev" value="100">'
-	rate_html = '<input type="hidden" id="eu" value="0">'
+#	rate_html = '<input type="hidden" id="ev" value="100">'
+#	rate_html = '<input type="hidden" id="eu" value="0">'
 end
 
 #### Return button

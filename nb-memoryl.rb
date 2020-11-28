@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser memory linker 0.00
+#Nutrition browser memory linker & ranker 0.00
 
 #==============================================================================
 #CHANGE LOG
@@ -31,60 +31,88 @@ require '/var/www/nb-soul.rb'
 
 db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
-pointer_h = Hash.new
+category_list = []
+pointer_list = []
+memory = []
 
 #### Lording all pointer
-puts "Lording all memories.\n"
+puts "Lording all pointer.\n"
 r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY};" )
 r.each do |e|
-	pointer_h[e['pointer']] = e['pointer'].size if e['pointer'].size > 2
+	pointer_list << e['pointer']
+	category_list << e['category']
+end
+pointer_list.uniq!
+category_list.uniq!
+
+
+#### Adding pointer mark
+puts "Adding pointer mark.\n"
+r.each do |e|
+	memory = e['memory']
+
+	pointer_sub_list = []
+	pointer_list.each do |ee| pointer_sub_list << memory.scan( ee ) end
+	pointer_sub_list.flatten!
+	pointer_sub_list.uniq!
+	pointer_sub_list_ = Array.new( pointer_sub_list )
+
+	# Removing smaller pointer & number
+	pointer_sub_list.size.times do |c|
+		pointer_sub_list_.each do |e|
+			begin
+				pointer_sub_list[c] = nil if /#{pointer_sub_list[c]}/ =~ e && pointer_sub_list[c] != e || /\d+/ =~ e || e.size < 2
+			rescue
+				pointer_sub_list[c] = nil
+				puts "ERROR.\n"
+			end
+		end
+	end
+
+	pointer_sub_list.each do |ee|
+		memory.gsub!( ee, "{{#{ee}}}" ) if ee != nil && ee != e['pointer']
+	end
+	memory.gsub!( '{{{{', '{{' )
+	memory.gsub!( '}}}}', '}}' )
+	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
 end
 
+#### Evaluating Rank
+puts "Counting.\n"
+each_count = []
 
-memory_size = r.size
-puts "#{pointer_h.size} pointers.\n"
-puts "#{memory_size} memories.\n"
+r.each do |e|
+	each_count << ( e['know'].to_f / e['count'].to_f )
+end
 
+puts "Evaluating total rank.\n"
+total_rank = each_count.map { |v| each_count.count { |a| a > v } + 1 }
 
 c = 0
 r.each do |e|
-	sub_pointer = []
-	memory = e['memory']
-	memory.gsub!( '{{', '' )
-	memory.gsub!( '}}', '' )
-
-	# 記憶に存在するポインタの抽出
-	pointer_h.each_key do |k|
-		begin
-			if /#{k}/ =~ memory
-				sub_pointer << k
-			end
-		rescue
-		end
-	end
-	sub_pointer.flatten!
-	sub_pointer.uniq!
-
-	opt_pointer_h = Hash.new
-	sub_pointer.each do |ee| opt_pointer_h[ee] = true end
-
-	#ポインタ in ポインタのフラグ折り
-	sub_pointer.each do |ee|
-		sub_pointer.each do |eee|
-			opt_pointer_h[eee] = false if /#{eee}/ =~ ee && eee != ee
-			opt_pointer_h[eee] = false if /^\d+$/ =~ eee
-		end
-	end
-
-	# ポインターの拡張タグ
-	opt_pointer_h.each do |k, v|
-		memory.gsub!( k, "{{#{k}}}") if v
-	end
-
-	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
-
+	trank = 11 - ( total_rank[c].to_f / total_rank.size * 10 ).ceil
+	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET trank='#{trank}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
 	c += 1
-	print( "#{c}/#{memory_size}\r" )
 end
 
-puts "\nDone."
+puts "Evaluating category rank.\n"
+category_list.each do |e|
+	rr = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{e}';" )
+
+	each_count = []
+	rr.each do |e|
+		each_count << ( e['know'].to_f / e['count'].to_f )
+	end
+
+	puts "#{e} rank.\n"
+	category_rank = each_count.map { |v| each_count.count { |a| a > v } + 1 }
+
+	c = 0
+	rr.each do |ee|
+		rank = 11 - ( category_rank[c].to_f / category_rank.size * 10 ).ceil
+		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET rank='#{rank}' WHERE category='#{ee['category']}' AND pointer='#{ee['pointer']}';" )
+		c += 1
+	end
+end
+
+puts "Done.\n"

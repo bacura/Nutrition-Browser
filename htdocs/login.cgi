@@ -109,7 +109,7 @@ when 'check'
   unless r.first
       html_init( nil )
       html_head( nil, 0, nil )
-      html_top()
+      html_top_login( lp )
       msg = "<p class='msg_small_red'>#{lp[4]}</p>"
       html_login_form( msg, lp )
 

@@ -49,22 +49,16 @@ end
 #==============================================================================
 cgi = CGI.new
 
-uname, uid, status, aliasu, language = login_check( cgi )
-lp = lp_init( 'koyomi-fix', language )
-start_year, st_set = get_starty( uname )
-
 html_init( nil )
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "uid: #{uid}<br>"
-	puts "status: #{status}<br>"
-	puts "aliasu: #{aliasu}<br>"
-	puts "language: #{language}<br>"
-	puts "<hr>"
-	puts "st_set:#{st_set}<br>\n"
-	puts "<hr>"
-end
+
+user = User.new( cgi )
+user.debug if @debug
+lp = user.language( script )
+
+
+start_year, st_set = get_starty( user.name )
 fix_opt = Hash.new
+
 
 #### POSTデータの取得
 command = cgi['command']
@@ -123,11 +117,11 @@ if command == 'save'
 
 	#### modify
 	if  modifyf == 1
-		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		if r.first
 			a = r.first['koyomi'].split( "\t" )[order]
 			code = a.split( ":" )[0]
-			mdb( "UPDATE #{$MYSQL_TB_FCS} SET name='#{food_name}', #{fix_set} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_FCS} SET name='#{food_name}', #{fix_set} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
 		end
 		koyomi_update = ''
 		r.each do |e|
@@ -142,20 +136,20 @@ if command == 'save'
 			end
 		end
 		koyomi_update.chop!
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	else
- 		fix_code = generate_code( uname, 'f' )
-		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{uname}', #{fix_set};", false, @debug )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+ 		fix_code = generate_code( user.name, 'f' )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		hh = st_set[tdiv] if hh == 99
 
 		if r.first
 			koyomi = r.first['koyomi']
 			koyomi << "\t#{fix_code}:100:99:#{hh}"
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
 			koyomi = "#{fix_code}:100:99:#{hh}"
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{uname}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		end
 	end
 end
@@ -167,12 +161,12 @@ end
 
 #### modify
 if command == 'modify' || modifyf == 1
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		t = r.first['koyomi'].split( "\t" )[order]
 		code = t.split( ":" )[0]
 
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
 		if rr.first
 			food_name = rr.first['name']
 			5.upto( 65 ) do |i| fix_opt[$FCT_ITEM[i]] = rr.first[$FCT_ITEM[i]].to_f end
@@ -185,7 +179,7 @@ end
 #### palette
 palette_ps = []
 palette_name = []
-r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
+r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
 r.each do |e|
 	a = e['palette'].split( '' )
 	a.map! do |x| x.to_i end
@@ -196,10 +190,8 @@ palette_set = palette_ps[palette]
 
 palette_html = ''
 palette_html << "<div class='input-group input-group-sm'>"
-palette_html << "<div class='input-group-prepend'>"
-palette_html << "	<label class='input-group-text'>#{lp[6]}</label>"
-palette_html << "</div>"
-palette_html << "<select class='custom-select custom-select-sm' id='palette' onChange=\"paletteKoyomi( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', #{modifyf} )\">"
+palette_html << "<label class='input-group-text'>#{lp[6]}</label>"
+palette_html << "<select class='form-select form-select-sm' id='palette' onChange=\"paletteKoyomi( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', #{modifyf} )\">"
 palette_ps.size.times do |c|
 	if palette == c
 		palette_html << "<option value='#{c}' SELECTED>#{palette_name[c]}</option>"
@@ -275,7 +267,7 @@ html_fct_block6 << '</table>'
 
 ####
 hh_html = ''
-hh_html << "<select class='custom-select custom-select-sm' id='hh_fix'>"
+hh_html << "<select class='form-select form-select-sm' id='hh_fix'>"
 hh_html << "	<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if hh == c
@@ -308,25 +300,21 @@ html = <<-"HTML"
 		<div class="col-3">
 			#{palette_html}
 		</div>
-		<div class="col-2" align='right'>
-			<div class="form-group form-check">
-    			<input type="checkbox" class="form-check-input" id="g100_check" onChange="koyomiG100check()">
-    			<label class="form-check-label">#{lp[2]}</label>
-  			</div>
-		</div>
-		<div class="col-2">
+		<div class="col-1"></div>
+		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text">#{lp[5]}</label>
-				</div>
+				<div class="form-check">
+    				<input type="checkbox" class="form-check-input" id="g100_check" onChange="koyomiG100check()">
+    				<label class="form-check-label">#{lp[2]}</label>
+  				</div>
+  				&nbsp;&nbsp;&nbsp;
+				<label class="input-group-text">#{lp[5]}</label>
 				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>&nbsp;g
 			</div>
 		</div>
 		<div class="col-2">
 			<div class="input-group input-group-sm">
-				<div class="input-group-prepend">
-					<label class="input-group-text">#{lp[12]}</label>
-				</div>
+				<label class="input-group-text">#{lp[12]}</label>
 				<input type="number" min='1' class="form-control form-control-sm" id="food_number" placeholder="1">
 			</div>
 		</div>

@@ -135,7 +135,6 @@ end
 date_html = ''
 week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
-p calendar.ddl
 1.upto( calendar.ddl ) do |c|
 	date_html << "<tr>"
 	if week_count == 0
@@ -144,7 +143,7 @@ p calendar.ddl
 		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
 	end
 
-	r = mariadb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false )
+	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false, @debug )
 	unless r.first
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
@@ -152,21 +151,21 @@ p calendar.ddl
 			onclick = "onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			if rr.first
 				if rr.first['koyomi'] == ''
-					date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+					date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 				else
 					koyomi_c = rr.first['koyomi'].split( "\t" ).size
 					if dd == c and tdiv == cc
-						date_html << "<td class='btn-warning' align='center' #{onclick}>#{koyomi_c}</td>"
+						date_html << "<td class='table-warning' align='center' #{onclick}>#{koyomi_c}</td>"
 					else
-						date_html << "<td class='btn-info' align='center' #{onclick}>#{koyomi_c}</td>"
+						date_html << "<td class='table-info' align='center' #{onclick}>#{koyomi_c}</td>"
 					end
 				end
 			else
-				date_html << "<td class='btn-light' align='center' #{onclick}>#{koyomi_c}</td>"
+				date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
 		end
 	else
-		4.times do date_html << "<td class='btn-secondary'></td>" end
+		4.times do date_html << "<td class='table-secondary'></td>" end
 	end
 
 	date_html << "</tr>"
@@ -179,8 +178,8 @@ end
 select_html = ''
 onchange = "onChange=\"\""
 
-
-select_html << "<select id='yyyy_cmm' class='custom-select custom-select-sm' #{onchange}>"
+select_html << "<div class='input-group mb-3'>"
+select_html << "<select id='yyyy_cmm' class='form-select form-select-sm' #{onchange}>"
 start_year.upto( 2020 ) do |c|
 	if c == yyyy
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -190,7 +189,7 @@ start_year.upto( 2020 ) do |c|
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='mm_cmm' class='custom-select custom-select-sm' #{onchange}>"
+select_html << "<select id='mm_cmm' class='form-select form-select-sm' #{onchange}>"
 1.upto( 12 ) do |c|
 	if c == mm
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -200,7 +199,7 @@ select_html << "<select id='mm_cmm' class='custom-select custom-select-sm' #{onc
 end
 select_html << "</select>&nbsp;/&nbsp;"
 
-select_html << "<select id='dd_cmm' class='custom-select custom-select-sm'>"
+select_html << "<select id='dd_cmm' class='form-select form-select-sm'>"
 1.upto( calendar.ddl ) do |c|
 	if c == dd
 		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -211,7 +210,7 @@ end
 select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
 
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
-select_html << "<select id='tdiv_cmm' class='custom-select custom-select-sm'>"
+select_html << "<select id='tdiv_cmm' class='form-select form-select-sm'>"
 0.upto( 3 ) do |c|
 	if tdiv == c
 		select_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
@@ -221,7 +220,7 @@ select_html << "<select id='tdiv_cmm' class='custom-select custom-select-sm'>"
 end
 select_html << "</select>&nbsp;&nbsp;&nbsp;"
 
-select_html << "<select id='hh_cmm' class='custom-select custom-select-sm'>"
+select_html << "<select id='hh_cmm' class='form-select form-select-sm'>"
 select_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if c == hh
@@ -231,6 +230,7 @@ select_html << "<option value='99'>時刻</option>"
 	end
 end
 select_html << "</select>"
+select_html << "</div>"
 
 
 #### Return button
@@ -247,11 +247,12 @@ html = <<-"HTML"
 		<div class='col-1'>#{return_button}</div>
 	</div>
 	<div class='row'>
-		<div class='col-5 form-inline'>
+		<div class='col-6 form-inline'>
 			#{select_html}
 		</div>
 		<div class='col-3 form-inline'>
-
+		</div>
+		<div class='col-1 form-inline'>
 		</div>
 		<div class='col-1 form-inline'>
 			#{save_button}

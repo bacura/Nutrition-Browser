@@ -37,9 +37,11 @@ var updateUintc_BWL1 = function(){
 		var uc12 = document.getElementById( "unitc12" ).value;
 		var uc13 = document.getElementById( "unitc13" ).value;
 		var uc14 = document.getElementById( "unitc14" ).value;
+		var uc16 = document.getElementById( "unitc16" ).value;
+		var uc17 = document.getElementById( "unitc17" ).value;
 		var notice = document.getElementById( "notice" ).value;
 
-		$.post( "gm-unitc.cgi", { command:'update', code:code, unitc2:uc2, unitc3:uc3, unitc4:uc4, unitc5:uc5, unitc6:uc6, unitc7:uc7, unitc8:uc8, unitc9:uc9, unitc10:uc10, unitc11:uc11, unitc12:uc12, unitc13:uc13, unitc14:uc14, notice:notice}, function( data ){ $( "#bw_levelF" ).html( data );});
+		$.post( "gm-unitc.cgi", { command:'update', code:code, unitc2:uc2, unitc3:uc3, unitc4:uc4, unitc5:uc5, unitc6:uc6, unitc7:uc7, unitc8:uc8, unitc9:uc9, unitc10:uc10, unitc11:uc11, unitc12:uc12, unitc13:uc13, unitc14:uc14, unitc16:uc16, unitc17:uc17, notice:notice}, function( data ){ $( "#bw_levelF" ).html( data );});
 		displayVideo( code + ' saved' );
 	}
 };

@@ -33,7 +33,7 @@ require './nb-soul.rb'
 
 #【特定のデータベースにアクセスするユーザーの追加】
 #CREATE USER '****'@'localhost' IDENTIFIED BY '****';
-#GRANT ALL PRIVILEGES ON nutrition.* TO 'nbu'@'localhost';
+#GRANT ALL PRIVILEGES ON nutrition.**** TO ''@'localhost';
 #FLUSH PRIVILEGES;
 
 #### Ruby-R用データベース初期化（オプション）
@@ -630,7 +630,7 @@ end
 def memory_init()
 	puts '記憶テーブルの作成'
 
-	query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, count BIGINT UNSIGNED, date DATETIME );'
+	query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT,, total_rank TINYINT, count BIGINT UNSIGNED, know BIGINT UNSIGNED, date DATETIME );'
 	$db.query( query )
 end
 
@@ -709,7 +709,7 @@ end
 def schoolk_init()
 	puts 'school koyomiテーブルの作成'
 	# テーブル作成
-	query = 'CREATE TABLE schoolk (user VARCHAR(32), student VARCHAR(32), menu VARCHAR(32), ampam TINYINT(1), date DATE );'
+	query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), pass VARCHAR(4), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
 	$db.query( query )
 end
 

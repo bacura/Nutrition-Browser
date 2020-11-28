@@ -71,6 +71,8 @@ unitc11 = 0.0
 unitc12 = 0.0
 unitc13 = 0.0
 unitc14 = 0.0
+unitc16 = 0.0
+unitc17 = 0.0
 notice = ''
 
 
@@ -89,9 +91,11 @@ when 'update'
 	unitc12 = cgi['unitc12'].gsub( ':', '' ).to_f
 	unitc13 = cgi['unitc13'].gsub( ':', '' ).to_f
 	unitc14 = cgi['unitc14'].gsub( ':', '' ).to_f
+	unitc16 = cgi['unitc16'].gsub( ':', '' ).to_f
+	unitc17 = cgi['unitc17'].gsub( ':', '' ).to_f
 	notice = cgi['notice']
 
-	unitc = "::#{unitc2}:#{unitc3}:#{unitc4}:#{unitc5}:#{unitc6}:#{unitc7}:#{unitc8}:#{unitc9}:#{unitc10}:#{unitc11}:#{unitc12}:#{unitc13}:#{unitc14}:"
+	unitc = "-:-:#{unitc2}:#{unitc3}:#{unitc4}:#{unitc5}:#{unitc6}:#{unitc7}:#{unitc8}:#{unitc9}:#{unitc10}:#{unitc11}:#{unitc12}:#{unitc13}:#{unitc14}:-:#{unitc16}:#{unitc17}:"
 	fn = code.split( ',' )
 	fn.each do |e|
 		mdb( "UPDATE #{$MYSQL_TB_EXT} SET unitc='#{unitc}', unitn='#{notice}' WHERE FN='#{e}';", false, @debug ) if /\d\d\d\d\d/ =~ e
@@ -107,7 +111,7 @@ unless code == ''
 	r = mdb( "SELECT * from #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, @debug )
 	if r.first
 		t = r.first['unitc']
-		t = '::0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:' if t == nil || t == ''
+		t = '-:-:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:-:0.0:0.0:' if t == nil || t == ''
 		unitc = t.split( ':' )
 		unitc2 = unitc[2]
 		unitc3 = unitc[3]
@@ -121,7 +125,9 @@ unless code == ''
 		unitc11 = unitc[11]
 		unitc12 = unitc[12]
 		unitc13 = unitc[13]
-		unitc13 = unitc[14]
+		unitc14 = unitc[14]
+		unitc16 = unitc[16]
+		unitc17 = unitc[17]
 		notice = r.first['unitn']
 	end
 end
@@ -179,6 +185,10 @@ html = <<-"HTML"
 		<div class='col-1'><input type='text' class='form-control form-control-sm' id='unitc13' value='#{unitc13}'></div>
 		<div class='col-1' align='right'>#{$UNIT[14]}</div>
 		<div class='col-1'><input type='text' class='form-control form-control-sm' id='unitc14' value='#{unitc14}'></div>
+		<div class='col-1' align='right'>#{$UNIT[16]}</div>
+		<div class='col-1'><input type='text' class='form-control form-control-sm' id='unitc16' value='#{unitc16}'></div>
+		<div class='col-1' align='right'>#{$UNIT[17]}</div>
+		<div class='col-1'><input type='text' class='form-control form-control-sm' id='unitc17' value='#{unitc17}'></div>
 	</div><br>
 
 	<div class='row'>

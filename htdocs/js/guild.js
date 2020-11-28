@@ -319,11 +319,9 @@ var modifysaveKoyomi = function( code, origin ){
 // Modifying or copying code in Koyomi
 var modifysaveKoyomi2 = function( code, yyyy, mm, dd, tdiv, origin ){
 	var hh = document.getElementById( "hh" ).value;
-	var ev = document.getElementById( "ev" ).value;
-	var eu = document.getElementById( "eu" ).value;
 	var copy = 0;
 	if( document.getElementById( "copy" ).checked ){ copy = 1; }
-	$.post( "koyomi-add.cgi", { command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }, function( data ){ $( "#bw_levelF" ).html( data );});
+	$.post( "koyomi-add.cgi", { command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin, copy:copy }, function( data ){ $( "#bw_levelF" ).html( data );});
 };
 
 // Modifying or copying fix code in Koyomi
@@ -432,5 +430,21 @@ var initGinmi = function(){
 
 var ginmiForm = function( mod ){
 	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
+	document.getElementById( "bw_level2" ).style.display = 'block';
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Tokei R //////////////////////////////////////////////////////////////
+
+// Tokei R init
+var initToker = function(){
+	closeBroseWindows( 1 );
+	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#bw_level1" ).html( data );});
+	document.getElementById( "bw_level1" ).style.display = 'block';
+};
+
+var tokerForm = function( mod ){
+	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
 	document.getElementById( "bw_level2" ).style.display = 'block';
 };

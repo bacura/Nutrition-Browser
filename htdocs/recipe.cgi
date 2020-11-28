@@ -180,7 +180,7 @@ when 'save'
 	else
 		pre_recipe = Recipe.new( user.name )
 		pre_recipe.code = recipe.code
-		pre_recipe.load_db
+		pre_recipe.load_db( code )
 		recipe.sum = r.first['sum']
 		recipe.dish = r.first['dish'].to_i
 		recipe.fig1 = pre_recipe.fig1

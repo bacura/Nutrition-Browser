@@ -406,9 +406,9 @@ photo_html = [ '', '', '', '' ]
 if freeze_flag == 0
 	0.upto( 3 ) do |c|
 		photo_html[c] = <<-"PHOTO"
-		<form method="post" enctype="multipart/form-data" id='photo_form'>
+		<form method="post" enctype="multipart/form-data" id='photo_formm#{c}'>
 			<label for="photom">&nbsp;&nbsp;#{lp[26]}</label>
-			<input type="file" name="photo1" id="photom" class="custom-control-file" onchange="">
+			<input type="file" name="photo1" id="photom#{c}" class="custom-control-file" onchange="">
 		</form>
 PHOTO
 	end
@@ -441,7 +441,7 @@ html = <<-"HTML"
 		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
 		<div class='col-8'></div>
 		<div class='col-1'>
-			<button class='btn btn-sm btn-success' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</button>
+			<span onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</span>
 		</div>
 	</div>
 	<div class='row'>
