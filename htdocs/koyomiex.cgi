@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi ex 0.00b
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20200611, 0.00b
+#Nutrition browser koyomi ex 0.01b
 
 
 #==============================================================================
@@ -87,7 +82,13 @@ end
 command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
+yyyy_mm = cgi['yyyy_mm']
 dd = cgi['dd'].to_i
+unless yyyy_mm == ''
+	a = yyyy_mm.split( '-' )
+	yyyy = a[0].to_i
+	mm = a[1].to_i
+end
 dd = 1 if dd == 0
 item_no = cgi['item_no'].to_i
 cell = cgi['cell']
@@ -117,10 +118,6 @@ end
 
 #### Date & calendar config
 calendar = Calendar.new( user.name, yyyy, mm, dd )
-calendar_nm = Calendar.new( user.name, yyyy, mm, dd )
-calendar_nm.move_mm( 1 )
-calendar_pm = Calendar.new( user.name, yyyy, mm, dd )
-calendar_pm.move_mm( -1 )
 calendar_td = Calendar.new( user.name, 0, 0, 0 )
 calendar.debug if @debug
 sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
@@ -163,7 +160,7 @@ end
 
 ####
 th_html = '<thead><tr>'
-th_html << "<th align='center'>日付</th>"
+th_html << "<th align='center'></th>"
 kex_select_set.size.times do |c|
 	th_html << "<th align='center'>#{item_set[c]} (#{unit_set[c]})</th>"
 end
@@ -202,52 +199,20 @@ r.each do |e| koyomir[e['date'].day] = e end
 end
 
 
-####
-select_html = ''
-select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='yyyy' class='form-select form-select-sm' onChange=\"changeKoyomiex_BW1()\">"
-calendar.yyyyf.upto( calendar_td.yyyy + 1 + 1 ) do |c|
-	if c == calendar.yyyy
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>"
-select_html << "<label class='input-group-text'>#{lp[9]}</label>"
-
-select_html << "<select id='mm' class='form-select form-select-sm' onChange=\"initKoyomiex( '', '' )\">"
-1.upto( 12 ) do |c|
-	if c == mm
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>"
-select_html << "<label class='input-group-text'>#{lp[10]}</label>"
-select_html << "</div>"
-
-
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'>
 			<h5>#{lp[8]}</h5>
 		</div>
-		<div class='col-3 form-inline'>
-			#{select_html}
+		<div class='col-2 form-inline'>
+			<input type='month' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomiex()">
 		</div>
-		<div class='col-2'>
-			<a href='#day#{date.day}'><button class='btn btn-sm btn-outline-primary'>#{lp[14]}</button></a>&nbsp;
-			<button class='btn btn-sm btn-outline-primary' onclick="initKoyomiex( '#{calendar_pm.yyyy}', '#{calendar_pm.mm}' )">#{lp[15]}</button>
-			<button class='btn btn-sm btn-outline-primary' onclick="initKoyomiex( '#{calendar_td.yyyy}', '#{calendar_td.mm}' )">#{lp[13]}</button>
-			<button class='btn btn-sm btn-outline-primary' onclick="initKoyomiex( '#{calendar_nm.yyyy}', '#{calendar_nm.mm}' )">#{lp[16]}</button>
+		<div class='col-7'>
+			<a href='#day#{date.day}'>#{lp[13]}</a>
 		</div>
-		<div class='col-3'>
-		</div>
-		<div class='col-2'>
-			<button class='btn btn-sm btn-success' onclick="changeKoyomi( '#{calendar.yyyy}', '#{calendar.mm}' )">#{lp[12]}</button>
+		<div class='col-1'>
+			<button class='btn btn-sm btn-success' onclick="changeKoyomi()">#{lp[12]}</button>
 		</div>
 	</div>
 	<div class='row'>

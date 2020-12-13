@@ -82,7 +82,7 @@ $RECIPE_TIME = ['未設定','～5','～10','～15','～20','～30','～45','～6
 $RECIPE_COST = ['未設定','50円未満','100円未満','150円未満','200円未満','300円未満','400円未満','500円未満','600円未満','800円未満','1000円未満', '1000円以上']
 
 #         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15       16    17
-$UNIT = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前', 'cm', '束']
+$UNIT = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前', 'cm', '普通']
 
 #              0    1           2         3     4       5
 $SUB_GROUP = ['','緑黄色野菜','普通牛乳','味噌','醤油','食塩']
@@ -408,6 +408,7 @@ def food_weight_check( food_weight )
   fw.sub!( '．', '.' )
   fw.sub!( '、', '.' )
   fw.sub!( ',', '.' )
+  fw.sub!( '，', '.' )
   fw.sub!( '。', '.' )
   fw.sub!( '／', '/')
   fw.sub!( '＋', '+')
@@ -659,7 +660,7 @@ end
 
 ####
 class Calendar
-  attr_accessor :yyyy, :yyyyf, :mm, :dd, :ddl, :wf, :wl
+  attr_accessor :yyyy, :yyyyf, :mm, :mms, :dd, :dds, :ddl, :wf, :wl
 
   def initialize( uname, yyyy, mm, dd )
     @yyyy = yyyy
@@ -689,6 +690,11 @@ class Calendar
       a = res.first['koyomiy'].split( ':' )
       @yyyyf = a[0].to_i if a[0].to_i != 0
     end
+
+    @mms = @mm
+    @mms = "0#{mm}" if @mm < 10
+    @dds = @dd
+    @dds = "0#{dd}" if @dd < 10
   end
 
   def move_mm( mm )

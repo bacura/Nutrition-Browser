@@ -107,7 +107,7 @@ def meals( e, lp, uname, freeze_flag )
 		if freeze_flag == 0
 			mb_html << "<td>"
 			mb_html << fix_copy_button unless fix_copy_button == ''
-			mb_html << "<button class='btn btn-sm btn-outline-danger' onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">削除</button>"
+			mb_html << "<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">#{lp[27]}</span>"
 			mb_html << "</td>"
 		else
 			mb_html << "<td></td>"
@@ -275,6 +275,12 @@ command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
+yyyy_mm = cgi['yyyy_mm']
+unless yyyy_mm == ''
+	a = yyyy_mm.split( '-' )
+	yyyy = a[0].to_i
+	mm = a[1].to_i
+end
 hh = cgi['hh'].to_i
 tdiv = cgi['tdiv'].to_i
 code = cgi['code']
@@ -491,10 +497,6 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-1'>
-			<br>
-			<h5>メモ</h5>
-		</div>
 		#{memo_html}
 	</div>
 </div>

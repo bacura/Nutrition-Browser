@@ -97,30 +97,28 @@ def html_top( user, lp )
       end
     end
     login << "</SELECT>"
-    login << "&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
+    login << "&nbsp;#{lp[56]}&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{lp[55]}</a>"
     login << "</div>"
   else
-    login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">ログアウト</a>"
+    login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{lp[55]}</a>"
   end
-  login = "<a href='login.cgi' class=\"text-#{login_color}\">ログイン</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">登録</a>" if user_name == nil
+  login = "<a href='login.cgi' class=\"text-#{login_color}\">#{lp[60]}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{lp[53]}</a>" if user_name == nil
 
   html = <<-"HTML"
       <header class="navbar navbar-dark bg-dark" id="header">
         <div class='row'>
-          <div class='col-3'><h2><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h2></div>
+          <div class='col-3'><h2><a href="index.cgi" class="text-#{login_color}">#{lp[54]}</a></h2></div>
           <div class='col-4'><span class="text-#{login_color} login_msg"><h3>#{login}</h3></span></div>
           <div class='col-1'><a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a></div>
-          <div class='col-1'>
-            <select class="form-select form-select-sm" id="qcate">
-              <option value='0'>食品</option>
-              <option value='1'>レシピ</option>
-              <option value='2'>記憶</option>
-            </select>
-          </div>
-          <div class='col-3'>
-            <div class="input-group mb-3">
-              <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
-              <span class='btn btn-sm' onclick="searchBWL1()">#{lp[52]}</span>
+          <div class='col-4'>
+            <div class="input-group">
+              <select class="form-select" id="qcate">
+                <option value='0'>#{lp[57]}</option>
+                <option value='1'>#{lp[58]}</option>
+                <option value='2'>#{lp[59]}</option>
+              </select>
+              <input class="form-control" type="search" maxlength="100" id="words" onchange="searchBWL1()">
+              <btton class='btn btn-sm' onclick="searchBWL1()">#{lp[52]}</button>
             </div>
           </div>
         </div>

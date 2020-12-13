@@ -2,9 +2,9 @@
 昼食
 夕食
 間食 / 補食
-メモ
+<img src='bootstrap-dist/icons/pencil-fill.svg' style='height:2em; width:2em;'>
 操作
-<img src='bootstrap-dist/icons/arrow-up-circle-fill.svg' style='height:2em; width:2em;'>
+<img src='bootstrap-dist/icons/arrow-up-circle-fill.svg' style='height:3em; width:3em;'>
 食事内容
 摂取量
 時刻
@@ -24,3 +24,4 @@
 何か食べた（大盛）
 何か食べた（特盛）
 <img src='bootstrap-dist/icons/camera-fill.svg' style='height:2em; width:2em;'>
+<img src='bootstrap-dist/icons/x-circle-fill.svg' style='height:1.5em; width:1.5em;'>

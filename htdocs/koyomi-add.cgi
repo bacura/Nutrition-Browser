@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi adding panel 0.01b
+#Nutrition browser koyomi adding panel 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -102,6 +102,13 @@ command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
+yyyy_mm_dd = cgi['yyyy_mm_dd']
+unless yyyy_mm_dd == ''
+	a = yyyy_mm_dd.split( '-' )
+	yyyy = a[0].to_i
+	mm = a[1].to_i
+	dd = a[2].to_i
+end
 code = cgi['code']
 ev = cgi['ev'].to_i
 eu = cgi['eu'].to_i
@@ -194,7 +201,7 @@ if command == 'save' || command == 'move'
 end
 
 copy_html = ''
-save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomi_BWF( '#{code}', '#{origin}' )\">#{lp[12]}</button>"
+save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomiAdd( 'save', '#{code}', '#{origin}' )\">#{lp[12]}</button>"
 
 
 ####
@@ -204,7 +211,7 @@ if command == 'modify' || command == 'move' || command == 'move_fix'
     copy_html << "<label class='form-check-label'>#{lp[24]}</label>"
 	copy_html << "</div>"
 
-	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"modifysaveKoyomi( '#{code}', '#{origin}' )\">#{lp[23]}</button>"
+	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomiAdd( 'move', '#{code}', '#{origin}' )\">#{lp[23]}</button>"
 end
 
 
@@ -244,8 +251,8 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
 			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
-			onclick = "onclick=\"saveKoyomi2_BWF( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			onclick = "onclick=\"modifysaveKoyomi2( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move' || command == 'move_fix'
+			onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
+			onclick = "onclick=\"modifysaveKoyomi_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move' || command == 'move_fix'
 
 			if rr.first
 				if rr.first['koyomi'] == ''
@@ -269,63 +276,32 @@ end
 
 
 #### Select HTML
-select_html = ''
-onchange = "onChange=\"changeKoyomi_BWF( '#{code}', '#{origin}' )\""
-onchange = "onChange=\"modifychangeKoyomi( '#{code}', '#{origin}' )\"" if command == 'modify'
-select_html << "<div class='input-group mb-3'>"
-select_html << "<select id='yyyy_add' class='form-select form-select-sm' #{onchange}>"
-calendar.yyyyf.upto( 2020 ) do |c|
-	if c == calendar.yyyy
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>&nbsp;/&nbsp;"
-
-select_html << "<select id='mm_add' class='form-select form-select-sm' #{onchange}>"
-1.upto( 12 ) do |c|
-	if c == calendar.mm
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>&nbsp;/&nbsp;"
-
-select_html << "<select id='dd' class='form-select form-select-sm'>"
-1.upto( calendar.ddl ) do |c|
-	if c == calendar.dd
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
-
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
-select_html << "<select id='tdiv' class='form-select form-select-sm'>"
+
+tdiv_html = ''
+tdiv_html << "<select id='tdiv' class='form-select form-select-sm'>"
 0.upto( 3 ) do |c|
 	if tdiv == c
-		select_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
+		tdiv_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
 	else
-		select_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
+		tdiv_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
 	end
 end
-select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
+tdiv_html << "</select>"
 
-select_html << "<select id='hh' class='form-select form-select-sm'>"
-select_html << "<option value='99'>時刻</option>"
+#### Rate HTML
+hour_html = ''
+hour_html << "<select id='hh' class='form-select form-select-sm'>"
+hour_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if c == hh
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
+		hour_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
-		select_html << "<option value='#{c}'>#{c}</option>"
+		hour_html << "<option value='#{c}'>#{c}</option>"
 	end
 end
-select_html << "</select>"
+hour_html << "</select>"
 #select_html << "<button class='btn btn-sm btn-outline-success' type='button' onclick=\"nowKoyomi()\">#{lp[11]}</button>"
-select_html << "</div>"
 
 
 #### Rate HTML
@@ -352,10 +328,14 @@ else
 end
 
 #### Return button
-return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn()\">#{lp[11]}</button>"
+return_button = "<span onclick=\"koyomiReturn()\">#{lp[11]}</span>"
 if command == 'modify' || command == 'move'
-	return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</button>"
+	return_button = "<span onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</span>"
 end
+
+
+onchange = "onChange=\"changeKoyomiAdd( 'init', '#{code}', '#{origin}' )\""
+onchange = "onChange=\"changeKoyomiAdd( 'modify', '#{code}', '#{origin}' )\"" if command == 'modify'
 
 
 html = <<-"HTML"
@@ -365,8 +345,14 @@ html = <<-"HTML"
 		<div class='col-1'>#{return_button}</div>
 	</div>
 	<div class='row'>
-		<div class='col-6 form-inline'>
-			#{select_html}
+		<div class='col-2 form-inline'>
+			<input type='date' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
+		</div>
+		<div class='col-2 form-inline'>
+			#{tdiv_html}
+		</div>
+		<div class='col-2 form-inline'>
+			#{hour_html}
 		</div>
 		<div class='col-3 form-inline'>
 			#{rate_html}
@@ -383,7 +369,7 @@ html = <<-"HTML"
 	<table class="table table-sm table-hover">
 	<thead>
     	<tr>
-     		<th align='center'>#{lp[17]}</th>
+     		<th align='center'></th>
      		<th align='center'>#{lp[18]}</th>
      		<th align='center'>#{lp[19]}</th>
      		<th align='center'>#{lp[20]}</th>

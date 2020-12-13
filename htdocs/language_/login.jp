@@ -2,3 +2,10 @@ IDとパスワードを入力してログインしてください。
 パスワード
 ログイン
 IDとパスワードが一致しませんでした。<br>パスワードを忘れた方は再登録してください。
+<img src='bootstrap-dist/icons/question-circle.svg' style='height:3em; width:3em;'>
+<img src='bootstrap-dist/icons/search.svg' style='height:1.5em; width:1.5em;'>
+栄養ブラウザ
+登録
+食品
+レシピ
+記憶

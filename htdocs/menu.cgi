@@ -106,7 +106,7 @@ r.each do |e| label_list << e['label'] end
 label_list.uniq!
 
 
-html_label = '<select class="form-control form-control-sm" id="label">'
+html_label = '<select class="form-select form-select-sm" id="label">'
 html_label << "<option value='#{lp[2]}'>#{lp[2]}</option>"
 label_list.each do |e|
 	html_label << "<option value='#{e}' #{selected( menu.label, e )}>#{e}</option>" unless e == lp[2]

@@ -8,13 +8,13 @@
 こよみ
 年
 月
-戻る
+<img src='bootstrap-dist/icons/arrow-up-circle-fill.svg' style='height:3em; width:3em;'>
 登録
 朝食
 昼食
 夕食
 間食 / 補食
-日
+#
 朝食
 昼食
 夕食

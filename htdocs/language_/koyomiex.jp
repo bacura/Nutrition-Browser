@@ -9,12 +9,5 @@
 年
 月
 日
-←基本
-今日
-↓
-←
-→
-
-
-
-
+基本
+<img src='bootstrap-dist/icons/arrow-down-square.svg' style='height:2em; width:2em;'>

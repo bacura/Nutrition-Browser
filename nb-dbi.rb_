@@ -33,7 +33,7 @@ require './nb-soul.rb'
 
 #【特定のデータベースにアクセスするユーザーの追加】
 #CREATE USER '****'@'localhost' IDENTIFIED BY '****';
-#GRANT ALL PRIVILEGES ON nutrition.**** TO ''@'localhost';
+#GRANT ALL PRIVILEGES ON nutrition.* TO '****'@'localhost';
 #FLUSH PRIVILEGES;
 
 #### Ruby-R用データベース初期化（オプション）
@@ -709,17 +709,10 @@ end
 def schoolk_init()
 	puts 'school koyomiテーブルの作成'
 	# テーブル作成
-	query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), pass VARCHAR(4), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
+	query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), pass VARCHAR(64), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
 	$db.query( query )
 end
 
-#### 料理教室献立テーブルの作成
-def schoolm_init()
-	puts 'school koyomiテーブルの作成'
-	# テーブル作成
-	query = 'CREATE TABLE schoolm (user VARCHAR(32), code VARCHAR(32), course VARCHAR(64), orderm TINYINT);'
-	$db.query( query )
-end
 
 #==============================================================================
 puts "fctb2015_db_init.rb"
@@ -754,9 +747,7 @@ $db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}
 #metst_init()
 #mets_init()
 
-#schoolm_init()
 #schoolk_init()
-#schools_init()
 
 
 $db.close

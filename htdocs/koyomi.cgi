@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi 0.03b
+#Nutrition browser koyomi 0.04b
 
 
 #==============================================================================
@@ -27,7 +27,7 @@ def sub_menu( lp )
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomi()">#{lp[23]}</button></div>
-		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex( '', '' )">#{lp[24]}</button></div>
+		<div class='col-2'><button class='btn btn-sm btn-outline-info' onclick="initKoyomiex()">#{lp[24]}</button></div>
 		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[25]}</button></div>
 		<div class='col-2'><button class='btn btn-sm btn-outline-light' onclick="">#{lp[26]}</button></div>
 		<div class='col-2'></div>
@@ -224,6 +224,12 @@ command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
+yyyy_mm = cgi['yyyy_mm']
+unless yyyy_mm == ''
+	a = yyyy_mm.split( '-' )
+	yyyy = a[0].to_i
+	mm = a[1].to_i
+end
 dd = 1 if dd == 0
 freeze_check = cgi['freeze_check']
 freeze_check_all = cgi['freeze_check_all']
@@ -244,10 +250,6 @@ sub_menu ( lp ) if command == 'menu'
 
 #### Date & calendar config
 calendar = Calendar.new( user.name, yyyy, mm, dd )
-calendar_nm = Calendar.new( user.name, yyyy, mm, dd )
-calendar_nm.move_mm( 1 )
-calendar_pm = Calendar.new( user.name, yyyy, mm, dd )
-calendar_pm.move_mm( -1 )
 calendar_td = Calendar.new( user.name, 0, 0, 0 )
 
 calendar.debug if @debug
@@ -445,7 +447,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<td #{onclick}>#{koyomi_tmp[4]}</td>"
 	end
 
-	date_html << "<td><input type='checkbox' id='freeze_check#{c}' onChange=\"freezeKoyomi( '#{calendar.yyyy}', '#{calendar.mm}', '#{c}' )\" #{freeze_checked}></td>"
+	date_html << "<td><input type='checkbox' id='freeze_check#{c}' onChange=\"freezeKoyomi( '#{c}' )\" #{freeze_checked}></td>"
 	date_html << "</tr>"
 
 	if calc_html_set[c] == '' || calc_html_set[c] == nil
@@ -461,51 +463,18 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	week_count = 0 if week_count > 6
 end
 
-
-####
-select_html = ''
-select_html << "<div class='input-group input-group-sm'>"
-select_html << "<select id='yyyy' class='form-select form-select-sm' onChange=\"changeKoyomi( '', '' )\">"
-calendar.yyyyf.upto( calendar_td.yyyy + 1 ) do |c|
-	if c == calendar.yyyy
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>"
-select_html << "<label class='input-group-text'>#{lp[9]}</label>"
-
-select_html << "<select id='mm' class='form-select form-select-sm' onChange=\"changeKoyomi( '', '' )\">"
-1.upto( 12 ) do |c|
-	if c == calendar.mm
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>"
-select_html << "<label class='input-group-text'>#{lp[10]}</label>"
-select_html << "</div>"
-
-
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><h5>#{lp[8]}</h5></div>
-		<div class='col-3 form-inline'>
-			#{select_html}
+		<div class='col-2 form-inline'>
+			<input type='month' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomi()">
 		</div>
-		<div class='col-2'>
-			<a href='#day#{calendar_td.dd}'><button class='btn btn-sm btn-outline-primary'>#{lp[28]}</button></a>&nbsp;
-			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_pm.yyyy}', '#{calendar_pm.mm}' )">#{lp[29]}</button>
-			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_td.yyyy}', '#{calendar_td.mm}' )">#{lp[18]}</button>
-			<button class='btn btn-sm btn-outline-primary' onclick="changeKoyomi( '#{calendar_nm.yyyy}', '#{calendar_nm.mm}' )">#{lp[30]}</button>
+		<div class='col-7'>
+			<a href='#day#{calendar_td.dd}'>#{lp[18]}</a>
 		</div>
-		<div class='col-3'>
-		</div>
-		<div class='col-2'>
-			<button class='btn btn-sm btn-success' onclick="initKoyomiex( '#{calendar.yyyy}', '#{calendar.mm}' )">#{lp[22]}</button>
+		<div class='col-1'>
+			<button class='btn btn-sm btn-success' onclick="changeKoyomiex()">#{lp[22]}</button>
 		</div>
 	</div>
 	<div class='row'>
@@ -516,13 +485,13 @@ html = <<-"HTML"
 	<table class="table table-sm table-hover">
 	<thead>
     	<tr>
-     		<th align='center'>#{lp[11]}</th>
+     		<th align='center'></th>
      		<th align='center'>#{lp[12]}</th>
      		<th align='center'>#{lp[13]}</th>
      		<th align='center'>#{lp[14]}</th>
      		<th align='center'>#{lp[15]}</th>
      		<th align='center'>#{lp[16]}</th>
-     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll( '#{calendar.yyyy}', '#{calendar.mm}' )" #{freeze_all_checked}>&nbsp;#{lp[17]}</th>
+     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll()" #{freeze_all_checked}>&nbsp;#{lp[17]}</th>
     	</tr>
   	</thead>
 	#{date_html}

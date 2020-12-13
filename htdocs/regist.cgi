@@ -26,30 +26,28 @@ script='regist'
 #==============================================================================
 
 #### HTML top
-def html_top_regist()
+def html_top_regist( lp )
   login_color = "secondary"
-  login = "<a href='login.cgi' class=\"text-#{login_color}\">ログイン</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">登録</a>"
+  login = "<a href='login.cgi' class=\"text-#{login_color}\">#{lp[17]}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{lp[24]}</a>"
 
   html = <<-"HTML"
       <header class="navbar navbar-dark bg-dark" id="header">
-        <h4><a href="index.cgi" class="text-#{login_color}">栄養ブラウザ</a></h4>
-        <span class="text-#{login_color} login_msg"><h5>#{login}</h5></span>
-        <a href='http://neg.bacura.jp/?p=523' target='manual'><span class="text-#{login_color} login_msg"><h5>手引き</h5></span></a>
-        <span class="form-inline form-inline-sm">
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <select class="form-control form-control-sm" id="qcate">
-                <option value='0'>食品</option>
-                <option value='1'>レシピ</option>
-                <option value='2'>記憶</option>
+        <div class='row'>
+          <div class='col-3'><h2><a href="index.cgi" class="text-#{login_color}">#{lp[25]}</a></h2></div>
+          <div class='col-4'><span class="text-#{login_color} login_msg"><h3>#{login}</h3></span></div>
+          <div class='col-1'><a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{lp[26]}</a></div>
+          <div class='col-4'>
+            <div class="input-group">
+              <select class="form-select" id="qcate">
+                <option value='0'>#{lp[28]}</option>
+                <option value='1'>#{lp[29]}</option>
+                <option value='2'>#{lp[20]}</option>
               </select>
-            </div>
-            <input class="form-control form-control-sm" type="text" maxlength="100" id="words" onchange="searchBWL1()">
-            <div class="input-group-append">
-              <button class="btn btn-outline-#{login_color} btn-sm" onclick="searchBWL1()">検索</button>
+              <input class="form-control" type="search" maxlength="100" id="words" onchange="searchBWL1()">
+              <btton class='btn btn-sm' onclick="searchBWL1()">#{lp[27]}</button>
             </div>
           </div>
-        </span>
+        </div>
       </header>
 HTML
 
@@ -158,7 +156,7 @@ get_data = get_data()
 post_data = CGI.new
 
 html_head( nil, 0, nil )
-html_top_regist()
+html_top_regist( lp )
 
 case get_data['mode']
 # Confomation of user data

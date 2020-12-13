@@ -1,0 +1,44 @@
+#Nutrition browser koyomi-cmm 0.00b
+
+#==============================================================================
+# OVERVIEW
+#==============================================================================
+栄養ブラウザのカレンダー機能のセット複製・移動スクリプト。
+
+
+#==============================================================================
+# DEPENDENCE
+#==============================================================================
+nb-soul.rb
+
+
+#==============================================================================
+# ITEM FROM GET / POST
+#==============================================================================
+[POST]
+command.to_i	#コマンド
+yyyy_mm_dd.to_s	#年月日
+yyyy.to_i		#年
+mm.to_i			#月
+dd.to_i			#日
+tdiv.to_i		#食事区分
+hh.to_i			#時間
+
+cm_mode.to_s	#移動/コピー
+origin.to_s		#移動/コピー元情報
+
+#==============================================================================
+# TRANSITION
+#==============================================================================
+guild.js/cmmKoyomi( cm_mode, yyyy, mm, dd, tdiv ) -> koyomi-cmm.cgi{ command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99 }
+guild.js/cmmChangeKoyomi( cm_mode, origin ) -> koyomi-cmm.cgi{ command:"init", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, origin:origin }
+guild.js/cmmSaveKoyomi( cm_mode, origin ) -> koyomi-cmm.cgi{ command:"save", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, origin:origin }
+guild.js/cmmSaveKoyomi_direct( cm_mode, yyyy, mm, dd, tdiv, origin ) -> koyomi-cmm.cgi{ command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }
+
+
+#==============================================================================
+#CHANGE LOG
+#==============================================================================
+20200611	0.00b	βスタート
+20201202	0.01b	問題：特になし
+					修正：年月のフォーム入力をHTML5に対応させた。それに伴い月移動ボタンの廃止。

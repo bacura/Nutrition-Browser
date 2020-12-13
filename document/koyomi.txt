@@ -17,6 +17,7 @@ nb-soul.rb
 #==============================================================================
 #POST
 command.to_i	#コマンド
+yyyy_mm.to_s	#年月
 yyyy.to_i		#年
 mm.to_i			#月
 dd.to_i			#日
@@ -28,13 +29,13 @@ freeze_check_all.to_s	#全凍結チェック 'true' or 'false'
 # TRANSITION
 #==============================================================================
 guild.js/initKoyomi() -> koyomi.cgi{ command:"menu" }, koyomi.cgi{ command:"init" }
-guild.js/changeKoyomi( yyyy, mm ) -> koyomi.cgi{ command:"init", yyyy:yyyy, mm:mm }
-guild.js/freezeKoyomi( yyyy, mm, dd ) -> koyomi.cgi{ command:'freeze', yyyy:yyyy, mm:mm, dd, freeze_check:freeze_check }
-guild.js/freezeKoyomiAll( yyyy, mm ) -> "koyomi.cgi", { command:'freeze_all', yyyy:yyyy, mm:mm,  freeze_check_all:freeze_check_all }
+guild.js/changeKoyomi() -> koyomi.cgi{ command:"init", yyyy_mm:yyyy_mm }
+guild.js/freezeKoyomi( dd ) -> koyomi.cgi{ command:'freeze', yyyy_mm:yyyy_mm, dd:dd, freeze_check:freeze_check }
+guild.js/freezeKoyomiAll() -> "koyomi.cgi", { command:'freeze_all', yyyy_mm:yyyy_mm, freeze_check_all:freeze_check_all }
 
-guild.js/initKoyomiex( yyyy, mm ) -> koyomiex.cgi{ command:"init", yyyy:yyyy, mm:mm }
+guild.js/initKoyomiex() -> koyomiex.cgi{ command:"init" }
 
-guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy:yyyy, mm:mm, dd:dd }
+guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy_mm:yyyy_mm, dd:dd }
 
 #==============================================================================
 #CHANGE LOG
@@ -46,3 +47,5 @@ guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy:yyyy, mm
 					修正：zcodeが存在しなくても、何か食べたのみの日では新規に発行しない様に分岐条件を最適化した。
 20200715	0.03b	問題：一時的な単位と単位コードの変換を消したらエラーとなる。
 					修正：単位コードの形式が文字列だったので、数字形式に変更した。
+20201202	0.04b	問題：特になし
+					修正：年月のフォーム入力をHTML5に対応させた。それに伴い月移動ボタンの廃止。

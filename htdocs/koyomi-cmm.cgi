@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi menu copy / move 0.00b
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#2020611, 0.00b
+#Nutrition browser koyomi menu copy / move 0.01b
 
 
 #==============================================================================
@@ -62,6 +57,13 @@ command = cgi['command']
 yyyy = cgi['yyyy'].to_i
 mm = cgi['mm'].to_i
 dd = cgi['dd'].to_i
+yyyy_mm_dd = cgi['yyyy_mm_dd']
+unless yyyy_mm_dd == ''
+	a = yyyy_mm_dd.split( '-' )
+	yyyy = a[0].to_i
+	mm = a[1].to_i
+	dd = a[2].to_i
+end
 tdiv = cgi['tdiv'].to_i
 hh = cgi['hh'].to_i
 cm_mode = cgi['cm_mode']
@@ -125,9 +127,9 @@ end
 ####
 save_button = ''
 if cm_mode == 'copy'
-	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi2( '#{cm_mode}', '#{origin}' )\">#{lp[12]}</button>"
+	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{lp[12]}</button>"
 else
-	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi2( '#{cm_mode}', '#{origin}' )\">#{lp[8]}</button>"
+	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{lp[8]}</button>"
 end
 
 
@@ -148,7 +150,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
 			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
-			onclick = "onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
+			onclick = "onclick=\"cmmSaveKoyomi_direct( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			if rr.first
 				if rr.first['koyomi'] == ''
 					date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
@@ -174,83 +176,49 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 end
 
 
-#### Select HTML
-select_html = ''
-onchange = "onChange=\"\""
-
-select_html << "<div class='input-group mb-3'>"
-select_html << "<select id='yyyy_cmm' class='form-select form-select-sm' #{onchange}>"
-start_year.upto( 2020 ) do |c|
-	if c == yyyy
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>&nbsp;/&nbsp;"
-
-select_html << "<select id='mm_cmm' class='form-select form-select-sm' #{onchange}>"
-1.upto( 12 ) do |c|
-	if c == mm
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>&nbsp;/&nbsp;"
-
-select_html << "<select id='dd_cmm' class='form-select form-select-sm'>"
-1.upto( calendar.ddl ) do |c|
-	if c == dd
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		select_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-select_html << "</select>&nbsp;&nbsp;&nbsp;&nbsp;"
-
+#### tdiv HTML
+tdiv_html = ''
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
-select_html << "<select id='tdiv_cmm' class='form-select form-select-sm'>"
+tdiv_html << "<select id='tdiv_cmm' class='form-select form-select-sm'>"
 0.upto( 3 ) do |c|
 	if tdiv == c
-		select_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
+		tdiv_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
 	else
-		select_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
+		tdiv_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
 	end
 end
-select_html << "</select>&nbsp;&nbsp;&nbsp;"
+tdiv_html << "</select>"
 
-select_html << "<select id='hh_cmm' class='form-select form-select-sm'>"
-select_html << "<option value='99'>時刻</option>"
+
+#### hour HTML
+hour_html = ''
+hour_html << "<select id='hh_cmm' class='form-select form-select-sm'>"
+hour_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
 	if c == hh
-		select_html << "<option value='#{c}' SELECTED>#{c}</option>"
+		hour_html << "<option value='#{c}' SELECTED>#{c}</option>"
 	else
-		select_html << "<option value='#{c}'>#{c}</option>"
+		hour_html << "<option value='#{c}'>#{c}</option>"
 	end
 end
-select_html << "</select>"
-select_html << "</div>"
-
-
-#### Return button
-return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn()\">#{lp[11]}</button>"
-if command == 'save' || cm_mode == 'move'
-	return_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[11]}</button>"
-end
+hour_html << "</select>"
 
 
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-11'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
-		<div class='col-1'>#{return_button}</div>
+		<div class='col-1'><span onclick="koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</span></div>
 	</div>
 	<div class='row'>
-		<div class='col-6 form-inline'>
-			#{select_html}
+		<div class='col-2 form-inline'>
+			<input type='date' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' onChange="cmmChangeKoyomi( '#{cm_mode}', '#{origin}' )">
 		</div>
-		<div class='col-3 form-inline'>
+		<div class='col-2 form-inline'>
+			#{tdiv_html}
+		</div>
+		<div class='col-2 form-inline'>
+			#{hour_html}
 		</div>
 		<div class='col-1 form-inline'>
 		</div>
@@ -263,7 +231,7 @@ html = <<-"HTML"
 	<table class="table table-sm table-hover">
 	<thead>
     	<tr>
-     		<th align='center'>#{lp[17]}</th>
+     		<th align='center'></th>
      		<th align='center'>#{lp[13]}</th>
      		<th align='center'>#{lp[14]}</th>
      		<th align='center'>#{lp[15]}</th>

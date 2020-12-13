@@ -32,12 +32,11 @@ origin.to_s		#移動/コピー元情報
 #==============================================================================
 # TRANSITION
 #==============================================================================
-guild.js/saveKoyomi_BWF( code, origin ) -> koyomi-add.cgi{ command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
-guild.js/saveKoyomi2_BWF( code, yyyy, mm, dd, tdiv, origin ) -> koyomi-add.cgi{ command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
-guild.js/modifysaveKoyomi( code, origin ) -> koyomi-add.cgi{ command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }
-guild.js/modifysaveKoyomi2( code, yyyy, mm, mm, tdiv, origin ) -> koyomi-add.cgi{ command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }
-guild.js/changeKoyomi_BWF( code, origin ) -> koyomi-add.cgi{ command:"init", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
-guild.js/modifychangeKoyomi( code, origin ) -> koyomi-add.cgi{ command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
+guild.js/saveKoyomiAdd( com, code, origin ) -> koyomi-add.cgi{ command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }
+guild.js/saveKoyomiAdd_direct( code, yyyy, mm, dd, tdiv, origin ) -> koyomi-add.cgi{ command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
+
+guild.js/modifysaveKoyomi_direct( code, yyyy, mm, mm, tdiv, origin ) -> koyomi-add.cgi{ command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }
+guild.js/changeKoyomiAdd( com, code, origin ) -> koyomi-add.cgi{ command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }
 
 guild.js/koyomiReturn() -> {}
 guild.js/koyomiReturn2KE( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'init', yyyy:yyyy, mm:mm, dd:dd }
@@ -48,3 +47,6 @@ guild.js/koyomiReturn2KE( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'init', yyy
 #CHANGE LOG
 #==============================================================================
 20200803	0.00b	βスタート
+20201118	0.01b	fix食品の移動エラーを修正。fix食品の複製時にFCSデータを複製し、新コードを生成するようにした。
+20201202	0.02b	問題：特になし
+					修正：年月のフォーム入力をHTML5に対応させた。それに伴い月移動ボタンの廃止。

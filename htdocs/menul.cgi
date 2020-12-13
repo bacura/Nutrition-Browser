@@ -31,7 +31,7 @@ def range_html( range, lp )
 		end
 	end
 
-	html = '<select class="form-control form-control-sm" id="range">'
+	html = '<select class="form-select form-select-sm" id="range">'
 	html << "<option value='0' #{range_select[0]}>#{lp[12]}</option>"
 	html << "<option value='1' #{range_select[1]}>#{lp[19]}</option>"
 	html << "<option value='2' #{range_select[2]}>#{lp[13]}</option>"
@@ -49,7 +49,7 @@ def label_html( uname, label, lp )
 	r.each do |e| label_list << e['label'] end
 	label_list.uniq!
 
-	html = '<select class="form-control form-control-sm" id="label">'
+	html = '<select class="form-select form-select-sm" id="label">'
 	html << "<option value=''>#{lp[12]}</option>"
 	label_list.each do |e| html << "<option value='#{e}' #{selected( e, label )}}>#{e}</option>" end
 	html << '</select>'

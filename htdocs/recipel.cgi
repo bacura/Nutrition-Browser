@@ -33,7 +33,7 @@ def range_html( range )
 	end
 
 	html = '表示範囲'
-	html << '<select class="form-control form-control-sm" id="range">'
+	html << '<select class="form-select form-select-sm" id="range">'
 	html << "<option value='0' #{range_select[0]}>全て</option>"
 	html << "<option value='1' #{range_select[1]}>下書き</option>"
 	html << "<option value='2' #{range_select[2]}>保護</option>"
@@ -49,7 +49,7 @@ end
 #### 料理スタイル生成
 def type_html( type )
 	html = '料理スタイル'
-	html << '<select class="form-control form-control-sm" id="type">'
+	html << '<select class="form-select form-select-sm" id="type">'
 	html << "<option value='99'>全て</option>"
 	$RECIPE_TYPE.size.times do |c|
 		if type == c
@@ -67,7 +67,7 @@ end
 #### 献立区分
 def role_html( role )
 	html = '献立区分'
-	html << '<select class="form-control form-control-sm" id="role">'
+	html << '<select class="form-select form-select-sm" id="role">'
 	html << "<option value='99'>全て</option>"
 	$RECIPE_ROLE.size.times do |c|
 		if role == c
@@ -90,7 +90,7 @@ end
 #### 調理区分
 def tech_html( tech )
 	html = '調理区分'
-	html << '<select class="form-control form-control-sm" id="tech">'
+	html << '<select class="form-select form-select-sm" id="tech">'
 	html << "<option value='99'>全て</option>"
 	$RECIPE_TECH.size.times do |c|
 		if tech == c
@@ -108,7 +108,7 @@ end
 #### 目安時間
 def time_html( time )
 	html = '目安時間(分)'
-	html << '<select class="form-control form-control-sm" id="time">'
+	html << '<select class="form-select form-select-sm" id="time">'
 	html << "<option value='99'>全て</option>"
 	$RECIPE_TIME.size.times do |c|
 		if time == c
@@ -126,7 +126,7 @@ end
 #### 目安費用
 def cost_html( cost )
 	html = '目安費用(円)'
-	html << '<select class="form-control form-control-sm" id="cost">'
+	html << '<select class="form-select form-select-sm" id="cost">'
 	html << "<option value='99'>全て</option>"
 	$RECIPE_COST.size.times do |c|
 		if cost == c
